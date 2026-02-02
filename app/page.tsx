@@ -106,6 +106,33 @@ const Home = () => {
               </a>
             </div>
 
+            <div className="flex justify-center mb-16 -mt-10">
+              <a
+                href="https://github.com/Next-Voters/Next-Voters"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-50/60 px-4 py-2 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors font-plus-jakarta-sans"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 text-gray-500"
+                  fill="currentColor"
+                >
+                  <path d="M12 0.5C5.37 0.5 0 5.87 0 12.5c0 5.29 3.438 9.773 8.205 11.365.6.111.82-.261.82-.579 0-.285-.011-1.04-.016-2.04-3.338.725-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.73.083-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.304.762-1.604-2.665-.304-5.466-1.332-5.466-5.93 0-1.31.469-2.381 1.236-3.221-.124-.303-.536-1.523.117-3.176 0 0 1.008-.322 3.301 1.23a11.51 11.51 0 0 1 3.006-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.655 1.653.243 2.873.119 3.176.77.84 1.235 1.911 1.235 3.221 0 4.61-2.806 5.623-5.479 5.921.43.37.814 1.096.814 2.209 0 1.594-.014 2.877-.014 3.268 0 .321.216.694.825.576C20.565 22.268 24 17.787 24 12.5 24 5.87 18.63 0.5 12 0.5z" />
+                </svg>
+                <span>We&apos;re open source — star us on GitHub!</span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 text-amber-400/70"
+                  fill="currentColor"
+                >
+                  <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              </a>
+            </div>
+
             {/* Stanford Professor Testimonial */}
             <div className="max-w-2xl mx-auto mb-16">
               <div className="bg-gray-50 border border-gray-200 rounded-xl px-8 pt-8 pb-4 shadow-sm">
