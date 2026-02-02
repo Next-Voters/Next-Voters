@@ -85,24 +85,8 @@ const Home = () => {
                 </button>
               </div>
 
-              {/* Preference selector + counts (side-by-side on desktop) */}
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <PreferenceSelector />
-
-                <div className="flex items-center gap-2 font-plus-jakarta-sans">
-                  <div className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-[13px] text-gray-600">
-                    Requests:{" "}
-                    <span className="font-semibold text-gray-900">
-                      {analytics?.requestCount ?? "—"}
-                    </span>
-                  </div>
-                  <div className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-[13px] text-gray-600">
-                    Responses:{" "}
-                    <span className="font-semibold text-gray-900">
-                      {analytics?.responseCount ?? "—"}
-                    </span>
-                  </div>
-                </div>
+              <div className="mt-4">
+                <PreferenceSelector responseCount={analytics?.responseCount} />
               </div>
             </div>
 
