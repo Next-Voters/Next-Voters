@@ -54,7 +54,7 @@ const MobileHeader: React.FC = () => {
               </li>
             ))}
             <li>
-              <AuthButtons />
+              <AuthButtons variant="mobile" />
             </li>
           </ul>
         </nav>

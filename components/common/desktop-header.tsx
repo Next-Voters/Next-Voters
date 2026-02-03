@@ -35,7 +35,7 @@ const DesktopHeader: React.FC = () => {
           </ul>
         </nav>
 
-        <AuthButtons />
+        <AuthButtons variant="desktop" />
       </div>
     </div>
   );
