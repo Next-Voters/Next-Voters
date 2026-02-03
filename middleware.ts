@@ -9,7 +9,7 @@ const isPathMatch = (route: string) => {
 
 export default async function middleware(req: NextRequest) {
   const route = req.nextUrl.pathname;
-  if (isPathMatch(route) && !await isUserAuthenticatedAndHasAdminRole(req)) {
+  if (isPathMatch(route) && !await isUserAuthenticatedAndHasAdminRole()) {
     const homeURL = new URL("/", req.url);
     return NextResponse.redirect(homeURL);
   }
