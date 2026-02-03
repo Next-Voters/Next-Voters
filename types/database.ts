@@ -4,7 +4,7 @@ export interface Database {
   chat_count: ChatCountTable,
   admin_table: UserAdminTable,
   user_admin_request: UserAdminRequestTable
-  email_subscriptions: EmailSubscriptionTable
+  subscriptions: SubscriptionTable
 }
 
 export interface ChatCountTable {
@@ -23,8 +23,8 @@ export interface UserAdminRequestTable {
   name: string
 }
 
-export interface EmailSubscriptionTable {
-  email: string,
+export interface SubscriptionTable {
+  contact: string,
   topics: string[]
 }
 
