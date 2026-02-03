@@ -1,20 +1,8 @@
+"use client"
+
 import React from "react";
 import headerItems from "@/data/header";
-import dynamic from "next/dynamic";
-
-// Dynamically import LogoutLink to handle missing Kinde config
-const LogoutLink = dynamic(
-  () => import("@kinde-oss/kinde-auth-nextjs/components")
-    .then((mod) => mod.LogoutLink)
-    .catch(() => {
-      // Return a no-op component if Kinde fails to load
-      return ({ children, className, ...props }: any) => null;
-    }),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-);
+import AuthButtons from "./components/auth-buttons";
 
 const DesktopHeader: React.FC = () => {
   return (
@@ -47,9 +35,7 @@ const DesktopHeader: React.FC = () => {
           </ul>
         </nav>
 
-        <LogoutLink className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">
-          Sign Out
-        </LogoutLink>
+        <AuthButtons variant="desktop" />
       </div>
     </div>
   );

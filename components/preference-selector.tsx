@@ -8,7 +8,7 @@ import { getPreference, setPreference } from '@/lib/preferences';
 const PreferenceSelector = () => {
   const [selectedPreference, setSelectedPreference] = useState(getPreference());
   
-  const handlePreferenceChange = (value) => {
+  const handlePreferenceChange = (value: string) => {
     setPreference(value);
     setSelectedPreference(value);
   };
@@ -24,7 +24,7 @@ const PreferenceSelector = () => {
 
   return (
     <div>
-      <div className="flex space-x-2 mt-3">
+      <div className="mt-3 flex items-end justify-between gap-3">
         <Select 
           value={selectedPreference || ""} 
           onValueChange={handlePreferenceChange}

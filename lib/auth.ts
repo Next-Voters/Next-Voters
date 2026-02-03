@@ -1,7 +1,8 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { NextRequest } from "next/server";
+"use server"
 
-export const isUserAuthenticatedAndHasAdminRole = async (req: NextRequest) => {
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+
+export const isUserAuthenticatedAndHasAdminRole = async () => {
     // Check if Kinde is configured
     const kindeSiteUrl = process.env.KINDE_SITE_URL;
     const kindeIssuerUrl = process.env.KINDE_ISSUER_URL;
