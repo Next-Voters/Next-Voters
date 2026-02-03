@@ -59,6 +59,10 @@ const PreferenceSelector = ({ responseCount }: PreferenceSelectorProps) => {
             ))}
           </SelectContent>
         </Select>
+
+        <div className="text-right font-plus-jakarta-sans text-[13px] text-gray-600 whitespace-nowrap">
+          <span className="font-semibold text-gray-900">{answersProvided}</span> answers provided so far
+        </div>
       </div>
     </div>
   )
