@@ -3,3 +3,6 @@ export type Preference = {
   region: string;
   party: string;
 };
+
+
+export type PreferredCommunication = 'email' | 'sms';

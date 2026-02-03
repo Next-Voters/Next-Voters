@@ -25,7 +25,8 @@ export interface UserAdminRequestTable {
 
 export interface SubscriptionTable {
   contact: string,
-  topics: string[]
+  topics: string[],
+  type_contact: 'email' | 'sms'
 }
 
 export type ChatCount = Selectable<ChatCountTable>

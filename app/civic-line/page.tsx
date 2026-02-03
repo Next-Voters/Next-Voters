@@ -3,8 +3,7 @@
 import { useMemo, useState } from 'react';
 import { handleSubscribe } from '@/server-actions/sub-to-civicline';
 import topicOptions from '@/data/topic-options';
-
-type PreferredCommunication = 'email' | 'sms';
+import { PreferredCommunication } from '@/types/preferences';
 
 const EmailServiceProduct = () => {
   const [preferredCommunication, setPreferredCommunication] =
@@ -56,7 +55,7 @@ const EmailServiceProduct = () => {
       return;
     }
 
-    const result = await handleSubscribe(contact.trim(), topics);
+    const result = await handleSubscribe(contact.trim(), topics, preferredCommunication);
     if (result?.error) {
       alert(result.error);
     } else {
