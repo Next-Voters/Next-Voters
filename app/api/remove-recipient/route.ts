@@ -17,12 +17,12 @@ export async function GET(request: Request) {
     return decoded
   })
 
-  const email = (decoded as { email: string }).email
+  const contact = (decoded as { contact: string }).contact
 
   try {
     await db
-      .deleteFrom('email_subscriptions')
-      .where('email', '=', email)
+      .deleteFrom('subscriptions')
+      .where('contact', '=', contact)
       .execute()
 
     return NextResponse.json({
