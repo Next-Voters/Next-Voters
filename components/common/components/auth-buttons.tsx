@@ -1,47 +1,21 @@
-import dynamic from 'next/dynamic';
-import React from 'react'
-import { isUserAuthenticated } from '@/lib/auth';
+"use client";
 
-const AuthButtons = () => {
+import React from "react";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { LoginLink, LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 
-    // Dynamically import LogoutLink to handle missing Kinde config
-    const LogoutLink = dynamic(
-      () => import("@kinde-oss/kinde-auth-nextjs/components")
-        .then((mod) => mod.LogoutLink)
-        .catch(() => {
-          return ({ children, className, ...props }: any) => null;
-        }),
-      { 
-        ssr: false,
-        loading: () => null
-      }
-    );
+export default function AuthButtons() {
+  const { isAuthenticated, isLoading } = useKindeBrowserClient();
 
-    const LoginLink = dynamic(
-      () => import("@kinde-oss/kinde-auth-nextjs/components")
-        .then((mod) => mod.LoginLink)
-        .catch(() => {
-          return ({ children, className, ...props }: any) => null;
-        }),
-      { 
-        ssr: false,
-        loading: () => null
-      }
-    );
-    
-  return (
-    <>
-    {isUserAuthenticated() ? 
-        <LogoutLink className="block p-2 text-gray-700 hover:bg-gray-100 rounded w-full text-left">
-                Sign Out
-        </LogoutLink>
-        : (
-        <LoginLink className="block p-2 text-gray-700 hover:bg-gray-100 rounded w-full text-left">
-                Sign In
-        </LoginLink>
-        )}
-    </>
-  )
+  if (isLoading) return null; // or a spinner
+
+  return isAuthenticated ? (
+    <LogoutLink className="block p-2 text-gray-700 hover:bg-gray-100 rounded w-full text-left">
+      Sign Out
+    </LogoutLink>
+  ) : (
+    <LoginLink className="block p-2 text-gray-700 hover:bg-gray-100 rounded w-full text-left">
+      Sign In
+    </LoginLink>
+  );
 }
-
-export default AuthButtons
