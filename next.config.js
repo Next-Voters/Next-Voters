@@ -23,6 +23,9 @@ const nextConfig = {
     scrollRestoration: true,
   },
 
+  // Minimal Turbopack config to avoid Turbopack vs webpack build error
+  turbopack: {},
+
   images: {
     domains: ["example.com"],
     formats: ["image/avif", "image/webp"],
