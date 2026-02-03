@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { handleSubscribeEmail } from '@/server-actions/sub-to-email';
 import topics from '@/data/topic-options';
 
