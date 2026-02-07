@@ -1,39 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { handleSubscribe } from '@/server-actions/sub-to-civicline';
-import topicOptions from '@/data/topic-options';
+import { useState } from 'react';
 import { PreferredCommunication } from '@/types/preferences';
+import { Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const EmailServiceProduct = () => {
-  const [preferredCommunication, setPreferredCommunication] =
-    useState<PreferredCommunication>('email');
-
+  const router = useRouter();
   const [contact, setContact] = useState('');
-  const [topics, setTopics] = useState<string[]>([]);
-
-  const contactConfig = useMemo(() => {
-    if (preferredCommunication === 'sms') {
-      return {
-        label: 'Your Phone Number',
-        placeholder: '+1 (647) 555-0123',
-        inputMode: 'tel' as const,
-        type: 'tel' as const,
-      };
-    }
-    return {
-      label: 'Your Email Address',
-      placeholder: 'changemaker@nextvoters.com',
-      inputMode: 'email' as const,
-      type: 'email' as const,
-    };
-  }, [preferredCommunication]);
+  // Step 1 collects contact only; step 2 collects interests.
+  const [preferredCommunication] = useState<PreferredCommunication>('email');
 
   const validate = () => {
     const trimmed = contact.trim();
 
     if (!trimmed) return `Please enter your ${preferredCommunication}.`;
-    if (topics.length === 0) return 'Please select at least one topic.';
 
     if (preferredCommunication === 'email') {
       // simple email check (good enough for client-side)
@@ -48,90 +29,93 @@ const EmailServiceProduct = () => {
     return null;
   };
 
-  const onSubscribe = async () => {
+  const onContinue = async () => {
     const error = validate();
     if (error) {
       alert(error);
       return;
     }
 
-    const result = await handleSubscribe(contact.trim(), topics, preferredCommunication);
-    if (result?.error) {
-      alert(result.error);
-    } else {
-      alert('Subscribed successfully!');
-      setContact('');
-      setTopics([]);
-    }
+    const trimmed = contact.trim();
+    router.push(
+      `/next-voters-line/interests?contact=${encodeURIComponent(trimmed)}&type=${encodeURIComponent(
+        preferredCommunication
+      )}`
+    );
   };
 
+  const progressPercent = 33;
+
   return (
-    <div className="w-full min-h-screen bg-white flex items-center justify-center">
-      <div className="w-full max-w-[680px] px-6 py-20 text-center">
-        <h1 className="text-[48px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans leading-tight">
-          This is Next Voters Line. Become informed.
+    <div className="w-full min-h-[calc(100vh-64px)] bg-white pb-20">
+      <div className="w-full max-w-[980px] px-6 pt-20 pb-28">
+        <h1 className="text-[44px] sm:text-[52px] font-bold text-gray-900 mb-8 font-plus-jakarta-sans leading-[1.05] tracking-tight">
+          <span className="block">Get weekly executive updates</span>
+          <span className="block md:whitespace-nowrap">on NYC politics you care about</span>
         </h1>
 
-        <p className="text-[16px] text-gray-600 mb-12 font-plus-jakarta-sans leading-relaxed">
-          Changing the world comes from being educated!
+        <p className="text-gray-900 font-plus-jakarta-sans leading-tight mb-8">
+          <span className="block text-[16px] sm:text-[18px] font-semibold">
+            Always be in the know
+          </span>
+          <span className="block text-[18px] sm:text-[20px] font-extrabold">
+            <span className="relative inline-block">
+              <span className="relative z-10">100% for free</span>
+              <svg
+                aria-hidden="true"
+                className="absolute left-0 right-0 -bottom-2 h-4 w-[112%] -translate-x-[6%]"
+                viewBox="0 0 240 36"
+                fill="none"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M8 12 C 70 34, 170 34, 232 12"
+                  stroke="#E12D39"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+          </span>
         </p>
 
-        <div className="flex flex-col items-center gap-4">
-          <label className="font-plus-jakarta-sans text-gray-900">
-            What is your preferred way to be contacted?
-          </label>
-
-          <select
-            className="w-full max-w-sm px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-gray-900 text-[14px] font-plus-jakarta-sans"
-            value={preferredCommunication}
-            onChange={(e) => {
-              const next = e.target.value as PreferredCommunication;
-              setPreferredCommunication(next);
-              setContact(''); // reset when switching modes
-            }}
-          >
-            <option value="email">Email</option>
-            <option value="sms">SMS</option>
-          </select>
-
-          <label className="font-plus-jakarta-sans text-gray-900">
-            {contactConfig.label}
-          </label>
-
-          <input
-            className="w-full max-w-sm px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-gray-900 text-[14px] font-plus-jakarta-sans"
-            type={contactConfig.type}
-            inputMode={contactConfig.inputMode}
-            placeholder={contactConfig.placeholder}
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-          />
-
-          <label className="font-plus-jakarta-sans text-gray-900">
-            What are your areas of interest?
-          </label>
-
-          <select
-            multiple
-            className="w-full max-w-sm px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-gray-900 text-[14px] font-plus-jakarta-sans"
-            value={topics}
-            onChange={(e) =>
-              setTopics(Array.from(e.target.selectedOptions, (opt) => opt.value))
-            }
-          >
-            {topicOptions.map((topic) => (
-              <option key={topic} value={topic}>
-                {topic}
-              </option>
-            ))}
-          </select>
+        <div className="w-full max-w-[420px]">
+          <div className="flex items-stretch border-2 border-gray-900 rounded-lg overflow-hidden bg-white">
+            <div className="flex items-center justify-center px-3 border-r-2 border-gray-900">
+              <Mail className="h-5 w-5 text-gray-900" aria-hidden="true" />
+            </div>
+            <input
+              className="flex-1 px-4 py-3 text-[18px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none font-plus-jakarta-sans"
+              type="email"
+              inputMode="email"
+              placeholder="example@email.com"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+            />
+          </div>
 
           <button
-            className="mt-4 inline-flex items-center justify-center px-8 py-3 text-[14px] text-gray-900 border border-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-plus-jakarta-sans font-medium"
-            onClick={onSubscribe}
+            type="button"
+            className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 text-[20px] font-bold text-white bg-[#E12D39] rounded-lg hover:bg-[#c92631] transition-colors font-plus-jakarta-sans"
+            onClick={onContinue}
           >
-            Subscribe
+            Never fall behind again
           </button>
+        </div>
+      </div>
+
+      {/* Bottom progress bar (as in Figma) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
+        <div className="w-full px-0">
+          <div className="h-[5px] w-full bg-gray-200">
+            <div
+              className="h-full bg-[#E12D39] rounded-r-full"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="py-2 text-center text-[11px] text-gray-500 font-plus-jakarta-sans">
+            {progressPercent}% Complete
+          </div>
         </div>
       </div>
     </div>
