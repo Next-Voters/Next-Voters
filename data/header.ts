@@ -12,7 +12,7 @@ const headerItems: HeaderItem[] = [{
 }, 
 {
     name: "Next Voters Line",
-    href: "/next-voters-line"
+    href: "/civic-line"
 }
 ]
 
