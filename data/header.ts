@@ -9,6 +9,10 @@ const headerItems: HeaderItem[] = [{
 }, {
     name: "Team",
     href: "/team"
+}, 
+{
+    name: "Next Voters Line",
+    name: "/next-voters-line"
 }
 ]
 

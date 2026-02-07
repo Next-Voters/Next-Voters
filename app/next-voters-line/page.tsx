@@ -69,7 +69,7 @@ const EmailServiceProduct = () => {
     <div className="w-full min-h-screen bg-white flex items-center justify-center">
       <div className="w-full max-w-[680px] px-6 py-20 text-center">
         <h1 className="text-[48px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans leading-tight">
-          Become informed.
+          This is Next Voters Line. Become informed.
         </h1>
 
         <p className="text-[16px] text-gray-600 mb-12 font-plus-jakarta-sans leading-relaxed">
