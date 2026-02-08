@@ -50,7 +50,7 @@ export const sendReferralEmail = async (referrerEmail: string, referredEmail: st
 export const sendConfirmationEmail = async (email: string, preferredCategories: string[]) => {
   const lastFolder = await getLastSummaryFolder();
   
-  const htmlLinks = preferredCategories.map(category => {
+  const htmlAnchorElement = preferredCategories.map(category => {
     return `<a href="https://storage.googleapis.com/${process.env.NEXT_PUBLIC_SUPABASE_URL}/public/next-voters-summaries/${lastFolder}/${category}.html">${category}</a>`;
   });
 
@@ -59,7 +59,7 @@ export const sendConfirmationEmail = async (email: string, preferredCategories: 
       <p>Thank you for signing up to Next Voters Line!</p>
       <p>As a bonus, here's last week's summary:</p>
       <ul>
-        ${htmlLinks.join("")}
+        ${htmlAnchorElement.join("")}
       </ul>
     </div>
   `;
