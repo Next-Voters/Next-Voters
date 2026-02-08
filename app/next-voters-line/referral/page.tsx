@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { sendReferralEmail } from '@/server-actions/send-referral-email';
+import { sendConfirmationEmail } from '@/server-actions/send-confirmation-email';
 
 function NextVotersLineReferralInner() {
   const searchParams = useSearchParams();
@@ -49,6 +50,7 @@ function NextVotersLineReferralInner() {
     try {
       try {
         await sendReferralEmail(referrerEmail, referralEmail.trim());
+        await sendConfirmationEmail(referralEmail.trim());
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Unknown error';
         alert(`Could not send referral email: ${message}`);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { transporter } from "@/lib/nodemailer"
 
-export const sendEmail  = async (email) => {
+export const sendConfirmationEmail = async (email) => {
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
