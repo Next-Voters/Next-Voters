@@ -7,5 +7,4 @@ export const handleGetUser = async (email: string) => {
         .where('email', '=', email)
         .executeTakeFirst() 
 
-    return row ?? null
-}
+    return row ?? nul

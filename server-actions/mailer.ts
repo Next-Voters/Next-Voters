@@ -57,16 +57,6 @@ export const sendConfirmationEmail = async (email: string, preferredCategories: 
   const html = `
     <div>
       <p>Thank you for signing up to Next Voters Line!</p>
-      <p>As a bonus, here's last week's summary:</p>
-      <ul>
-        ${htmlAnchorElement.join("")}
-      </ul>
-    </div>
-  `;
-
-  const html = `
-    <div>
-      <p>Thank you for signing up to Next Voters Line!</p>
       <p>As a bonus, here's the most recent summary:</p>
       <ul>
         ${preferredCategories.map(category => `<li>${category}</li>`).join("")}
