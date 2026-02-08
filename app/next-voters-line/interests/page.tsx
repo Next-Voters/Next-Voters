@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import topicOptions from '@/data/topic-options';
 import { handleSubscribe } from '@/server-actions/sub-to-civicline';
@@ -8,7 +8,7 @@ import { PreferredCommunication } from '@/types/preferences';
 
 const MAX_TOPICS = 3;
 
-export default function NextVotersLineInterestsPage() {
+function NextVotersLineInterestsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -138,6 +138,14 @@ export default function NextVotersLineInterestsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NextVotersLineInterestsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-slate-500">Loading…</div>}>
+      <NextVotersLineInterestsInner />
+    </Suspense>
   );
 }
 

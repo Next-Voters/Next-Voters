@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { sendReferralEmail } from '@/server-actions/send-referral-email';
 
-export default function NextVotersLineReferralPage() {
+function NextVotersLineReferralInner() {
   const searchParams = useSearchParams();
   const referrerEmail = useMemo(() => (searchParams.get('referrer') ?? '').trim(), [searchParams]);
 
@@ -132,6 +132,14 @@ export default function NextVotersLineReferralPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NextVotersLineReferralPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-slate-500">Loading…</div>}>
+      <NextVotersLineReferralInner />
+    </Suspense>
   );
 }
 
