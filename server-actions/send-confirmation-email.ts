@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import nodemailer from "nodemailer"
+import { transporter } from "@/lib/nodemailer"
 
 export const sendEmail  = async (email) => {
   try {

@@ -1,6 +1,6 @@
 "use server";
 
-import nodemailer from "nodemailer";
+import { transporter } from "@/lib/nodemailer";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -18,11 +18,6 @@ function escapeHtml(input: string): string {
 }
 
 export async function sendReferralEmail(referrerEmail: string, referredEmail: string) {
-  const host = requireEnv("EMAIL_HOST");
-  const port = Number(requireEnv("EMAIL_PORT"));
-  const user = requireEnv("EMAIL_USER");
-  const pass = requireEnv("EMAIL_PASS");
-
   const subject = `Your friend (${referrerEmail}) wants you to check this out`;
 
   const signupUrl = "https://nextvoters.com/civic-line";
@@ -48,15 +43,9 @@ export async function sendReferralEmail(referrerEmail: string, referredEmail: st
     </p>
   `;
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: true,
-    auth: { user, pass },
-  });
 
   await transporter.sendMail({
-    from: `Next Voters Line <${user}>`,
+    from: `Next Voters Line <${process.env.EMAIL_USER}>`,
     to: referredEmail,
     subject,
     text,
