@@ -3,8 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { sendReferralEmail } from '@/server-actions/send-referral-email';
-import { sendConfirmationEmail } from '@/server-actions/send-confirmation-email';
+import { sendConfirmationEmail, sendReferralEmail } from '@/server-actions/mailer';
 
 function NextVotersLineReferralInner() {
   const searchParams = useSearchParams();

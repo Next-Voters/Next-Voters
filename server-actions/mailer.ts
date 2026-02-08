@@ -2,18 +2,12 @@
 
 import { transporter } from "@/lib/nodemailer";
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing environment variable: ${name}`);
-  return value;
-}
-
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+    .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
 
@@ -43,7 +37,6 @@ export async function sendReferralEmail(referrerEmail: string, referredEmail: st
     </p>
   `;
 
-
   await transporter.sendMail({
     from: `Next Voters Line <${process.env.EMAIL_USER}>`,
     to: referredEmail,
@@ -53,3 +46,11 @@ export async function sendReferralEmail(referrerEmail: string, referredEmail: st
   });
 }
 
+export async function sendConfirmationEmail(email: string) {
+  await transporter.sendMail({
+    from: `Next Voters Line <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Confirmation Email",
+    text: "Thank you for signing up to Next Voters Line!",
+  });
+}
