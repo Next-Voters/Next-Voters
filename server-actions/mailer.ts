@@ -22,7 +22,7 @@ export const sendReferralEmail = async (referrerEmail: string, referredEmail: st
     "",
     `Your friend with the email ${referrerEmail} is referring you to sign up for the Next Voters Line, a free, bias-free way to get emailed weekly summaries of the NYC politics you care about.`,
     "",
-    "No pressure, but you can sign up here for a week in 30 seconds to see what the hype is about.",
+    "No pressure, but you can sign up here in 30 seconds to see what the hype is about.",
     "",
     signupUrl,
     "",
