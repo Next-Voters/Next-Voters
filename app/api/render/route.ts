@@ -23,7 +23,11 @@ export async function GET(req: NextRequest) {
   });
 
   if (!upstream.ok) {
-    return new Response(`Upstream error: ${upstream.status}`, { status: 502 });
+    const errorText = await upstream.text().catch(() => "");
+    return new Response(
+      `Upstream error: ${upstream.status}\nURL: ${url.toString()}\n\n${errorText.slice(0, 1000)}`,
+      { status: 502 }
+    );
   }
 
   const html = await upstream.text();
