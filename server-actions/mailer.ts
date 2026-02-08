@@ -1,8 +1,9 @@
 "use server";
 
 import { transporter } from "@/lib/nodemailer";
+import { getLastSummaryFolder } from "@/lib/supabase-helper";
 
-function escapeHtml(input: string): string {
+const escapeHtml = (input: string): string => {
   return input
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -11,7 +12,7 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#039;");
 }
 
-export async function sendReferralEmail(referrerEmail: string, referredEmail: string) {
+export const sendReferralEmail = async (referrerEmail: string, referredEmail: string) => {
   const subject = `Your friend (${referrerEmail}) wants you to check this out`;
 
   const signupUrl = "https://nextvoters.com/civic-line";
@@ -46,11 +47,37 @@ export async function sendReferralEmail(referrerEmail: string, referredEmail: st
   });
 }
 
-export async function sendConfirmationEmail(email: string) {
+export const sendConfirmationEmail = async (email: string, preferredCategories: string[]) => {
+  const lastFolder = await getLastSummaryFolder();
+  
+  const htmlLinks = preferredCategories.map(category => {
+    return `<a href="https://storage.googleapis.com/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET}/public/next-voters-summaries/${lastFolder}/${category}.html">${category}</a>`;
+  });
+
+  const html = `
+    <div>
+      <p>Thank you for signing up to Next Voters Line!</p>
+      <p>As a bonus, here's last week's summary:</p>
+      <ul>
+        ${htmlLinks.join("")}
+      </ul>
+    </div>
+  `;
+
+  const html = `
+    <div>
+      <p>Thank you for signing up to Next Voters Line!</p>
+      <p>As a bonus, here's the most recent summary:</p>
+      <ul>
+        ${preferredCategories.map(category => `<li>${category}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+
   await transporter.sendMail({
     from: `Next Voters Line <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Confirmation Email",
-    text: "Thank you for signing up to Next Voters Line!",
+    html,
   });
 }
