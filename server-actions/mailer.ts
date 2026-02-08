@@ -51,7 +51,7 @@ export const sendConfirmationEmail = async (email: string, preferredCategories: 
   const lastFolder = await getLastSummaryFolder();
   
   const htmlLinks = preferredCategories.map(category => {
-    return `<a href="https://storage.googleapis.com/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET}/public/next-voters-summaries/${lastFolder}/${category}.html">${category}</a>`;
+    return `<a href="https://storage.googleapis.com/${process.env.NEXT_PUBLIC_SUPABASE_URL}/public/next-voters-summaries/${lastFolder}/${category}.html">${category}</a>`;
   });
 
   const html = `
