@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     return new Response("Missing ?path=", { status: 400 });
   }
 
-  const allowedHost = "ihzytkomakaqhkqdrval.supabase.co";
+  const allowedHost = "next-voters-summaries.supabase.co";
   let url: URL;
 
   try {
