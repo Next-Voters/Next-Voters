@@ -11,8 +11,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Next-Voters',
-  description: 'Next-Voters',
+  title: 'Next Voters | AI-Powered Civic Education & Policy Analysis Platform',
+  description:
+    'Next Voters is an AI-powered civic education platform that helps young voters understand legislation, public policy, and North American politics through clear summaries, nonpartisan analysis, and real-world political context.',
 }
 
 export default function RootLayout({
