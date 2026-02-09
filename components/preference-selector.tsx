@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import supportedRegions from '@/data/supported-regions';
-import { getPreference, setPreference } from '@/lib/preferences';
+import { getPreference, setPreference } from '@/lib/country-preference';
 
 const PreferenceSelector = () => {
   const [selectedPreference, setSelectedPreference] = useState(getPreference());

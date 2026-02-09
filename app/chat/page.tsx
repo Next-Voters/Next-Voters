@@ -5,7 +5,7 @@ import MessageBubble from "@/components/chat-platform/message-bubble";
 import NoChatScreen from "@/components/chat-platform/no-chat-screen";
 import ClientMountWrapper from "@/components/client-mount-wrapper";
 import PreferenceSelector from "@/components/preference-selector";
-import { getPreference } from "@/lib/preferences";
+import { getPreference } from "@/lib/country-preference";
 import { AIAgentResponse } from "@/types/chat-platform/chat-platform";
 import { Message } from "@/types/chat-platform/message";
 import { useMutation } from "@tanstack/react-query";

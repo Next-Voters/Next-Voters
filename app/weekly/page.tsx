@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
 export default function WeeklyPage() {
-  // Mirror where `/civic-line` points (currently the Next Voters Line flow).
+  // Alias route: keep marketing URLs short and memorable.
+  // Match the current Civic Line entrypoint.
   redirect("/next-voters-line");
 }
 

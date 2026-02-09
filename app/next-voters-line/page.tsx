@@ -9,7 +9,6 @@ export default function NextVotersLineLandingPage() {
   const router = useRouter();
   const [contact, setContact] = useState('');
 
-  // Keep the contract consistent across the flow.
   const preferredCommunication: PreferredCommunication = 'email';
 
   const validate = () => {
@@ -96,7 +95,6 @@ export default function NextVotersLineLandingPage() {
         </div>
       </div>
 
-      {/* Bottom progress bar (as in Figma) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white">
         <div className="w-full px-0">
           <div className="h-[5px] w-full bg-gray-200">
