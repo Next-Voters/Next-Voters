@@ -36,5 +36,6 @@ export const generateResponseForParty = async (
   if (!result.object) {
     throw new Error("Failed to generate response for party");
   }  
-  return result.object;
+   return result.object;
 };
+
