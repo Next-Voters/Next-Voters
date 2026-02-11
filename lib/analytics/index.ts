@@ -2,7 +2,20 @@
 
 import { db } from "../db"
 
+const ensureChatCountRow = async () => {
+    await db
+        .insertInto("chat_count")
+        .values({
+            id: 1,
+            responses: 0,
+            requests: 0,
+        })
+        .onConflict((oc) => oc.column("id").doNothing())
+        .execute();
+}
+
 export const handleIncrementResponse = async () => {
+    await ensureChatCountRow()
     await db
         .updateTable("chat_count")
         .set(eb => ({
@@ -13,6 +26,7 @@ export const handleIncrementResponse = async () => {
 }
 
 export const handleIncrementRequest = async () => {
+    await ensureChatCountRow()
     await db 
         .updateTable("chat_count")
         .set(eb => ({
@@ -23,6 +37,7 @@ export const handleIncrementRequest = async () => {
 }
 
 export const handleGetResponseCount = async () => {
+    await ensureChatCountRow()
     const row = await db
         .selectFrom("chat_count")
         .select('responses')
@@ -33,6 +48,7 @@ export const handleGetResponseCount = async () => {
 }
 
 export const handleGetRequestCount = async () => {
+    await ensureChatCountRow()
     const row = await db
         .selectFrom("chat_count")
         .select("requests")

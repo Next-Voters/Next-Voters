@@ -16,13 +16,27 @@ export const getLastSummaryFolder = async (): Promise<string> => {
   }
 
   // Dynamic import so the build never fails when @supabase/supabase-js isn't installed.
-  let createClient: typeof import("@supabase/supabase-js").createClient;
+  type CreateClientFn = (url: string, key: string) => {
+    storage: {
+      from: (bucket: string) => {
+        list: (
+          path?: string,
+          options?: { sortBy?: { column: string; order: "asc" | "desc" } }
+        ) => Promise<{ data: { name: string }[] | null; error: { message: string } | null }>;
+      };
+    };
+  };
+  let createClient: CreateClientFn;
   try {
-    const mod = await import("@supabase/supabase-js");
-    createClient = mod.createClient;
+    const moduleName = "@supabase/" + "supabase-js";
+    const mod = await import(moduleName);
+    if (typeof mod?.createClient !== "function") {
+      throw new Error("createClient export not found in @supabase/supabase-js");
+    }
+    createClient = mod.createClient as CreateClientFn;
   } catch {
     throw new Error(
-      "@supabase/supabase-js is not installed. Run: npm i @supabase/supabase-js"
+      "@supabase/supabase-js is not installed. Run: pnpm add @supabase/supabase-js"
     );
   }
 
