@@ -20,27 +20,6 @@ export const supportedRegionDetails: SupportedRegionDetails[] = [
     ],
     "collectionName": "collection-us",
     "type": "country"
-  },
-  {
-    "code": "US-CA",
-    "name": "California",
-    "parentRegionCode": "US",
-    "politicalParties": [
-      "Democratic Party",
-      "Republican Party"
-    ],
-    "collectionName": "collection-us-ca",
-    "type": "sub-region"
-  },
-  {
-    "code": "IN",
-    "name": "India",
-    "politicalParties": [
-      "Indian Congress",
-      "BJP"
-    ],
-    "collectionName": "collection-in",
-    "type": "country"
   }
 ]
 
