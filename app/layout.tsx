@@ -34,9 +34,9 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: 'Next Voters | AI-Powered Civic Education',
+    title: 'Next Voters | Civic Education',
     description:
-      'Understand legislation and public policy with AI-driven summaries built for students and first-time voters.',
+      'Understand legislation and public policy with summaries built for students and everyday voters.',
     type: 'website',
     locale: 'en_US',
     siteName: 'Next Voters',
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Next Voters | AI Civic Education',
+    title: 'Next Voters | Civic Education',
     description:
-      'AI-powered explanations of legislation and public policy for the next generation of voters.',
+      'Explanations of legislation and public policy for the next generation of voters.',
   },
 }
 
