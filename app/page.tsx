@@ -158,10 +158,15 @@ const Home = () => {
             <p className="text-sm text-gray-600 mb-3 font-plus-jakarta-sans">
               Proud to be supported by
             </p>
-            <div className="flex justify-center">
+            <div className="flex justify-center items-center gap-8 md:gap-12">
               <img
                 src="/google-for-nonprofits-logo.png"
                 alt="Google for Nonprofits"
+                className="h-32 object-contain"
+              />
+              <img
+                src="/lookup-live-logo.png"
+                alt="LOOK UP"
                 className="h-32 object-contain"
               />
             </div>
