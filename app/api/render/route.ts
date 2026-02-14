@@ -1,9 +1,17 @@
 import { NextRequest } from "next/server";
 
+const allowedFileTypes = ["html", "md"];
+
 export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path");
   if (!filePath) {
     return new Response("Missing ?path=", { status: 400 });
+  }
+
+  const [fileName, fileExtension] = filePath.split(".");
+
+  if (!allowedFileTypes.includes(fileExtension)) {
+    return new Response("File type not allowed", { status: 403 });
   }
 
   const allowedHost = "ihzytkomakaqhkqdrval.supabase.co";
@@ -30,12 +38,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const html = await upstream.text();
+  const contentType = fileExtension === "html" ? "text/html" : "text/markdown";
 
-  return new Response(html, {
+  return new Response(await upstream.text(), {
     status: 200,
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
+      "Content-Type": `${contentType}; charset=utf-8`,
       "Cache-Control": "public, max-age=60",
     },
   });
