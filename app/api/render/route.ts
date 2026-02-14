@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   let url: URL;
 
   try {
-    url = new URL(`https://${allowedHost}/storage/v1/object/public/next-voters-summaries/public/${filePath}`);
+    url = new URL(`https://${allowedHost}/storage/v1/object/public/next-voters-summaries/${filePath}`);
     if (url.host !== allowedHost) {
       return new Response("Host not allowed", { status: 403 });
     }
