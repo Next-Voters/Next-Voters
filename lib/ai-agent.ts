@@ -94,6 +94,22 @@ export function createSystemMessage(content: string): Message {
   };
 }
 
+/**
+ * Extracts the graph output from a run response.
+ * Tries `output`, then `result`, then `values` to handle different API response shapes.
+ */
+function extractRunOutput<T>(response: RunResponse<T>): T {
+  const output = response.output ?? response.result ?? response.values;
+
+  if (!output) {
+    throw new LangGraphError(
+      `Graph execution completed but no output was returned (run_id: ${response.run_id})`
+    );
+  }
+
+  return output;
+}
+
 // ============================================================================
 // Research Brief Agent Functions
 // ============================================================================
@@ -140,11 +156,7 @@ export async function invokeResearchBriefAgent(
     throw new LangGraphError(`Graph execution failed: ${response.error}`);
   }
 
-  if (!response.output) {
-    throw new LangGraphError('Graph execution completed but no output was returned');
-  }
-
-  return response.output;
+  return extractRunOutput(response);
 }
 
 /**
@@ -291,11 +303,7 @@ export async function invokeResearchAgent(
     throw new LangGraphError(`Graph execution failed: ${response.error}`);
   }
 
-  if (!response.output) {
-    throw new LangGraphError('Graph execution completed but no output was returned');
-  }
-
-  return response.output;
+  return extractRunOutput(response);
 }
 
 /**

@@ -98,6 +98,8 @@ export interface RunResponse<T = unknown> {
   run_id: string;
   status: 'pending' | 'running' | 'success' | 'error' | 'timeout' | 'interrupted';
   output?: T;
+  result?: T;
+  values?: T;
   error?: string;
   metadata?: Record<string, unknown>;
   created_at: string;
