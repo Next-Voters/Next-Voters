@@ -107,15 +107,29 @@ export function createSystemMessage(content: string): Message {
  * Tries `output`, then `result`, then `values` to handle different API response shapes.
  */
 function extractRunOutput<T>(response: RunResponse<T>): T {
-  const output = response.output ?? response.result ?? response.values;
+  const maybeEnvelope = response as unknown as Partial<RunResponse<T>>;
+  const isRunEnvelope =
+    typeof maybeEnvelope === 'object' &&
+    maybeEnvelope !== null &&
+    ('run_id' in maybeEnvelope ||
+      'status' in maybeEnvelope ||
+      'output' in maybeEnvelope ||
+      'result' in maybeEnvelope ||
+      'values' in maybeEnvelope);
 
-  if (!output) {
-    throw new LangGraphError(
-      `Graph execution completed but no output was returned (run_id: ${response.run_id})`
-    );
+  if (!isRunEnvelope) {
+    return response as unknown as T;
   }
 
-  return output;
+  const output = maybeEnvelope.output ?? maybeEnvelope.result ?? maybeEnvelope.values;
+
+  if (output !== undefined && output !== null) {
+    return output;
+  }
+
+  throw new LangGraphError(
+    `Graph execution completed but no output was returned (run_id: ${maybeEnvelope.run_id ?? 'unknown'})`
+  );
 }
 
 /**
@@ -188,7 +202,7 @@ export async function invokeResearchBriefAgent(
     },
   };
 
-  const response = await makeRequest<RunResponse<ResearchBriefAgentState>>(
+  const response = await makeRequest<RunResponse<ResearchBriefAgentState> | ResearchBriefAgentState>(
     `/runs/wait`,
     {
       method: 'POST',
@@ -197,11 +211,11 @@ export async function invokeResearchBriefAgent(
     }
   );
 
-  if (response.status === 'error') {
+  if ('status' in response && response.status === 'error') {
     throw new LangGraphError(`Graph execution failed: ${response.error}`);
   }
 
-  return extractRunOutput(response);
+  return extractRunOutput(response as RunResponse<ResearchBriefAgentState>);
 }
 
 /**
@@ -339,7 +353,7 @@ export async function invokeResearchAgent(
     },
   };
 
-  const response = await makeRequest<RunResponse<ResearchAgentState>>(
+  const response = await makeRequest<RunResponse<ResearchAgentState> | ResearchAgentState>(
     `/runs/wait`,
     {
       method: 'POST',
@@ -348,11 +362,11 @@ export async function invokeResearchAgent(
     }
   );
 
-  if (response.status === 'error') {
+  if ('status' in response && response.status === 'error') {
     throw new LangGraphError(`Graph execution failed: ${response.error}`);
   }
 
-  return extractRunOutput(response);
+  return extractRunOutput(response as RunResponse<ResearchAgentState>);
 }
 
 /**
