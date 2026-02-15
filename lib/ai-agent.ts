@@ -128,7 +128,7 @@ export async function invokeResearchBriefAgent(
   };
 
   const response = await makeRequest<RunResponse<ResearchBriefAgentState>>(
-    `/assistants/${GRAPH_IDS.RESEARCH_BRIEF}/runs/wait`,
+    `/runs/wait`,
     {
       method: 'POST',
       body: JSON.stringify(request),
@@ -179,7 +179,7 @@ export async function streamResearchBriefAgent(
     },
   };
 
-  const url = `${LANGGRAPH_API_URL}/assistants/${GRAPH_IDS.RESEARCH_BRIEF}/runs/stream`;
+  const url = `${LANGGRAPH_API_URL}/runs/stream`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -279,7 +279,7 @@ export async function invokeResearchAgent(
   };
 
   const response = await makeRequest<RunResponse<ResearchAgentState>>(
-    `/assistants/${GRAPH_IDS.RESEARCH}/runs/wait`,
+    `/runs/wait`,
     {
       method: 'POST',
       body: JSON.stringify(request),
@@ -330,7 +330,7 @@ export async function streamResearchAgent(
     },
   };
 
-  const url = `${LANGGRAPH_API_URL}/assistants/${GRAPH_IDS.RESEARCH}/runs/stream`;
+  const url = `${LANGGRAPH_API_URL}/runs/stream`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {

@@ -103,19 +103,19 @@ https://disastrous-doretta-next-voters-1be027c9.koyeb.app/docs
 
 ## 📝 API Endpoint Structure
 
-The LangGraph API requires assistant IDs to be included in the endpoint path:
+The LangGraph API uses stateless run endpoints. The `assistant_id` is specified in the request body, not the URL path:
 
 ```
-POST /assistants/{assistant_id}/runs/wait     # For synchronous invocations
-POST /assistants/{assistant_id}/runs/stream   # For streaming invocations
+POST /runs/wait     # For synchronous invocations
+POST /runs/stream   # For streaming invocations
 ```
 
 Example:
 ```typescript
 // Correct endpoint structure
-const url = `${LANGGRAPH_API_URL}/assistants/research_brief_agent/runs/wait`;
+const url = `${LANGGRAPH_API_URL}/runs/wait`;
 
-// The assistant_id is included in both the path AND the request body
+// The assistant_id is included in the request body
 const request = {
   assistant_id: 'research_brief_agent',
   input: { messages: [...] }
