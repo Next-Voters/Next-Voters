@@ -32,6 +32,14 @@ const GRAPH_IDS = {
   RESEARCH: 'research_agent',
 } as const;
 
+const assistantIdCache = new Map<string, string>();
+
+interface AssistantSearchResult {
+  assistant_id: string;
+  graph_id: string;
+  name?: string;
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -110,6 +118,41 @@ function extractRunOutput<T>(response: RunResponse<T>): T {
   return output;
 }
 
+/**
+ * Resolves a graph id/name to an assistant UUID.
+ * Falls back to the provided graph id if lookup fails so existing deployments keep working.
+ */
+async function resolveAssistantId(graphId: string, signal?: AbortSignal): Promise<string> {
+  const cached = assistantIdCache.get(graphId);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const assistants = await makeRequest<AssistantSearchResult[]>(
+      '/assistants/search',
+      {
+        method: 'POST',
+        body: JSON.stringify({}),
+        signal,
+      }
+    );
+
+    const match = assistants.find((assistant) =>
+      assistant.graph_id === graphId || assistant.name === graphId
+    );
+
+    if (match?.assistant_id) {
+      assistantIdCache.set(graphId, match.assistant_id);
+      return match.assistant_id;
+    }
+  } catch (error) {
+    console.warn(`Failed to resolve assistant ID for ${graphId}:`, error);
+  }
+
+  return graphId;
+}
+
 // ============================================================================
 // Research Brief Agent Functions
 // ============================================================================
@@ -133,8 +176,10 @@ export async function invokeResearchBriefAgent(
   input: ResearchBriefAgentInput,
   options?: InvokeOptions
 ): Promise<ResearchBriefAgentState> {
+  const assistantId = await resolveAssistantId(GRAPH_IDS.RESEARCH_BRIEF, options?.signal);
+
   const request: RunRequest<ResearchBriefAgentInput> = {
-    assistant_id: GRAPH_IDS.RESEARCH_BRIEF,
+    assistant_id: assistantId,
     input,
     stream_mode: ['values'],
     config: {
@@ -181,8 +226,10 @@ export async function streamResearchBriefAgent(
   input: ResearchBriefAgentInput,
   options?: StreamOptions
 ): Promise<void> {
+  const assistantId = await resolveAssistantId(GRAPH_IDS.RESEARCH_BRIEF, options?.signal);
+
   const request: RunRequest<ResearchBriefAgentInput> = {
-    assistant_id: GRAPH_IDS.RESEARCH_BRIEF,
+    assistant_id: assistantId,
     input,
     stream_mode: ['values', 'updates'],
     config: {
@@ -280,8 +327,10 @@ export async function invokeResearchAgent(
   input: ResearchAgentInput,
   options?: InvokeOptions
 ): Promise<ResearchAgentState> {
+  const assistantId = await resolveAssistantId(GRAPH_IDS.RESEARCH, options?.signal);
+
   const request: RunRequest<ResearchAgentInput> = {
-    assistant_id: GRAPH_IDS.RESEARCH,
+    assistant_id: assistantId,
     input,
     stream_mode: ['values'],
     config: {
@@ -328,8 +377,10 @@ export async function streamResearchAgent(
   input: ResearchAgentInput,
   options?: StreamOptions
 ): Promise<void> {
+  const assistantId = await resolveAssistantId(GRAPH_IDS.RESEARCH, options?.signal);
+
   const request: RunRequest<ResearchAgentInput> = {
-    assistant_id: GRAPH_IDS.RESEARCH,
+    assistant_id: assistantId,
     input,
     stream_mode: ['values', 'updates'],
     config: {
