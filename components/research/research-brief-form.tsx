@@ -27,6 +27,9 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
   const [state, setState] = useState<ResearchBriefAgentState | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
 
+  const needsClarification = state?.needs_clarification === true;
+  const hasResearchBrief = typeof state?.research_brief === 'string' && state.research_brief.trim().length > 0;
+
   const handleSubmitTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
@@ -43,8 +46,10 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
       setConversationStarted(true);
       
       // Check if we're done immediately (no clarification needed)
-      if (!result.data.needs_clarification && result.data.research_brief) {
-        onBriefComplete(result.data.research_brief, result.data.messages);
+      const done = result.data.needs_clarification === false;
+      const brief = typeof result.data.research_brief === 'string' ? result.data.research_brief.trim() : '';
+      if (done && brief) {
+        onBriefComplete(brief, result.data.messages);
       }
     } else {
       setError(result.error || 'Failed to submit topic');
@@ -67,8 +72,10 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
       setState(result.data);
       
       // Check if we're done with clarifications
-      if (!result.data.needs_clarification && result.data.research_brief) {
-        onBriefComplete(result.data.research_brief, result.data.messages);
+      const done = result.data.needs_clarification === false;
+      const brief = typeof result.data.research_brief === 'string' ? result.data.research_brief.trim() : '';
+      if (done && brief) {
+        onBriefComplete(brief, result.data.messages);
       }
     } else {
       setError(result.error || 'Failed to answer question');
@@ -151,7 +158,7 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
         )}
 
         {/* Clarification Question */}
-        {state && state.needs_clarification && state.question && (
+        {state && needsClarification && state.question && (
           <Alert className="border-primary/50 bg-primary/5">
             <AlertDescription className="space-y-4">
               <div className="font-medium text-primary">Clarification Needed:</div>
@@ -161,7 +168,7 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
         )}
 
         {/* Answer Input */}
-        {conversationStarted && state?.needs_clarification && (
+        {conversationStarted && needsClarification && (
           <form onSubmit={handleAnswerQuestion} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="answer" className="text-sm font-medium">
@@ -201,7 +208,7 @@ export function ResearchBriefForm({ onBriefComplete }: ResearchBriefFormProps) {
         )}
 
         {/* Brief Complete Message */}
-        {state && !state.needs_clarification && state.research_brief && (
+        {state && !needsClarification && hasResearchBrief && (
           <Alert className="border-green-500/50 bg-green-500/5">
             <AlertDescription>
               <div className="font-medium text-green-700 dark:text-green-400 mb-2">

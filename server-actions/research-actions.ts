@@ -29,6 +29,24 @@ interface ClarifyWithUserResponse {
   research_brief?: string;
 }
 
+function coerceBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') {
+      return true;
+    }
+    if (normalized === 'false') {
+      return false;
+    }
+  }
+
+  return undefined;
+}
+
 function getMessageTextContent(message: Message | undefined): string {
   if (!message) {
     return '';
@@ -95,10 +113,8 @@ function normalizeResearchBriefState(state: ResearchBriefAgentState): ResearchBr
     return state;
   }
 
-  const normalizedNeedsClarification =
-    typeof parsedPayload.need_clarification === 'boolean'
-      ? parsedPayload.need_clarification
-      : state.needs_clarification;
+  const parsedNeedsClarification = coerceBoolean(parsedPayload.need_clarification);
+  const stateNeedsClarification = coerceBoolean(state.needs_clarification);
 
   const normalizedQuestion =
     typeof parsedPayload.question === 'string' && parsedPayload.question.trim()
@@ -112,25 +128,19 @@ function normalizeResearchBriefState(state: ResearchBriefAgentState): ResearchBr
       ? parsedPayload.verification.trim()
       : state.research_brief;
 
-  const uiMessage =
-    normalizedNeedsClarification
-      ? normalizedQuestion
-      : normalizedResearchBrief;
-
-  const nextMessages = [...state.messages];
-  if (uiMessage && typeof lastAiMessage.content === 'string') {
-    nextMessages[actualIndex] = {
-      ...lastAiMessage,
-      content: uiMessage,
-    };
-  }
+  const normalizedNeedsClarification =
+    parsedNeedsClarification ??
+    stateNeedsClarification ??
+    (normalizedResearchBrief ? false : Boolean(normalizedQuestion));
 
   return {
     ...state,
-    messages: nextMessages,
+    messages: state.messages,
     needs_clarification: normalizedNeedsClarification,
     question: normalizedQuestion,
-    research_brief: normalizedNeedsClarification ? state.research_brief : normalizedResearchBrief,
+    research_brief: normalizedNeedsClarification
+      ? state.research_brief
+      : normalizedResearchBrief,
   };
 }
 
