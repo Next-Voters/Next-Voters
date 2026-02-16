@@ -184,6 +184,18 @@ function shouldRetryWithGraphId(error: unknown): boolean {
   return /failed to get assistant .* from database/i.test(error.message);
 }
 
+function shouldRetryTransientThreadError(error: unknown): boolean {
+  if (!(error instanceof LangGraphError)) {
+    return false;
+  }
+
+  return /failed to get thread .* from database|failed to insert thread/i.test(error.message);
+}
+
+async function delay(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ============================================================================
 // Research Brief Agent Functions
 // ============================================================================
@@ -209,8 +221,9 @@ export async function invokeResearchBriefAgent(
 ): Promise<ResearchBriefAgentState> {
   const graphId = GRAPH_IDS.RESEARCH_BRIEF;
   let assistantId = await resolveAssistantId(graphId, options?.signal);
+  const maxAttempts = 3;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const request: RunRequest<ResearchBriefAgentInput> = {
       assistant_id: assistantId,
       input,
@@ -242,6 +255,12 @@ export async function invokeResearchBriefAgent(
         assistantId = graphId;
         continue;
       }
+
+      if (attempt < maxAttempts - 1 && shouldRetryTransientThreadError(error)) {
+        await delay(200 * (attempt + 1));
+        continue;
+      }
+
       throw error;
     }
   }
@@ -374,8 +393,9 @@ export async function invokeResearchAgent(
 ): Promise<ResearchAgentState> {
   const graphId = GRAPH_IDS.RESEARCH;
   let assistantId = await resolveAssistantId(graphId, options?.signal);
+  const maxAttempts = 3;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const request: RunRequest<ResearchAgentInput> = {
       assistant_id: assistantId,
       input,
@@ -407,6 +427,12 @@ export async function invokeResearchAgent(
         assistantId = graphId;
         continue;
       }
+
+      if (attempt < maxAttempts - 1 && shouldRetryTransientThreadError(error)) {
+        await delay(200 * (attempt + 1));
+        continue;
+      }
+
       throw error;
     }
   }
