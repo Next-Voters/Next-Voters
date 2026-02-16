@@ -44,14 +44,14 @@ export async function GET(req: NextRequest) {
 
   if (fileExtension === "md") {
     const ctaHtml = `
-<div style="margin-top: 3rem; padding: 2rem; border-top: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; gap: 1rem; font-family: sans-serif;">
+<div style="margin-bottom: 3rem; padding: 2rem; border-bottom: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; gap: 1rem; font-family: sans-serif;">
   <p style="margin: 0; color: #4b5563; font-size: 1.1rem;">Ready to discuss these results?</p>
   <a href="/chat" style="background-color: #2563eb; color: white; padding: 0.75rem 2rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
     Go to Chat
   </a>
 </div>
     `;
-    html += ctaHtml;
+    html = ctaHtml + html;
   }
 
   return new Response(html, {
@@ -62,3 +62,4 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+```
