@@ -1,5 +1,5 @@
 import { type Metadata } from 'next'
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google'
 import './globals.css'
 import Root from '@/components/common/root'
 import { AuthProvider } from '@/wrappers/AuthProvider'
@@ -10,10 +10,19 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: 'swap',
 })
 
+const dancingScript = Dancing_Script({
+  subsets: ['latin'],
+  variable: '--font-dancing-script',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Next Voters |Civic Education & Policy Analysis',
+  title: {
+    default: 'Next Voters | Civic Education & Policy Analysis',
+    template: '%s | Next Voters',
+  },
   description:
-    'Next Voters is a civic education platform helping students and young voters understand legislation, public policy, and North American politics through clear summaries and nonpartisan analysis.',
+    'Next Voters helps students and young voters understand legislation, public policy, and North American politics through clear summaries and nonpartisan analysis. Get free civic education and policy alerts.',
 
   keywords: [
     'civic education',
@@ -26,27 +35,41 @@ export const metadata: Metadata = {
     'nonpartisan political analysis',
     'student civic engagement',
     'policy analysis',
+    'Gen Z voting',
+    'civic alerts',
   ],
 
+  authors: [{ name: 'Next Voters' }],
+  creator: 'Next Voters',
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 
   openGraph: {
-    title: 'Next Voters | Civic Education',
+    title: 'Next Voters | Civic Education & Policy Analysis',
     description:
-      'Understand legislation and public policy with summaries built for students and everyday voters.',
+      'Understand legislation and public policy with clear summaries built for students and everyday voters. Subscribe to free civic alerts.',
     type: 'website',
     locale: 'en_US',
     siteName: 'Next Voters',
+    url: 'https://nextvoters.com',
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Next Voters | Civic Education',
+    title: 'Next Voters | Civic Education & Policy Analysis',
     description:
-      'Explanations of legislation and public policy for the next generation of voters.',
+      'Clear explanations of legislation and public policy for the next generation of voters. Free civic alerts.',
+  },
+
+  metadataBase: new URL('https://nextvoters.com'),
+  alternates: {
+    canonical: '/',
   },
 }
 
@@ -58,7 +81,7 @@ export default function RootLayout({
 }) {
   return (
     <AuthProvider>
-    <html lang="en" className={plusJakartaSans.variable}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${dancingScript.variable}`}>
       <body className={`antialiased`}>
         <Root>{children}</Root>
       </body>

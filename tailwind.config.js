@@ -16,6 +16,10 @@ module.exports = {
   			'plus-jakarta-sans': [
   				'var(--font-plus-jakarta-sans)',
   				'sans-serif'
+  			],
+  			'signature': [
+  				'var(--font-dancing-script)',
+  				'cursive'
   			]
   		},
   		backgroundImage: {
