@@ -11,8 +11,12 @@ const headerItems: HeaderItem[] = [{
     href: "/team"
 }, 
 {
-    name: "Next Voters Line",
+    name: "Alerts",
     href: "/civic-line"
+},
+{
+    name: "Mission",
+    href: "/#mission"
 }
 ]
 

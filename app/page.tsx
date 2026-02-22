@@ -173,6 +173,68 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Mission Section - Letter Style */}
+        <section id="mission" className="py-16 md:py-20 bg-gray-50 scroll-mt-20">
+          <div className="max-w-2xl mx-auto px-6">
+            <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+              <div className="px-8 md:px-12 pt-10 pb-8 md:pt-12 md:pb-10">
+                <h2 className="text-[28px] md:text-[32px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans">
+                  Our Mission
+                </h2>
+                <div className="space-y-4 text-left">
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    Young voters deserve to understand policy and legislation without wading through jargon or partisan spin. We built Next Voters to give the next generation the tools to cut through the noise: clear, AI-powered answers to civic questions, grounded in facts.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    Our goal is simple: help students and first-time voters feel confident, informed, and ready to participate in democracy. Technology should empower civic engagement, not overwhelm it.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    The problem we saw was stark. Gen Z spends nearly three hours a day on social media, much of it scrolling past election-related content. That content is often unverified, algorithmically amplified, and designed to maximize engagement rather than understanding. Despite being digital natives, young voters encounter a barrage of conflicting sources that deters them from seeking quality information. The gap between confidence and skill is widening dangerously.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    We believe every citizen should be able to ask a question about policy and get a straight answer. Not a partisan take. Not a wall of legalese. Just clarity. That&apos;s why we built an AI that explains legislation in plain language, surfaces multiple perspectives, and cites its sources. You can ask about anything: local zoning, federal bills, ballot measures, and get answers you can trust.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    Civic education shouldn&apos;t be a luxury. It shouldn&apos;t require a law degree or a political science PhD. It should be as accessible as opening an app and typing a question. That&apos;s the world we&apos;re building toward: one where informed voting is the norm, not the exception.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    Our fellowship program extends this mission. We support young leaders who want to make a real impact, with grants, mentorship, and a community of peers who care about strengthening democracy. The next generation of voters isn&apos;t apathetic; they&apos;re overwhelmed. Give them the right tools, and they&apos;ll show up.
+                  </p>
+                  <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                    We&apos;re excited to have you here. Whether you&apos;re a student, a first-time voter, or someone who just wants to understand what&apos;s going on, you belong. Let&apos;s make informed voting the norm.
+                  </p>
+                </div>
+                <div className="mt-10 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <img
+                    src="/profile-pics/krishiv-thakuria.png"
+                    alt="Krishiv Thakuria"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="font-signature text-2xl md:text-3xl text-gray-900">
+                      Krishiv Thakuria
+                    </p>
+                    <p className="text-[14px] text-gray-600 font-plus-jakarta-sans mt-0.5">
+                      President, Next Voters
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <a
+                    href="/next-voters-line"
+                    className="inline-block px-10 py-4 text-[18px] font-bold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-plus-jakarta-sans shadow-sm"
+                  >
+                    <strong>Subscribe to Alerts</strong>
+                  </a>
+                  <span className="text-[16px] text-gray-600 font-plus-jakarta-sans font-normal">
+                    Dash, it&apos;s free.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* 87% Statistics Section */}
         <section className="py-20 md:py-24 bg-white">
           <div className="max-w-[1200px] mx-auto px-6">
@@ -196,10 +258,10 @@ const Home = () => {
                 </h2>
                 <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
                   TikTok, Instagram, and other social platforms have become Gen
-                  Z's chief civic classroom, but that's where misinformation
+                  Z&apos;s chief civic classroom, but that&apos;s where misinformation
                   thrives. Young voters spend nearly three hours daily scrolling
-                  past election-related content—much of it unverified and
-                  influenced content—propagated by engagement algorithms. Despite
+                  past election-related content, much of it unverified and
+                  influenced, propagated by engagement algorithms. Despite
                   being digital natives, Gen Z encounters a barrage of
                   conflicting sources that deters them from seeking quality
                   information. The gap between confidence and skill is widening
