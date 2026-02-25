@@ -8,7 +8,7 @@ interface TeamMemberCardProps {
 
 const TeamMemberCard = ({ member }: TeamMemberCardProps) => {
   return (
-    <div className="flex flex-col bg-gray-50 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 h-full">
+    <div className="flex flex-col bg-page rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 h-full">
       <div className="w-full h-80 relative">
         <Image
           src={member.image}

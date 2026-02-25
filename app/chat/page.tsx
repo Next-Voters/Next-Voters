@@ -206,7 +206,7 @@ const Chat = () => {
   }, [initialMessage, sendMessage]);
 
   return (
-    <ClientMountWrapper className="h-screen bg-slate-50 flex flex-col">
+    <ClientMountWrapper className="h-screen bg-page flex flex-col">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-10 mb-28">
         <div className="max-w-4xl mx-auto">
@@ -231,12 +231,12 @@ const Chat = () => {
       </div>
 
       {/* Input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-page border-t border-slate-200 px-4 py-4">
         <div className="max-w-4xl mx-auto lg:mb-0 mb-4">
           <div className="flex items-end space-x-3">
             <div className="flex-1 relative">
               <textarea
-                className="w-full bg-slate-50 py-3 px-4 pr-14 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm placeholder-slate-500 text-slate-900 resize-none max-h-32"
+                className="w-full bg-white py-3 px-4 pr-14 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm placeholder-slate-500 text-slate-900 resize-none max-h-32"
                 value={message}
                 placeholder="Type an issue like economics or healthcare to understand different political perspectives..."
                 onChange={(event) => setMessage(event.target.value)}

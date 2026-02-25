@@ -4,7 +4,7 @@ import React from 'react';
 
 const FellowshipPage = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-page">
       {/* Main Content */}
       <main className="w-full">
         {/* Hero Section */}

@@ -6,7 +6,7 @@ import AuthButtons from "./components/auth-buttons";
 
 const DesktopHeader: React.FC = () => {
   return (
-    <div className="w-full bg-white">
+    <div className="w-full bg-page">
       <div className="max-w-[1200px] mx-auto px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <span className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">

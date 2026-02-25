@@ -24,7 +24,7 @@ export default function ClientMountWrapper({
     return (
       <div className={className}>
         {fallback || (
-          <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="min-h-screen flex items-center justify-center bg-page">
             <Spinner size="lg" className="bg-black" />
           </div>
         )}

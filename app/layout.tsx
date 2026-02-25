@@ -1,8 +1,15 @@
-import { type Metadata } from 'next'
+import { type Metadata, type Viewport } from 'next'
 import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google'
 import './globals.css'
 import Root from '@/components/common/root'
 import { AuthProvider } from '@/wrappers/AuthProvider'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+}
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],

@@ -13,7 +13,7 @@ const MobileHeader: React.FC = () => {
   };
 
   return (
-    <header className="w-full bg-white">
+    <header className="w-full bg-page">
       <div className="px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <span className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">
@@ -38,7 +38,7 @@ const MobileHeader: React.FC = () => {
 
       {isOpen && (
         <nav 
-          className="bg-white w-full text-sm font-medium font-plus-jakarta-sans text-gray-900 px-4 py-2"
+          className="bg-page w-full text-sm font-medium font-plus-jakarta-sans text-gray-900 px-4 py-2"
           style={{ backdropFilter: "blur(3px)" }}
         >
           <ul className="flex flex-col gap-4 py-4">

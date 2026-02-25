@@ -187,7 +187,7 @@ function NextVotersLineReferralInner() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-white pb-20">
+    <div className="w-full min-h-[calc(100vh-64px)] bg-page pb-20">
       <div className="w-full max-w-[980px] px-6 pt-20 pb-28">
         <h1 className="text-[44px] sm:text-[52px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans leading-[1.05] tracking-tight">
           You&apos;re good to go!
@@ -290,7 +290,7 @@ function NextVotersLineReferralInner() {
       ) : null}
 
       {/* Bottom progress bar (as in Figma) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white">
+      <div className="fixed bottom-0 left-0 right-0 bg-page">
         <div className="w-full px-0">
           <div className="h-[5px] w-full bg-gray-200">
             <div
