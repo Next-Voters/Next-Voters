@@ -14,11 +14,11 @@ const Header: FC = () => {
     // Minimal header for landing pages where nav would distract
     if (pathname?.startsWith("/next-voters-line")) {
       return (
-        <header className="w-full bg-page">
-          <div className="px-6 py-4 flex items-center">
-            <span className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">
+        <header className="w-full bg-page pt-[env(safe-area-inset-top)]">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center">
+            <a href="/" className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">
               NV
-            </span>
+            </a>
           </div>
         </header>
       );
