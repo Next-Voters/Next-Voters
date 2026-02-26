@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.52",
+    "@kinde-oss/kinde-auth-nextjs": "^2.11.0",
     "@anthropic-ai/sdk": "^0.40.0",
     "@hookform/resolvers": "^5.1.0",
     "@huggingface/transformers": "^3.8.0",
