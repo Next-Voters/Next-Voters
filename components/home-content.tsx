@@ -175,9 +175,6 @@ export default function HomeContent() {
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
             <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden">
               <div className="px-5 sm:px-8 md:px-12 pt-8 sm:pt-10 pb-6 sm:pb-8 md:pt-12 md:pb-10">
-                <h2 className="text-[24px] sm:text-[28px] md:text-[32px] font-bold text-gray-900 mb-4 sm:mb-6 font-plus-jakarta-sans">
-                  Our Mission
-                </h2>
                 <div className="space-y-4 text-left">
                   <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
                     Young voters deserve to understand policy and legislation without wading through jargon or partisan spin. We built Next Voters to give the next generation the tools to cut through the noise: clear, AI-powered answers to civic questions, grounded in facts.
