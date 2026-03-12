@@ -1,4 +1,4 @@
-export type BlogCategory = "technology" | "civic-education" | "policy";
+export type BlogCategory = "technology" | "civic-education" | "policy" | "next-voters-updates";
 
 export type BlogPost = {
   slug: string;

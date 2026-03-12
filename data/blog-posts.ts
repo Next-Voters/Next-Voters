@@ -4,6 +4,7 @@ export const BLOG_CATEGORIES = [
   { id: "technology" as const, label: "Technology" },
   { id: "civic-education" as const, label: "Civic Education" },
   { id: "policy" as const, label: "Policy" },
+  { id: "next-voters-updates" as const, label: "Next Voters Updates" },
 ] as const;
 
 export const blogPosts: BlogPost[] = [
@@ -60,6 +61,24 @@ Both the judgement and score are then used to determine how to better system des
     dateModified: "2025-02-24",
     author: { name: "Hemit Patel" },
     keywords: ["LLM", "evals", "G-Evals", "chain of thought", "evaluation", "AI"],
+  },
+  {
+    slug: "political-affairs-updates-straight-to-your-inbox",
+    category: "next-voters-updates",
+    title: "Political Affairs Updates Straight to Your Inbox",
+    description:
+      "Next Voters is bringing political affairs updates straight to your inbox. We collect legislation and official statements, categorize and summarize them, and deliver them as a newsletter. Launched in NYC, Toronto, and San Diego.",
+    excerpt:
+      "We built our political party comparison tool to provide young voters an equally fast method of getting political affairs answers as social media. The difference is that we ground our answers in facts.",
+    content: `We built our political party comparison tool to provide young voters an equally fast method of getting political affairs answers as social media. The difference is that we ground our answers in facts. Our answers cite and are based solely on official statements by the major political parties, something that social media sites are incentivized against, as sensationalist, viral content results in higher post engagement and profit.
+
+However, political affairs have a year-round impact on Americans, not just during election cycles. And unfortunately, the ability to follow all relevant news and legislation, prepare for upcoming changes, and represent beliefs to legislators has become a luxury afforded by few. For most students and working people, this level of engagement and representation is not possible. Thus, our Next Voters team is working to change this by bringing political affairs updates straight to your inboxes.
+
+Every day, we collect discussed or implemented legislation, and the statements of elected officials based on the topics that interest you. We then categorize it, summarize it, and deliver it straight to you as a newsletter so you can get a quick understanding of political affairs, or a more concrete understanding by opening the links to the exact sources. We've launched in NYC, Toronto, and San Diego, with more cities to come soon!`,
+    datePublished: "2025-02-25",
+    dateModified: "2025-02-25",
+    author: { name: "Next Voters Team" },
+    keywords: ["newsletter", "political affairs", "legislation", "Next Voters Line", "NYC", "Toronto", "San Diego"],
   },
 ];
 

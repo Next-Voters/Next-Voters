@@ -138,6 +138,38 @@ export default function HomeContent() {
           </div>
         </section>
 
+        {/* Vision, Mission, Commitment */}
+        <section className="py-12 sm:py-16 md:py-20 bg-white">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6">
+            <div className="space-y-12 sm:space-y-16 text-left">
+              <div>
+                <h2 className="text-[22px] sm:text-[26px] md:text-[30px] font-bold font-plus-jakarta-sans mb-3" style={{ color: "#B91C1C" }}>
+                  Vision
+                </h2>
+                <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                  A democracy where participation and information isn&apos;t restricted by citizen&apos;s socioeconomic status, race, gender, or any other factor.
+                </p>
+              </div>
+              <div>
+                <h2 className="text-[22px] sm:text-[26px] md:text-[30px] font-bold font-plus-jakarta-sans mb-3" style={{ color: "#B91C1C" }}>
+                  Mission
+                </h2>
+                <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                  We create technology that makes trustworthy, unbiased civic education accessible to all so that every voice can be informed and represented.
+                </p>
+              </div>
+              <div>
+                <h2 className="text-[22px] sm:text-[26px] md:text-[30px] font-bold font-plus-jakarta-sans mb-3" style={{ color: "#B91C1C" }}>
+                  Commitment
+                </h2>
+                <p className="text-[16px] md:text-[17px] text-gray-700 leading-relaxed font-plus-jakarta-sans">
+                  Next Voters is committed to developing tools that bring clarity to official political party platforms, legislation, and public affairs, and provide factually-grounded answers in seconds.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Mission Section - Letter Style */}
         <section id="mission" className="py-12 sm:py-16 md:py-20 bg-page scroll-mt-20">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
