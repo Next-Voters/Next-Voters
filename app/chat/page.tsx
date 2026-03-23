@@ -206,9 +206,9 @@ const Chat = () => {
   }, [initialMessage, sendMessage]);
 
   return (
-    <ClientMountWrapper className="h-screen bg-slate-50 flex flex-col">
+    <ClientMountWrapper className="h-screen bg-page flex flex-col">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-10 mb-28">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-6 sm:py-10 mb-32 sm:mb-28">
         <div className="max-w-4xl mx-auto">
           {chatHistory.length > 0 ? (
             <>
@@ -230,15 +230,17 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-4">
-        <div className="max-w-4xl mx-auto lg:mb-0 mb-4">
-          <div className="flex items-end space-x-3">
-            <div className="flex-1 relative">
+      {/* Input - safe area for notched devices */}
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-page border-t border-slate-200 px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-end gap-2 sm:gap-3">
+            <div className="flex-1 min-w-0 relative">
               <textarea
-                className="w-full bg-slate-50 py-3 px-4 pr-14 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm placeholder-slate-500 text-slate-900 resize-none max-h-32"
+                className="w-full bg-white py-3 px-4 pr-12 sm:pr-14 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm placeholder-slate-500 text-slate-900 resize-none max-h-32 min-h-[48px]"
                 value={message}
-                placeholder="Type an issue like economics or healthcare to understand different political perspectives..."
+                placeholder="Type an issue like economics or healthcare..."
                 onChange={(event) => setMessage(event.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
@@ -247,15 +249,15 @@ const Chat = () => {
                 onClick={() => message.trim() && sendMessage(message)}
                 disabled={!message.trim()}
                 size="sm"
-                className="absolute right-2 bottom-2 w-8 h-8 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-all duration-200 border-0 p-0"
+                aria-label="Send message"
+                className="absolute right-2 bottom-2 min-w-[44px] min-h-[44px] w-11 h-11 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-all duration-200 border-0 p-0 touch-manipulation"
               >
-                <SendHorizonal size={14} className="ml-0.5" />
+                <SendHorizonal size={14} className="ml-0.5 shrink-0" />
               </Button>
 
-              <PreferenceSelector />  
+              <PreferenceSelector />
             </div>
           </div>
-          
           <p className="text-xs text-slate-400 mt-2 text-center">
             AI can be incorrect. Double check with citations.
           </p>

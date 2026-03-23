@@ -37,9 +37,9 @@ export default function NextVotersLineLandingPage() {
   const progressPercent = 33;
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-white pb-20">
-      <div className="w-full max-w-[980px] px-6 pt-20 pb-28">
-        <h1 className="text-[44px] sm:text-[52px] font-bold text-gray-900 mb-10 font-plus-jakarta-sans leading-[1.05] tracking-tight">
+    <div className="w-full min-h-[calc(100vh-64px)] bg-page pb-24 sm:pb-20">
+      <div className="w-full max-w-[980px] px-4 sm:px-6 pt-12 sm:pt-20 pb-28">
+        <h1 className="text-[32px] xs:text-[40px] sm:text-[44px] md:text-[52px] font-bold text-gray-900 mb-6 sm:mb-10 font-plus-jakarta-sans leading-[1.05] tracking-tight">
           <span className="block">Get weekly executive updates</span>
           <span className="block md:whitespace-nowrap">on NYC politics you care about</span>
         </h1>
@@ -73,7 +73,7 @@ export default function NextVotersLineLandingPage() {
               <Mail className="h-6 w-6 text-gray-900" aria-hidden="true" />
             </div>
             <input
-              className="flex-1 px-4 py-4 text-[20px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none font-plus-jakarta-sans"
+              className="flex-1 min-w-0 px-3 sm:px-4 py-3.5 sm:py-4 text-[16px] sm:text-[20px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none font-plus-jakarta-sans min-h-[48px]"
               type="email"
               inputMode="email"
               placeholder="example@email.com"
@@ -87,7 +87,7 @@ export default function NextVotersLineLandingPage() {
 
           <button
             type="button"
-            className="mt-5 w-full inline-flex items-center justify-center px-6 py-4 text-[22px] font-bold text-white bg-[#E12D39] rounded-lg hover:bg-[#c92631] transition-colors font-plus-jakarta-sans"
+            className="mt-4 sm:mt-5 w-full inline-flex items-center justify-center min-h-[48px] px-6 py-3.5 sm:py-4 text-[18px] sm:text-[22px] font-bold text-white bg-[#E12D39] rounded-lg hover:bg-[#c92631] transition-colors font-plus-jakarta-sans touch-manipulation"
             onClick={onContinue}
           >
             Never fall behind again
@@ -95,7 +95,7 @@ export default function NextVotersLineLandingPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white">
+      <div className="fixed bottom-0 left-0 right-0 bg-page pb-[env(safe-area-inset-bottom)]">
         <div className="w-full px-0">
           <div className="h-[5px] w-full bg-gray-200">
             <div

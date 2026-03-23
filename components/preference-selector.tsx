@@ -29,7 +29,7 @@ const PreferenceSelector = () => {
           value={selectedPreference || ""} 
           onValueChange={handlePreferenceChange}
         >
-          <SelectTrigger className="w-auto md:w-[150px] bg-white border border-gray-300 text-gray-900 text-xs md:text-sm p-2 h-9 md:h-10 font-plus-jakarta-sans">
+          <SelectTrigger className="w-full min-w-0 sm:w-auto md:w-[150px] bg-white border border-gray-300 text-gray-900 text-xs md:text-sm p-2 min-h-[44px] h-auto md:h-10 font-plus-jakarta-sans touch-manipulation">
             <SelectValue placeholder="Country" />
           </SelectTrigger>
           <SelectContent className="bg-white text-gray-900 border border-gray-300 z-[50]">

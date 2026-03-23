@@ -1,7 +1,14 @@
-import { type Metadata } from 'next'
+import { type Metadata, type Viewport } from 'next'
 import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google'
 import './globals.css'
 import Root from '@/components/common/root'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+}
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -57,6 +64,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     siteName: 'Next Voters',
     url: 'https://nextvoters.com',
+    images: ['/logo/nextvoters.png'],
   },
 
   twitter: {
@@ -64,6 +72,7 @@ export const metadata: Metadata = {
     title: 'Next Voters | Civic Education & Policy Analysis',
     description:
       'Clear explanations of legislation and public policy for the next generation of voters. Free civic alerts.',
+    images: ['/logo/nextvoters.png'],
   },
 
   metadataBase: new URL('https://nextvoters.com'),

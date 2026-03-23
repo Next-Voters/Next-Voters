@@ -8,6 +8,9 @@ module.exports = {
   ],
   theme: {
   	extend: {
+  		screens: {
+  			xs: '475px',
+  		},
   		fontFamily: {
   			sans: [
   				'var(--font-plus-jakarta-sans)',
@@ -32,6 +35,7 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			page: '#FAF8F5',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

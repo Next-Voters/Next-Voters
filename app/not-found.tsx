@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function NotFound() {
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-white">
+    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-page">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
-          <CardTitle className="text-4xl">404</CardTitle>
-          <CardDescription className="text-2xl font-semibold">
+          <CardTitle className="text-3xl sm:text-4xl">404</CardTitle>
+          <CardDescription className="text-xl sm:text-2xl font-semibold">
             Page not found
           </CardDescription>
         </CardHeader>

@@ -13,7 +13,7 @@ export const GET = async () => {
       requestCount,
       responseCount,
     });
-  } catch (error: any) {
+  } catch (error) {
     return returnErrorResponse(error);
   }
 }
