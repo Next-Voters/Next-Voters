@@ -6,10 +6,10 @@ import type { IState, ICity } from "country-state-city";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
 
 const selectClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-4 py-3.5 text-[16px] font-semibold text-gray-900 shadow-sm font-plus-jakarta-sans " +
-  "focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/15 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
+  "w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-[14.5px] font-semibold text-gray-900 " +
+  "focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 transition-all";
 
-const labelClass = "mb-2 block text-[14px] font-semibold text-gray-900 font-plus-jakarta-sans";
+const labelClass = "mb-1.5 block text-[13px] font-semibold text-gray-700";
 
 function sortByName<T extends { name: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
@@ -183,14 +183,16 @@ export default function RequestRegionPage() {
 
   if (done) {
     return (
-      <div className="flex min-h-[calc(100dvh-56px)] flex-col items-center justify-center bg-white px-6 pb-16 pt-12">
-        <p className="text-center text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">
+      <div className="flex min-h-[calc(100dvh-56px)] flex-col items-center justify-center bg-page px-6 pb-16 pt-12">
+        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-5">
+          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p className="text-center text-[18px] font-bold text-gray-950">
           Thanks — we&apos;ll notify you when it&apos;s ready.
         </p>
-        <a
-          href="/"
-          className="mt-8 text-[15px] font-semibold text-[#E12D39] font-plus-jakarta-sans hover:underline"
-        >
+        <a href="/" className="mt-7 text-[14.5px] font-semibold text-brand hover:underline">
           Back to Next Voters
         </a>
       </div>
@@ -198,16 +200,16 @@ export default function RequestRegionPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-56px)] flex-col bg-white">
-      <div className="flex flex-1 flex-col items-center px-6 pt-12 sm:pt-16">
-        <h1 className="text-center text-[22px] font-bold text-black sm:text-2xl font-plus-jakarta-sans">
+    <div className="flex min-h-[calc(100dvh-56px)] flex-col bg-page">
+      <div className="flex flex-1 flex-col items-center px-5 pt-12 sm:pt-16">
+        <h1 className="text-center text-[24px] sm:text-[28px] font-bold text-gray-950 tracking-tight">
           Select your region.
         </h1>
-        <p className="mt-3 text-center text-[22px] font-bold text-black sm:text-2xl font-plus-jakarta-sans">
+        <p className="mt-2 text-center text-[15px] text-gray-500">
           We&apos;ll notify you when it&apos;s ready.
         </p>
 
-        <div className="mt-12 w-full max-w-md flex-1 space-y-6">
+        <div className="mt-10 w-full max-w-md flex-1 space-y-5">
           <div>
             <label htmlFor="request-country" className={labelClass}>
               Country
@@ -280,19 +282,19 @@ export default function RequestRegionPage() {
           </div>
 
           {error ? (
-            <p className="text-center text-[14px] font-medium text-red-600 font-plus-jakarta-sans" role="alert">
+            <p className="text-[13px] font-medium text-brand bg-brand/5 border border-brand/20 rounded-lg px-3 py-2" role="alert">
               {error}
             </p>
           ) : null}
         </div>
       </div>
 
-      <div className="flex shrink-0 justify-center px-6 pb-10 pt-6">
+      <div className="flex shrink-0 justify-center px-5 pb-10 pt-6">
         <button
           type="button"
           disabled={submitting}
           onClick={onDone}
-          className="min-h-[52px] min-w-[200px] rounded-xl bg-[#E12D39] px-10 text-[16px] font-bold text-white shadow-sm font-plus-jakarta-sans transition-colors hover:bg-[#c92631] disabled:opacity-50"
+          className="min-h-[50px] min-w-[180px] rounded-xl bg-brand px-10 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-brand-hover disabled:opacity-50"
         >
           {submitting ? "Sending…" : "Done"}
         </button>

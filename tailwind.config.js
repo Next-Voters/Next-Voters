@@ -25,6 +25,9 @@ module.exports = {
   				'cursive'
   			]
   		},
+  		transitionDuration: {
+  			'250': '250ms',
+  		},
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
   			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))'
@@ -36,6 +39,12 @@ module.exports = {
   		},
   		colors: {
   			page: '#FAF8F5',
+  			surface: '#FAF8F5',
+  			brand: {
+  				DEFAULT: 'hsl(var(--brand))',
+  				hover: 'hsl(var(--brand-hover))',
+  				foreground: 'hsl(var(--brand-foreground))',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

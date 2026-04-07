@@ -22,14 +22,10 @@ function RegionSelectionInner() {
     try {
       const parsed = JSON.parse(raw) as unknown;
       return Array.isArray(parsed) ? parsed.map(String) : [];
-    } catch {
-      return [] as string[];
-    }
+    } catch { return [] as string[]; }
   }, [searchParams]);
 
   const [submittingId, setSubmittingId] = useState<string | null>(null);
-
-  const progressPercent = 75;
 
   const referralUrl = useMemo(() => {
     const referrer = encodeURIComponent(contact);
@@ -37,14 +33,7 @@ function RegionSelectionInner() {
   }, [contact]);
 
   const onSelectRegion = async (regionId: string) => {
-    if (!contact) {
-      router.push('/alerts');
-      return;
-    }
-    if (topics.length === 0) {
-      router.push('/alerts');
-      return;
-    }
+    if (!contact || topics.length === 0) { router.push('/alerts'); return; }
 
     const region = REGIONS.find((r) => r.id === regionId);
     const cityLabel = region?.label ?? regionId;
@@ -56,17 +45,15 @@ function RegionSelectionInner() {
         result = await handleSubscribe(contact, topics, cityLabel);
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Unknown error';
-        alert(`Could not save your signup right now: ${message}`);
+        alert(`Could not save your signup: ${message}`);
         router.push(referralUrl);
         return;
       }
-
       if (result?.error) {
         alert(result.error);
         router.push(referralUrl);
         return;
       }
-
       router.push(referralUrl);
     } finally {
       setSubmittingId(null);
@@ -74,61 +61,58 @@ function RegionSelectionInner() {
   };
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col bg-white">
-      {/* Fill space below header; progress is in-flow (no fixed + no pb gap) */}
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+    <div className="flex min-h-0 w-full flex-1 flex-col bg-gray-950">
+      {/* Header hint */}
+      <div className="px-5 pt-8 pb-6 text-center">
+        <h1 className="text-[22px] sm:text-[26px] font-bold text-white tracking-tight mb-1.5">
+          Select your region
+        </h1>
+        <p className="text-[14px] text-gray-400">We'll send you weekly updates about local politics in your city.</p>
+      </div>
+
+      {/* Region grid */}
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row gap-px bg-gray-800">
         {REGIONS.map((region) => {
           const isBusy = submittingId !== null;
           const isThis = submittingId === region.id;
-          const isDisabled = isBusy;
           return (
             <button
               key={region.id}
               type="button"
-              disabled={isDisabled}
+              disabled={isBusy}
               aria-label={isThis ? `Saving ${region.label}` : `Select ${region.label}`}
               onClick={() => onSelectRegion(region.id)}
               className={[
-                'group relative flex min-h-[200px] flex-1 basis-0 flex-col overflow-hidden border-0 border-b border-white/10 bg-transparent p-0 text-left last:border-b-0 md:min-h-0 md:border-b-0 md:border-r md:border-white/10 last:md:border-r-0',
-                'cursor-pointer transition-all duration-300 ease-out',
-                'ring-0 ring-inset ring-black/0 hover:ring-[3px] hover:ring-black/25 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-black/40',
-                'hover:shadow-[inset_0_0_80px_rgba(255,255,255,0.12)]',
-                'disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:ring-0 disabled:hover:shadow-none',
-                isThis ? 'ring-[3px] ring-black/35 shadow-[inset_0_0_80px_rgba(255,255,255,0.08)]' : '',
+                'group relative flex min-h-[180px] flex-1 basis-0 flex-col overflow-hidden bg-gray-900 text-left',
+                'cursor-pointer transition-all duration-300',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950',
+                'disabled:cursor-not-allowed disabled:opacity-40',
               ].join(' ')}
             >
-              <div className="absolute inset-0 overflow-hidden bg-stone-300">
+              {/* Background image */}
+              <div className="absolute inset-0 overflow-hidden">
                 <Image
                   src={region.imageSrc}
                   alt=""
                   fill
-                  className="object-cover blur-sm scale-110 opacity-[0.26] transition-transform duration-500 ease-out group-hover:scale-[1.08] group-disabled:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-110"
+                  className="object-cover blur-[2px] scale-110 opacity-25 transition-all duration-500 group-hover:opacity-35 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 33vw"
                   priority={region.id === 'toronto'}
                 />
               </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black/60" />
 
-              <div className="pointer-events-none absolute inset-0 bg-black/10 transition-opacity duration-300 group-hover:bg-black/5" aria-hidden />
-              <div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/8 via-black/12 to-black/22 transition-opacity duration-300 group-hover:opacity-90"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute inset-0 z-[5] bg-white/0 transition-colors duration-300 ease-out group-hover:bg-white/10 group-focus-visible:bg-white/10"
-                aria-hidden
-              />
-
-              <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-6 px-4 py-10 sm:px-6">
-                <span className="max-w-[16rem] text-center font-plus-jakarta-sans text-2xl font-bold leading-tight text-black transition-transform duration-300 ease-out group-hover:translate-y-[-1px] sm:text-3xl md:text-[30px]">
+              {/* Content */}
+              <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-4 py-10">
+                <span className="text-center text-[22px] sm:text-[26px] font-bold text-white leading-tight tracking-tight">
                   {region.label}
                 </span>
                 <span
                   className={[
-                    'inline-flex min-h-[48px] w-full max-w-[220px] items-center justify-center rounded-lg font-plus-jakarta-sans text-[16px] font-bold transition-all duration-300 ease-out',
+                    'inline-flex min-h-[44px] w-full max-w-[200px] items-center justify-center rounded-xl font-bold text-[14.5px] transition-all duration-200',
                     isThis
-                      ? 'border border-white/15 bg-gray-800 text-white shadow-inner'
-                      : 'bg-black text-white shadow-md group-hover:bg-gray-900 group-hover:shadow-lg',
-                    'group-disabled:opacity-90',
+                      ? 'bg-white/20 text-white border border-white/30'
+                      : 'bg-white text-gray-950 group-hover:bg-gray-100 shadow-md',
                   ].join(' ')}
                 >
                   {isThis ? 'Saving…' : 'Select'}
@@ -139,16 +123,12 @@ function RegionSelectionInner() {
         })}
       </div>
 
-      <div className="shrink-0 bg-white pb-[env(safe-area-inset-bottom)]">
-        <div className="h-2 w-full bg-gray-200">
-          <div
-            className="h-full rounded-r-full bg-[#E12D39] transition-[width] duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
+      {/* Progress */}
+      <div className="shrink-0 bg-gray-950 pb-[env(safe-area-inset-bottom)]">
+        <div className="h-1 w-full bg-gray-800">
+          <div className="h-full bg-brand transition-all duration-300" style={{ width: '75%' }} />
         </div>
-        <p className="py-2.5 text-center font-plus-jakarta-sans text-[12px] text-gray-600">
-          {progressPercent}% Complete
-        </p>
+        <p className="py-2 text-center text-[11px] text-gray-500">Step 3 of 4</p>
       </div>
     </div>
   );
@@ -156,7 +136,7 @@ function RegionSelectionInner() {
 
 export default function RegionSelectionPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center text-slate-500 font-plus-jakarta-sans">Loading…</div>}>
+    <Suspense fallback={<div className="p-6 text-center text-gray-400">Loading…</div>}>
       <RegionSelectionInner />
     </Suspense>
   );

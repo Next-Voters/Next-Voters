@@ -97,74 +97,64 @@ export default async function BlogPostPage({ params }: Props) {
     <>
       <ArticleJsonLd post={post} slug={slug} />
       <article className="min-h-screen bg-page">
-        {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-red-500 to-red-600" />
-
-        <div className="max-w-[680px] mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+        <div className="max-w-[680px] mx-auto px-5 sm:px-6 py-12 sm:py-16">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-[14px] text-gray-500 hover:text-gray-900 font-plus-jakarta-sans mb-10 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-gray-500 hover:text-gray-900 mb-10 transition-colors"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Blog
+            All articles
           </Link>
 
-          <header className="mb-12 sm:mb-14">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex px-2.5 py-1 rounded-md text-[12px] font-medium bg-gray-100 text-gray-600 font-plus-jakarta-sans">
+          <header className="mb-10">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="inline-flex px-2.5 py-1 rounded-md text-[11.5px] font-semibold bg-gray-100 text-gray-600">
                 {BLOG_CATEGORIES.find((c) => c.id === post.category)?.label ?? post.category}
               </span>
-              <time
-                className="text-[13px] font-medium tracking-wide uppercase text-gray-400 font-plus-jakarta-sans"
-                dateTime={post.datePublished}
-              >
-              {new Date(post.datePublished).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              <time className="text-[12.5px] font-medium text-gray-400" dateTime={post.datePublished}>
+                {new Date(post.datePublished).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </time>
             </div>
-            <h1 className="text-[28px] sm:text-[34px] md:text-[40px] font-bold text-gray-900 leading-[1.2] font-plus-jakarta-sans mb-5 tracking-tight">
+
+            <h1 className="text-[28px] sm:text-[34px] font-bold text-gray-950 leading-[1.2] mb-6 tracking-tight">
               {post.title}
             </h1>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-sm font-plus-jakarta-sans">
+
+            <div className="flex items-center gap-3 pt-5 border-t border-gray-100">
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-[13px] shrink-0">
                 {post.author.name.charAt(0)}
               </div>
               <div>
-                <p className="text-[15px] font-medium text-gray-900 font-plus-jakarta-sans">
-                  {post.author.name}
-                </p>
-                <p className="text-[13px] text-gray-500 font-plus-jakarta-sans">
-                  Next Voters Engineering
-                </p>
+                <p className="text-[14px] font-semibold text-gray-900">{post.author.name}</p>
+                <p className="text-[12.5px] text-gray-500">Next Voters</p>
               </div>
             </div>
           </header>
 
-          <div className="article-content font-plus-jakarta-sans text-[16px] sm:text-[17px] leading-[1.85] text-gray-700">
+          <div className="article-content text-[16px] sm:text-[16.5px] leading-[1.85] text-gray-700">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
               {post.content}
             </ReactMarkdown>
           </div>
 
-          <footer className="mt-14 sm:mt-16 pt-10 border-t border-gray-200">
-            <p className="text-[15px] text-gray-600 font-plus-jakarta-sans mb-6">
-              Ready to explore policy and legislation?
-            </p>
+          <footer className="mt-14 pt-8 border-t border-gray-200">
+            <p className="text-[15px] text-gray-600 mb-5">Ready to explore policy and legislation?</p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/chat"
-                className="inline-flex items-center justify-center min-h-[48px] px-6 py-3 text-[15px] font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-plus-jakarta-sans shadow-sm"
+                className="inline-flex items-center justify-center min-h-[46px] px-6 py-3 text-[14.5px] font-semibold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors shadow-sm"
               >
                 Start asking questions
               </Link>
               <Link
                 href="/blog"
-                className="inline-flex items-center justify-center min-h-[48px] px-6 py-3 text-[15px] font-semibold text-gray-900 border-2 border-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-plus-jakarta-sans"
+                className="inline-flex items-center justify-center min-h-[46px] px-6 py-3 text-[14.5px] font-semibold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-colors"
               >
                 More articles
               </Link>

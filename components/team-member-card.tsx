@@ -8,29 +8,35 @@ interface TeamMemberCardProps {
 
 const TeamMemberCard = ({ member }: TeamMemberCardProps) => {
   return (
-    <div className="flex flex-col bg-page rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 h-full overflow-hidden">
-      <div className="w-full h-56 sm:h-80 relative">
+    <div className="flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 h-full">
+      <div className="w-full aspect-[4/3] relative bg-gray-100">
         <Image
           src={member.image}
-          alt={`${member.name} Avatar`}
+          alt={`${member.name}`}
           fill
-          className="rounded-t-lg object-cover"
+          className="object-cover"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
       </div>
-      <div className="p-4 sm:p-5 flex-1 flex flex-col min-w-0">
-        <h3 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white font-plus-jakarta-sans">
-          <a href="#" className="hover:underline">{member.name}</a>
+      <div className="p-5 flex-1 flex flex-col">
+        <h3 className="text-[16px] font-bold text-gray-950 tracking-tight leading-tight">
+          {member.name}
         </h3>
-        <span className="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-plus-jakarta-sans">{member.role}</span>
-        <p className="mt-2 sm:mt-3 mb-3 sm:mb-4 font-light text-sm sm:text-base text-gray-500 dark:text-gray-400 font-plus-jakarta-sans line-clamp-4">
+        <span className="text-[13px] text-brand font-semibold mt-0.5">{member.role}</span>
+        <p className="mt-3 text-[13.5px] text-gray-500 leading-relaxed flex-1 line-clamp-4">
           {member.description}
         </p>
-        <ul className="flex space-x-4 mt-auto pt-3 sm:pt-4">
-          <a href={member.linkedin} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded text-gray-500 hover:text-gray-900 dark:hover:text-white touch-manipulation" aria-label={`${member.name} on LinkedIn`}>
-            <Linkedin className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" />
+        <div className="pt-4 mt-auto border-t border-gray-100">
+          <a
+            href={member.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors touch-manipulation"
+            aria-label={`${member.name} on LinkedIn`}
+          >
+            <Linkedin className="w-4 h-4" fill="currentColor" aria-hidden="true" />
           </a>
-        </ul>
+        </div>
       </div>
     </div>
   );

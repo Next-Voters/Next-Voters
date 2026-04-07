@@ -6,6 +6,7 @@ import topicOptions from '@/data/topic-options';
 import { PreferredCommunication } from '@/types/preferences';
 import { useSubscription } from '@/hooks/use-subscription';
 import { UpgradePrompt } from '@/components/alerts/upgrade-prompt';
+import { Check } from 'lucide-react';
 
 function NextVotersLineInterestsInner() {
   const router = useRouter();
@@ -23,8 +24,6 @@ function NextVotersLineInterestsInner() {
   const [selected, setSelected] = useState<string[]>([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const progressPercent = 50;
-
   const toggleTopic = (topic: string) => {
     setSelected((prev) => {
       const exists = prev.includes(topic);
@@ -38,43 +37,28 @@ function NextVotersLineInterestsInner() {
   };
 
   const onFinish = () => {
-    if (!contact) {
-      router.push('/alerts');
-      return;
-    }
-    if (selected.length === 0) {
-      alert('Please select at least one interest.');
-      return;
-    }
+    if (!contact) { router.push('/alerts'); return; }
+    if (selected.length === 0) { alert('Please select at least one interest.'); return; }
 
-    const q = new URLSearchParams({
-      contact,
-      type: preferredCommunication,
-      topics: JSON.stringify(selected),
-    });
+    const q = new URLSearchParams({ contact, type: preferredCommunication, topics: JSON.stringify(selected) });
     router.push(`/alerts/region?${q.toString()}`);
   };
 
   const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/alerts/interests';
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-page pb-20">
-      <div className="w-full max-w-[980px] px-6 pt-20 pb-28">
-        <h1 className="text-[44px] sm:text-[52px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans leading-[1.05] tracking-tight">
+    <div className="w-full min-h-[calc(100vh-56px)] bg-page flex flex-col pb-20">
+      <div className="flex-1 w-full max-w-[560px] mx-auto px-5 sm:px-6 pt-12 pb-8">
+        <h1 className="text-[30px] sm:text-[38px] font-bold text-gray-950 mb-3 leading-tight tracking-tight">
           You&apos;re almost done.
-          <br />
-          {subLoading
-            ? 'Just select your interests.'
-            : `Just select up to ${MAX_TOPICS} interest${MAX_TOPICS === 1 ? '' : 's'}.`}
         </h1>
-
-        <p className="text-[16px] sm:text-[18px] text-gray-900 font-plus-jakarta-sans font-semibold leading-tight mb-10">
-          We&apos;ll only send you updates
-          <br />
-          related to your interests.
+        <p className="text-[15px] sm:text-[16px] text-gray-500 mb-8 leading-relaxed">
+          {subLoading
+            ? 'Select your interests below.'
+            : `Select up to ${MAX_TOPICS} topic${MAX_TOPICS === 1 ? '' : 's'}. We'll only send you updates related to your choice.`}
         </p>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-2.5 mb-6">
           {topicOptions.map((topic) => {
             const isActive = selected.includes(topic);
             const isDisabled = !isActive && selected.length >= MAX_TOPICS;
@@ -86,13 +70,14 @@ function NextVotersLineInterestsInner() {
                 onClick={() => toggleTopic(topic)}
                 aria-pressed={isActive}
                 className={[
-                  'px-8 py-3 rounded-lg border-2 font-plus-jakarta-sans font-semibold text-[16px] transition-colors',
+                  'inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 font-semibold text-[14.5px] transition-all',
                   isActive
-                    ? 'border-gray-900 bg-gray-900 text-white'
-                    : 'border-gray-900 bg-white text-gray-900 hover:bg-gray-50',
-                  isDisabled && !isPro ? 'opacity-40 cursor-pointer' : '',
+                    ? 'border-brand bg-brand text-white shadow-sm'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50',
+                  isDisabled && !isPro ? 'opacity-40' : '',
                 ].join(' ')}
               >
+                {isActive && <Check className="w-4 h-4 shrink-0" />}
                 {topic}
               </button>
             );
@@ -100,12 +85,9 @@ function NextVotersLineInterestsInner() {
         </div>
 
         {!isPro && !subLoading && (
-          <p className="text-[13px] text-gray-500 font-plus-jakarta-sans mb-6">
+          <p className="text-[13px] text-gray-500 mb-8">
             Want all 3 topics?{' '}
-            <button
-              onClick={() => setShowUpgrade(true)}
-              className="text-[#E12D39] font-semibold hover:underline"
-            >
+            <button onClick={() => setShowUpgrade(true)} className="text-brand font-semibold hover:underline">
               Upgrade to Pro
             </button>
           </p>
@@ -114,25 +96,18 @@ function NextVotersLineInterestsInner() {
         <button
           type="button"
           onClick={onFinish}
-          className="inline-flex items-center justify-center px-10 py-3 text-[18px] font-bold text-white bg-[#E12D39] rounded-lg hover:bg-[#c92631] transition-colors font-plus-jakarta-sans"
+          className="inline-flex items-center justify-center min-h-[48px] px-8 py-3 text-[16px] font-bold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors shadow-sm touch-manipulation"
         >
-          Continue
+          Continue →
         </button>
       </div>
 
-      {/* Bottom progress bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-page">
-        <div className="w-full px-0">
-          <div className="h-[5px] w-full bg-gray-200">
-            <div
-              className="h-full bg-[#E12D39] rounded-r-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="py-2 text-center text-[11px] text-gray-500 font-plus-jakarta-sans">
-            {progressPercent}% Complete
-          </div>
+      {/* Progress */}
+      <div className="fixed bottom-0 left-0 right-0 bg-page/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
+        <div className="h-1 w-full bg-gray-200">
+          <div className="h-full bg-brand rounded-r-full transition-all duration-300" style={{ width: '50%' }} />
         </div>
+        <p className="py-2 text-center text-[11px] text-gray-400">Step 2 of 4</p>
       </div>
 
       <UpgradePrompt
@@ -147,7 +122,7 @@ function NextVotersLineInterestsInner() {
 
 export default function NextVotersLineInterestsPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center text-slate-500">Loading…</div>}>
+    <Suspense fallback={<div className="p-6 text-center text-gray-400">Loading…</div>}>
       <NextVotersLineInterestsInner />
     </Suspense>
   );

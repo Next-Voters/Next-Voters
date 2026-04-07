@@ -218,29 +218,26 @@ const Chat = () => {
                   message={msg}
                   isFromMe={msg.type === "reg"}
                 />
-              
             ))}
             {messageLoading.current && (
               <LoadingMessageBubble />
             )}
             </>
           ) : (
-            <NoChatScreen />
+            <NoChatScreen onSuggestionClick={(q) => { setMessage(q); sendMessage(q); }} />
           )}
         </div>
       </div>
 
       {/* Input - safe area for notched devices */}
-      <div
-        className="fixed bottom-0 left-0 right-0 bg-page border-t border-slate-200 px-4 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-page/95 backdrop-blur-sm border-t border-gray-200 px-4 sm:px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-end gap-2 sm:gap-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1 min-w-0 relative">
               <textarea
-                className="w-full bg-white py-3 px-4 pr-12 sm:pr-14 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm placeholder-slate-500 text-slate-900 resize-none max-h-32 min-h-[48px]"
+                className="w-full bg-white py-3 px-4 pr-14 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60 text-[14px] placeholder-gray-400 text-gray-900 resize-none max-h-32 min-h-[48px] transition-all"
                 value={message}
-                placeholder="Type an issue like economics or healthcare..."
+                placeholder="Ask about any policy or legislation…"
                 onChange={(event) => setMessage(event.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
@@ -250,16 +247,16 @@ const Chat = () => {
                 disabled={!message.trim()}
                 size="sm"
                 aria-label="Send message"
-                className="absolute right-2 bottom-2 min-w-[44px] min-h-[44px] w-11 h-11 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-all duration-200 border-0 p-0 touch-manipulation"
+                className="absolute right-2 bottom-2 min-w-[40px] min-h-[40px] w-10 h-10 bg-brand hover:bg-brand-hover disabled:bg-gray-200 disabled:opacity-60 text-white rounded-xl flex items-center justify-center transition-colors border-0 p-0 touch-manipulation"
               >
-                <SendHorizonal size={14} className="ml-0.5 shrink-0" />
+                <SendHorizonal size={14} className="shrink-0" />
               </Button>
 
               <PreferenceSelector />
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-2 text-center">
-            AI can be incorrect. Double check with citations.
+          <p className="text-[11px] text-gray-400 mt-2 text-center">
+            AI can be incorrect. Always verify with the cited sources.
           </p>
         </div>
       </div>

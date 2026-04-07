@@ -24,17 +24,17 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-page px-4">
-      <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2 font-plus-jakarta-sans">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-page px-5">
+      <div className="bg-white border border-gray-200 rounded-2xl p-7 sm:p-9 shadow-sm w-full max-w-[420px]">
+        <h1 className="text-[22px] font-bold text-gray-950 mb-1.5 tracking-tight">
           Request Admin Access
         </h1>
-        <p className="text-gray-600 text-sm mb-6 font-plus-jakarta-sans">
+        <p className="text-[14px] text-gray-500 mb-7">
           Submit your details to request admin access.
         </p>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1 font-plus-jakarta-sans">
+            <label htmlFor="name" className="block text-[13px] font-semibold text-gray-700 mb-1.5">
               Name
             </label>
             <input
@@ -43,12 +43,12 @@ export default function Page() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent font-plus-jakarta-sans"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-[14.5px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60 transition-all bg-gray-50/50 placeholder:text-gray-400"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 font-plus-jakarta-sans">
+            <label htmlFor="email" className="block text-[13px] font-semibold text-gray-700 mb-1.5">
               Email
             </label>
             <input
@@ -57,21 +57,21 @@ export default function Page() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent font-plus-jakarta-sans"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-[14.5px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60 transition-all bg-gray-50/50 placeholder:text-gray-400"
               placeholder="you@example.com"
             />
           </div>
           {message && (
-            <p className={`text-sm font-plus-jakarta-sans ${message.startsWith("User added") ? "text-green-600" : "text-gray-600"}`}>
+            <p className={`text-[13px] rounded-lg px-3 py-2 ${message.startsWith("User added") ? "text-green-700 bg-green-50 border border-green-200" : "text-gray-600 bg-gray-50 border border-gray-200"}`}>
               {message}
             </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors font-plus-jakarta-sans font-medium disabled:opacity-50"
+            className="w-full bg-brand text-white px-4 py-3 rounded-xl text-[15px] font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50"
           >
-            {loading ? "Submitting..." : "Request"}
+            {loading ? "Submitting…" : "Request Access"}
           </button>
         </form>
       </div>

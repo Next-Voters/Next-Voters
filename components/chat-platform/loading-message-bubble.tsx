@@ -1,17 +1,22 @@
-import React from 'react'
+import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LoadingMessageBubble = () => {
   return (
-    <div className="mb-4">
-      <div className="w-fit max-w-[95%] md:max-w-[75%] bg-gray-200 rounded-2xl shadow-sm p-4">
-        <div className="animate-pulse flex space-x-2">
-          <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
-          <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
-          <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
+    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      {[0, 1].map((i) => (
+        <div key={i} className="flex-1 rounded-2xl border border-gray-200 bg-white p-5">
+          <Skeleton className="h-4 w-1/3 mb-4" />
+          <div className="space-y-2.5">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-4/5" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
         </div>
-      </div>
+      ))}
     </div>
-  )
-}
+  );
+};
 
-export default LoadingMessageBubble
+export default LoadingMessageBubble;

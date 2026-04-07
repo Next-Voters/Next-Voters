@@ -1,69 +1,86 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import headerItems from "@/data/header";
 import AuthButtons from "./components/auth-buttons";
 import { Menu, X } from "lucide-react";
 
 const MobileHeader: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setIsOpen((prevState) => !prevState);
-  };
+  const pathname = usePathname();
 
   return (
-    <header className="w-full bg-page pt-[env(safe-area-inset-top)]">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <a href="/" className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans shrink-0">
+    <>
+      <header className="w-full bg-page border-b border-gray-200/80 sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+        <div className="px-4 h-14 flex justify-between items-center">
+          <a href="/" className="text-[17px] font-bold text-gray-900 tracking-tight">
             NV
           </a>
-          <a
-            href="/fellowship"
-            className="bg-[#E12D39] text-[11px] sm:text-[12px] text-white px-3 sm:px-4 py-2 rounded font-medium font-plus-jakarta-sans min-h-[44px] inline-flex items-center justify-center touch-manipulation shrink-0"
-          >
-            BECOME A FELLOW
-          </a>
+
+          <div className="flex items-center gap-2">
+            <a
+              href="/fellowship"
+              className="text-[12px] font-semibold text-brand border border-brand/30 px-3 py-1.5 rounded-md hover:bg-brand/5 transition-colors"
+            >
+              Fellowship
+            </a>
+            <button
+              type="button"
+              onClick={() => setIsOpen((v) => !v)}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+              className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+            >
+              {isOpen ? <X className="w-5 h-5 text-gray-700" /> : <Menu className="w-5 h-5 text-gray-700" />}
+            </button>
+          </div>
         </div>
+      </header>
 
-        <button
-          type="button"
-          onClick={toggleMenu}
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-          aria-expanded={isOpen}
-          className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation -mr-2"
-        >
-          {isOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
-        </button>
-      </div>
-
+      {/* Slide-down drawer overlay */}
       {isOpen && (
-        <nav
-          className="bg-page w-full text-sm font-medium font-plus-jakarta-sans text-gray-900 border-t border-gray-200"
-          style={{ backdropFilter: "blur(3px)" }}
-        >
-          <ul className="flex flex-col py-2">
-            {headerItems.map((item) => (
-              <li key={item.name}>
-                <a
-                  href={item.href}
-                  className="block py-3.5 px-4 min-h-[48px] flex items-center rounded-none hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </a>
+        <>
+          <div
+            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+            aria-hidden
+          />
+          <nav
+            className="fixed top-14 left-0 right-0 z-40 bg-page border-b border-gray-200 shadow-lg"
+            aria-label="Mobile navigation"
+          >
+            <ul className="flex flex-col py-2">
+              {headerItems.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                return (
+                  <li key={item.name}>
+                    <a
+                      href={item.href}
+                      className={[
+                        "flex items-center justify-between px-5 py-3.5 text-[15px] font-medium transition-colors touch-manipulation min-h-[48px]",
+                        isActive
+                          ? "text-brand"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
+                      ].join(" ")}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.name}
+                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />}
+                    </a>
+                  </li>
+                );
+              })}
+              <li className="border-t border-gray-200 mt-1 pt-1">
+                <div className="px-5 py-3 min-h-[52px] flex items-center">
+                  <AuthButtons variant="mobile" />
+                </div>
               </li>
-            ))}
-            <li className="border-t border-gray-200">
-              <div className="py-3 px-4 min-h-[48px] flex items-center">
-                <AuthButtons variant="mobile" />
-              </div>
-            </li>
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        </>
       )}
-    </header>
+    </>
   );
 };
 

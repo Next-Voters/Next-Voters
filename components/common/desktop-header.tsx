@@ -1,43 +1,63 @@
-"use client"
+"use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import headerItems from "@/data/header";
 import AuthButtons from "./components/auth-buttons";
 
 const DesktopHeader: React.FC = () => {
-  return (
-    <div className="w-full bg-page">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <a href="/" className="text-[18px] font-bold text-gray-900 font-plus-jakarta-sans">
-            NV
-          </a>
-          <a
-            href="/fellowship"
-            className="bg-[#E12D39] text-[12px] text-white px-4 py-2 rounded font-medium font-plus-jakarta-sans min-h-[44px] inline-flex items-center hover:bg-[#c62832] transition-colors"
-          >
-            BECOME A FELLOW
-          </a>
-        </div>
+  const pathname = usePathname();
 
-        <nav className="text-sm font-medium font-plus-jakarta-sans text-gray-900">
-          <ul className="flex items-center gap-1">
-            {headerItems.map((item) => (
-              <li key={item.name}>
-                <a
-                  href={item.href}
-                  className="block py-2 px-3 min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-gray-100"
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
+  return (
+    <header className="w-full bg-page border-b border-gray-200/80 sticky top-0 z-40 backdrop-blur-sm">
+      <div className="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between gap-6">
+        {/* Logo */}
+        <a
+          href="/"
+          className="text-[17px] font-bold text-gray-900 tracking-tight shrink-0 hover:opacity-80 transition-opacity"
+        >
+          NV
+        </a>
+
+        {/* Center nav */}
+        <nav aria-label="Main navigation" className="flex-1 flex justify-center">
+          <ul className="flex items-center gap-0.5">
+            {headerItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+              return (
+                <li key={item.name}>
+                  <a
+                    href={item.href}
+                    className={[
+                      "relative px-3 py-1.5 text-[13.5px] font-medium rounded-md transition-colors min-h-[36px] flex items-center",
+                      isActive
+                        ? "text-gray-900"
+                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/70",
+                    ].join(" ")}
+                  >
+                    {item.name}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-brand rounded-full" />
+                    )}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        <AuthButtons variant="desktop" />
+        {/* Right: CTA + auth */}
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href="/fellowship"
+            className="text-[13px] font-semibold text-brand border border-brand/30 px-3.5 py-1.5 rounded-md hover:bg-brand/5 transition-colors min-h-[36px] flex items-center"
+          >
+            Fellowship
+          </a>
+          <AuthButtons variant="desktop" />
+        </div>
       </div>
-    </div>
+    </header>
   );
 };
 
