@@ -2,16 +2,11 @@
   "name": "next-voters",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "debug": "NODE_OPTIONS='--inspect' next dev",
-    "debug:win": "cross-env NODE_OPTIONS='--inspect' next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "build:cli": "tsc ./cli/index.ts --outDir dist/cli",
-    "cli": "pnpm run build:cli && npx ts-node ./cli/index.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.52",
