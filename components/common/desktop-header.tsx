@@ -46,14 +46,8 @@ const DesktopHeader: React.FC = () => {
           </ul>
         </nav>
 
-        {/* Right: CTA + auth */}
+        {/* Right: auth */}
         <div className="flex items-center gap-3 shrink-0">
-          <a
-            href="/fellowship"
-            className="text-[13px] font-semibold text-brand border border-brand/30 px-3.5 py-1.5 rounded-md hover:bg-brand/5 transition-colors min-h-[36px] flex items-center"
-          >
-            Fellowship
-          </a>
           <AuthButtons variant="desktop" />
         </div>
       </div>

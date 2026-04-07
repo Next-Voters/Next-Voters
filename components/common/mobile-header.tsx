@@ -19,12 +19,6 @@ const MobileHeader: React.FC = () => {
           </a>
 
           <div className="flex items-center gap-2">
-            <a
-              href="/fellowship"
-              className="text-[12px] font-semibold text-brand border border-brand/30 px-3 py-1.5 rounded-md hover:bg-brand/5 transition-colors"
-            >
-              Fellowship
-            </a>
             <button
               type="button"
               onClick={() => setIsOpen((v) => !v)}

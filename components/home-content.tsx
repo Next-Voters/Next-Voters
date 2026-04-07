@@ -75,12 +75,6 @@ function HeroSection() {
           >
             Start asking questions
           </a>
-          <a
-            href="/fellowship"
-            className="inline-flex items-center justify-center min-h-[48px] px-7 py-3 text-[15px] font-semibold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-colors touch-manipulation"
-          >
-            Apply to fellowship →
-          </a>
         </div>
       </div>
     </section>
@@ -144,17 +138,6 @@ function TestimonialSection() {
             />
           </div>
 
-          <div className="mt-6">
-            <a
-              href="/fellowship"
-              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand hover:text-brand-hover transition-colors"
-            >
-              Join our fellowship
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
         </div>
       </div>
     </section>
@@ -416,47 +399,6 @@ function StatsSection() {
   );
 }
 
-function FellowshipSection() {
-  return (
-    <section className="py-16 sm:py-24 bg-white border-t border-gray-100">
-      <div className="max-w-[1100px] mx-auto px-5 sm:px-6 text-center">
-        <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-gray-400 mb-4">Fellowship program</p>
-        <h2 className="text-[28px] sm:text-[34px] md:text-[40px] font-bold text-gray-950 leading-tight mb-4">
-          Join the Next Voters Fellowship
-        </h2>
-        <p className="text-[16px] sm:text-[17px] text-gray-500 mb-12 max-w-lg mx-auto leading-relaxed">
-          Make a real change and strengthen democracy.
-        </p>
-
-        <div className="max-w-[420px] mx-auto bg-page border border-gray-200 rounded-2xl p-8 sm:p-10 mb-8 shadow-sm">
-          <p className="text-[15px] text-gray-600 mb-3">Get access to a pool of</p>
-          <div
-            className="text-[52px] sm:text-[68px] font-extrabold leading-none mb-3"
-            style={{
-              background: "linear-gradient(135deg, #B91C1C 0%, #1E40AF 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            $10,000+
-          </div>
-          <p className="text-[15px] text-gray-700 leading-relaxed">
-            in no-strings-attached, impact-based grants for top-performing fellows
-          </p>
-        </div>
-
-        <a
-          href="/fellowship"
-          className="inline-flex items-center justify-center min-h-[48px] px-8 py-3 text-[15px] font-semibold text-white bg-gray-950 rounded-xl hover:bg-gray-800 transition-colors shadow-sm touch-manipulation"
-        >
-          Learn more about the fellowship
-        </a>
-      </div>
-    </section>
-  );
-}
-
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export default function HomeContent() {
@@ -469,7 +411,6 @@ export default function HomeContent() {
         <PillarsSection />
         <MissionLetterSection />
         <StatsSection />
-        <FellowshipSection />
       </div>
     </ClientMountWrapper>
   );

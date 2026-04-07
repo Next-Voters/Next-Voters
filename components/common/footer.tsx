@@ -9,7 +9,6 @@ const footerLinks = {
   Company: [
     { name: "Team", href: "/team" },
     { name: "Blog", href: "/blog" },
-    { name: "Fellowship", href: "/fellowship" },
   ],
 };
 
