@@ -24,13 +24,6 @@ function HeroSection() {
       />
 
       <div className="relative max-w-[760px] mx-auto px-5 sm:px-6 text-center">
-        <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 mb-8 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
-          <span className="text-[12.5px] font-semibold text-gray-600 tracking-wide uppercase">
-            Civic education, powered by AI
-          </span>
-        </div>
-
         <h1 className="text-[40px] xs:text-[48px] sm:text-[56px] md:text-[64px] font-bold text-gray-950 leading-[1.04] tracking-tight mb-5">
           Understand policy.
           <br />
@@ -166,7 +159,6 @@ function PillarsSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
           {pillars.map(({ label, text }) => (
             <div key={label} className="flex flex-col gap-3">
-              <div className="w-1 h-6 bg-brand rounded-full" aria-hidden />
               <h2 className="text-[18px] font-bold text-gray-900">{label}</h2>
               <p className="text-[15px] text-gray-600 leading-relaxed">{text}</p>
             </div>
