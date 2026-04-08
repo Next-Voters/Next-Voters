@@ -20,21 +20,24 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: "Session not completed" }
   }
 
-  // Security: ensure this session belongs to the authenticated user
   if (session.metadata?.contact !== user.email) {
     return { success: false, error: "Session mismatch" }
   }
 
-  // Write Stripe IDs to Supabase — same fields the webhook writes, idempotent
+  // Upsert: creates the row if the user upgraded before finishing the signup wizard
   const admin = createSupabaseAdminClient()
-  await admin
+  const { error } = await admin
     .from("subscriptions")
-    .update({
-      stripe_customer_id: session.customer as string,
-      stripe_subscription_id: session.subscription as string,
-      stripe_status: "active",
-    })
-    .eq("contact", user.email)
+    .upsert(
+      {
+        contact: user.email,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
+        stripe_status: "active",
+      },
+      { onConflict: "contact" }
+    )
 
+  if (error) return { success: false, error: error.message }
   return { success: true }
 }

@@ -28,14 +28,18 @@ export async function POST(request: NextRequest) {
       const contact = session.metadata?.contact;
       if (!contact) break;
 
+      // Upsert: creates the row if the user upgraded before finishing the signup wizard
       await supabase
         .from('subscriptions')
-        .update({
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          stripe_status: 'active',
-        })
-        .eq('contact', contact);
+        .upsert(
+          {
+            contact,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            stripe_status: 'active',
+          },
+          { onConflict: 'contact' }
+        );
       break;
     }
 
