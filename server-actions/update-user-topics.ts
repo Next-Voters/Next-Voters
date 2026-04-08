@@ -1,6 +1,7 @@
 "use server"
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getStripe } from "@/lib/stripe"
 
 export async function updateUserTopics(topics: string[]): Promise<{ error?: string }> {
   const supabase = await createSupabaseServerClient()
@@ -10,13 +11,24 @@ export async function updateUserTopics(topics: string[]): Promise<{ error?: stri
 
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("premium")
+    .select("stripe_subscription_id")
     .eq("contact", user.email)
     .maybeSingle()
 
   if (!subscription) return { error: "No subscription found" }
 
-  const maxTopics = subscription.premium ? 3 : 1
+  // Verify Pro status live with Stripe
+  let isPro = false
+  if (subscription.stripe_subscription_id) {
+    try {
+      const stripeSub = await getStripe().subscriptions.retrieve(subscription.stripe_subscription_id)
+      isPro = stripeSub.status === 'active' || stripeSub.status === 'trialing'
+    } catch {
+      isPro = false
+    }
+  }
+
+  const maxTopics = isPro ? 3 : 1
   if (topics.length > maxTopics) {
     return { error: `Free plan is limited to ${maxTopics} topic. Please upgrade to Pro.` }
   }

@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('subscriptions')
         .update({
-          premium: true,
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
           stripe_status: 'active',
@@ -45,11 +44,9 @@ export async function POST(request: NextRequest) {
       const contact = sub.metadata?.contact;
       if (!contact) break;
 
-      const isPremium = ['active', 'trialing'].includes(sub.status);
       await supabase
         .from('subscriptions')
         .update({
-          premium: isPremium,
           stripe_status: sub.status,
           stripe_period_end: new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
         })
@@ -64,7 +61,7 @@ export async function POST(request: NextRequest) {
 
       await supabase
         .from('subscriptions')
-        .update({ premium: false, stripe_status: 'canceled' })
+        .update({ stripe_status: 'canceled' })
         .eq('contact', contact);
       break;
     }
@@ -81,7 +78,6 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('subscriptions')
         .update({
-          premium: true,
           stripe_status: 'active',
           stripe_period_end: new Date((stripeSub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
         })
