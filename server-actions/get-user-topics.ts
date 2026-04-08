@@ -15,10 +15,8 @@ export async function getUserTopics(): Promise<string[]> {
 
   if (!data) return []
 
-  return data
-    .map((row: { supported_topics: { topic_name: string } | null }) =>
-      row.supported_topics?.topic_name ?? ""
-    )
+  return (data as Array<{ supported_topics: { topic_name: string } | null }>)
+    .map((row) => row.supported_topics?.topic_name ?? "")
     .filter(Boolean)
-    .map((name: string) => name.charAt(0).toUpperCase() + name.slice(1))
+    .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
 }
