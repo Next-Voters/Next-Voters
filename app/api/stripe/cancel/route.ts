@@ -20,19 +20,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No active subscription found' }, { status: 404 });
   }
 
-  const updated = await getStripe().subscriptions.update(
-    subscription.stripe_subscription_id,
-    { cancel_at_period_end: true }
-  );
+  try {
+    const updated = await getStripe().subscriptions.update(
+      subscription.stripe_subscription_id,
+      { cancel_at_period_end: true }
+    );
 
-  await supabase
-    .from('subscriptions')
-    .update({ stripe_status: 'canceling' })
-    .eq('contact', user.email);
+    await supabase
+      .from('subscriptions')
+      .update({ stripe_status: 'canceling' })
+      .eq('contact', user.email);
 
-  const periodEnd = new Date(
-    (updated as unknown as { current_period_end: number }).current_period_end * 1000
-  ).toISOString();
+    // cancel_at is set by Stripe when cancel_at_period_end is true
+    const periodEnd = updated.cancel_at
+      ? new Date(updated.cancel_at * 1000).toISOString()
+      : null;
 
-  return NextResponse.json({ success: true, periodEnd });
+    return NextResponse.json({ success: true, periodEnd });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to cancel subscription';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
