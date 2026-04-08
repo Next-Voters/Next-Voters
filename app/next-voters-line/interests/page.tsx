@@ -1,12 +1,13 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import topicOptions from '@/data/topic-options';
 import { PreferredCommunication } from '@/types/preferences';
 import { useSubscription } from '@/hooks/use-subscription';
 import { UpgradePrompt } from '@/components/alerts/upgrade-prompt';
 import { TierBadge } from '@/components/alerts/tier-badge';
+import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
 import { Check } from 'lucide-react';
 
 function NextVotersLineInterestsInner() {
@@ -19,7 +20,22 @@ function NextVotersLineInterestsInner() {
     return type === 'sms' ? 'sms' : 'email';
   }, [searchParams]);
 
-  const { isPro, isAuthenticated, isLoading: subLoading, tier } = useSubscription();
+  const isPostCheckout = searchParams.get('checkout') === 'success';
+  const sessionId = searchParams.get('session_id');
+
+  const { isPro, isAuthenticated, isLoading: subLoading, tier, refetch } = useSubscription();
+  const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    if (!isPostCheckout || !sessionId) return;
+    setVerifying(true);
+    fulfillCheckout(sessionId)
+      .then((result) => { if (result.success) refetch(); })
+      .finally(() => setVerifying(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loading = verifying || subLoading;
   const MAX_TOPICS = isPro ? 3 : 1;
 
   const [selected, setSelected] = useState<string[]>([]);
@@ -40,7 +56,6 @@ function NextVotersLineInterestsInner() {
   const onFinish = () => {
     if (!contact) { router.push('/alerts'); return; }
     if (selected.length === 0) { alert('Please select at least one interest.'); return; }
-
     const q = new URLSearchParams({ contact, type: preferredCommunication, topics: JSON.stringify(selected) });
     router.push(`/alerts/region?${q.toString()}`);
   };
@@ -54,10 +69,15 @@ function NextVotersLineInterestsInner() {
           <h1 className="text-[30px] sm:text-[38px] font-bold text-gray-950 leading-tight tracking-tight">
             You&apos;re almost done.
           </h1>
-          {!subLoading && <TierBadge tier={tier} />}
+          {!loading && <TierBadge tier={tier} />}
         </div>
+
+        {verifying && (
+          <p className="text-[14px] text-brand font-medium mb-2">Verifying your payment…</p>
+        )}
+
         <p className="text-[15px] sm:text-[16px] text-gray-500 mb-8 leading-relaxed">
-          {subLoading
+          {loading
             ? 'Select your interests below.'
             : `Select up to ${MAX_TOPICS} topic${MAX_TOPICS === 1 ? '' : 's'}. We'll only send you updates related to your choice.`}
         </p>
@@ -66,7 +86,6 @@ function NextVotersLineInterestsInner() {
           {topicOptions.map((topic) => {
             const isActive = selected.includes(topic);
             const isDisabled = !isActive && selected.length >= MAX_TOPICS;
-
             return (
               <button
                 key={topic}
@@ -88,7 +107,7 @@ function NextVotersLineInterestsInner() {
           })}
         </div>
 
-        {!isPro && !subLoading && (
+        {!isPro && !loading && (
           <p className="text-[13px] text-gray-500 mb-8">
             Want all 3 topics?{' '}
             <button onClick={() => setShowUpgrade(true)} className="text-brand font-semibold hover:underline">
@@ -106,7 +125,6 @@ function NextVotersLineInterestsInner() {
         </button>
       </div>
 
-      {/* Progress */}
       <div className="fixed bottom-0 left-0 right-0 bg-page/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
         <div className="h-1 w-full bg-gray-200">
           <div className="h-full bg-brand rounded-r-full transition-all duration-300" style={{ width: '50%' }} />

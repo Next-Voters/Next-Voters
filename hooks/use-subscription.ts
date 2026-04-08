@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getSubscriptionStatus } from "@/server-actions/get-subscription-status";
 
 interface SubscriptionState {
@@ -11,7 +11,7 @@ interface SubscriptionState {
   tier: 'pro' | 'basic' | 'none';
 }
 
-export function useSubscription(): SubscriptionState {
+export function useSubscription(): SubscriptionState & { refetch: () => void } {
   const [state, setState] = useState<SubscriptionState>({
     isPro: false,
     isAuthenticated: false,
@@ -20,11 +20,16 @@ export function useSubscription(): SubscriptionState {
     tier: 'none',
   });
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
+    setState((prev) => ({ ...prev, isLoading: true }));
     getSubscriptionStatus().then((result) => {
       setState({ ...result, isLoading: false });
     });
   }, []);
 
-  return state;
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { ...state, refetch };
 }
