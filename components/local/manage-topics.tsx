@@ -34,7 +34,12 @@ export function ManageTopics() {
     if (exists) {
       setSelected(selected.filter((t) => t !== topic));
     } else if (selected.length >= MAX_TOPICS) {
-      setShowUpgrade(true);
+      if (!isPro) {
+        // Basic: swap to the new topic instead of blocking
+        setSelected([topic]);
+      } else {
+        setShowUpgrade(true);
+      }
     } else {
       setSelected([...selected, topic]);
     }
@@ -89,7 +94,7 @@ export function ManageTopics() {
                   isActive
                     ? "border-brand bg-brand text-white shadow-sm"
                     : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50",
-                  isDisabled && !isPro ? "opacity-40" : "",
+                  isDisabled && isPro ? "opacity-40" : "",
                 ].join(" ")}
               >
                 {isActive && <Check className="w-4 h-4 shrink-0" />}
