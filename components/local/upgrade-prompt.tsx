@@ -68,7 +68,7 @@ export function UpgradePrompt({
             disabled={loading}
             className="w-full px-6 py-3 text-[15px] font-bold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors disabled:opacity-60"
           >
-            {loading ? "Redirecting…" : isAuthenticated ? "Upgrade to Pro — $5/mo" : "Log in to upgrade"}
+            {loading ? "Redirecting…" : isAuthenticated ? "Upgrade to Pro — $2/mo" : "Log in to upgrade"}
           </button>
           <button
             onClick={onClose}

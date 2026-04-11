@@ -130,7 +130,7 @@ export default function PricingPage() {
             <div className="mb-7">
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">Pro</p>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-[44px] font-bold text-white leading-none">$5</span>
+                <span className="text-[44px] font-bold text-white leading-none">$2</span>
                 <span className="text-[15px] text-gray-400">/&nbsp;mo</span>
               </div>
               <p className="text-[13px] text-gray-500">billed monthly &middot; cancel anytime</p>
