@@ -5,16 +5,14 @@ import { Check } from "lucide-react";
 import topicOptions from "@/data/topic-options";
 import { useSubscription } from "@/hooks/use-subscription";
 import { TierBadge } from "@/components/local/tier-badge";
-import { UpgradePrompt } from "@/components/local/upgrade-prompt";
 import { getUserTopics } from "@/server-actions/get-user-topics";
 import { updateUserTopics } from "@/server-actions/update-user-topics";
 
 export function ManageTopics() {
-  const { isPro, isAuthenticated, isLoading: subLoading, tier } = useSubscription();
+  const { isPro, isLoading: subLoading, tier } = useSubscription();
   const MAX_TOPICS = isPro ? 3 : 1;
 
   const [selected, setSelected] = useState<string[]>([]);
-  const [showUpgrade, setShowUpgrade] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
   const [topicsLoading, setTopicsLoading] = useState(true);
@@ -22,7 +20,6 @@ export function ManageTopics() {
   useEffect(() => {
     if (subLoading) return;
     getUserTopics().then((topics) => {
-      // Cap to MAX_TOPICS in case user downgraded from Pro to Basic
       setSelected(topics.slice(0, MAX_TOPICS));
       setTopicsLoading(false);
     });
@@ -35,10 +32,7 @@ export function ManageTopics() {
       setSelected(selected.filter((t) => t !== topic));
     } else if (selected.length >= MAX_TOPICS) {
       if (!isPro) {
-        // Basic: swap to the new topic instead of blocking
         setSelected([topic]);
-      } else {
-        setShowUpgrade(true);
       }
     } else {
       setSelected([...selected, topic]);
@@ -76,13 +70,14 @@ export function ManageTopics() {
           <TierBadge tier={tier} />
         </div>
         <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
-          {`Select up to ${MAX_TOPICS} topic${MAX_TOPICS === 1 ? "" : "s"}. We'll only send you updates related to your choice.`}
+          {isPro
+            ? "Select up to 3 topics. We'll only send you updates related to your choices."
+            : "Select 1 topic. Upgrade to Pro for all 3."}
         </p>
 
         <div className="flex flex-wrap gap-2.5 mb-6">
           {topicOptions.map((topic) => {
             const isActive = selected.includes(topic);
-            const isDisabled = !isActive && selected.length >= MAX_TOPICS;
             return (
               <button
                 key={topic}
@@ -94,7 +89,6 @@ export function ManageTopics() {
                   isActive
                     ? "border-brand bg-brand text-white shadow-sm"
                     : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50",
-                  isDisabled && isPro ? "opacity-40" : "",
                 ].join(" ")}
               >
                 {isActive && <Check className="w-4 h-4 shrink-0" />}
@@ -103,18 +97,6 @@ export function ManageTopics() {
             );
           })}
         </div>
-
-        {!isPro && (
-          <p className="text-[13px] text-gray-500 mb-8">
-            Want all 3 topics?{" "}
-            <button
-              onClick={() => setShowUpgrade(true)}
-              className="text-brand font-semibold hover:underline"
-            >
-              Upgrade to Pro
-            </button>
-          </p>
-        )}
 
         <div className="flex items-center gap-4">
           <button
@@ -132,13 +114,6 @@ export function ManageTopics() {
           )}
         </div>
       </div>
-
-      <UpgradePrompt
-        open={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        isAuthenticated={isAuthenticated}
-        redirectPath="/local"
-      />
     </div>
   );
 }

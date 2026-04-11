@@ -1,6 +1,7 @@
 "use server"
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import topicOptions from "@/data/topic-options"
 
 type TopicRow = { supported_topics: { topic_name: string } | null }
 
@@ -17,8 +18,12 @@ export async function getUserTopics(): Promise<string[]> {
 
   if (!data) return []
 
-  return (data as unknown as TopicRow[])
+  const dbNames = (data as unknown as TopicRow[])
     .map((row) => row.supported_topics?.topic_name ?? "")
     .filter(Boolean)
-    .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
+
+  // Match DB names (lowercase) back to the canonical topicOptions casing
+  return dbNames
+    .map((dbName) => topicOptions.find((opt) => opt.toLowerCase() === dbName.toLowerCase()))
+    .filter((name): name is string => !!name)
 }
