@@ -17,17 +17,21 @@ function HeroSection() {
 
   return (
     <section className="relative pt-20 pb-16 sm:pt-28 sm:pb-24 overflow-hidden">
-      {/* Subtle background gradient */}
+      {/* Gradient background */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-red-50/40 via-transparent to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-red-50/60 via-page to-amber-50/30"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-gradient-radial from-brand/5 to-transparent blur-3xl"
       />
 
       <div className="relative max-w-[760px] mx-auto px-5 sm:px-6 text-center">
         <h1 className="text-[40px] xs:text-[48px] sm:text-[56px] md:text-[64px] font-bold text-gray-950 leading-[1.04] tracking-tight mb-5">
           Understand policy.
           <br />
-          <span className="text-brand">Vote with confidence.</span>
+          <span className="bg-gradient-to-r from-brand to-red-400 bg-clip-text text-transparent">Vote with confidence.</span>
         </h1>
 
         <p className="text-[16px] sm:text-[18px] text-gray-500 leading-relaxed max-w-[540px] mx-auto mb-10">
@@ -35,7 +39,7 @@ function HeroSection() {
         </p>
 
         {/* Search */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-3 shadow-md mb-8 max-w-[580px] mx-auto">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-3 shadow-md mb-8 max-w-[580px] mx-auto">
           <div className="relative flex items-center gap-2">
             <input
               type="text"
@@ -48,7 +52,7 @@ function HeroSection() {
               type="button"
               aria-label="Submit question"
               onClick={go}
-              className="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 bg-brand rounded-xl flex items-center justify-center hover:bg-brand-hover transition-colors touch-manipulation"
+              className="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 bg-gradient-to-br from-brand to-red-500 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity touch-manipulation"
             >
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -64,7 +68,7 @@ function HeroSection() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
           <a
             href="/chat"
-            className="inline-flex items-center justify-center min-h-[48px] px-7 py-3 text-[15px] font-semibold text-white bg-gray-950 rounded-xl hover:bg-gray-800 transition-colors shadow-sm touch-manipulation"
+            className="inline-flex items-center justify-center min-h-[48px] px-7 py-3 text-[15px] font-semibold text-white bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl hover:from-gray-800 hover:to-gray-700 transition-all shadow-sm touch-manipulation"
           >
             Start asking questions
           </a>
@@ -76,7 +80,7 @@ function HeroSection() {
 
 function SupportersSection() {
   return (
-    <section className="py-8 border-y border-gray-100 bg-white">
+    <section className="py-8 border-y border-gray-100 bg-gradient-to-r from-white via-gray-50/50 to-white">
       <div className="max-w-[900px] mx-auto px-5 sm:px-6">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
           <p className="text-[12px] font-semibold uppercase tracking-widest text-gray-400">Supported by</p>
@@ -100,10 +104,13 @@ function SupportersSection() {
 
 function TestimonialSection() {
   return (
-    <section className="py-16 sm:py-20 bg-page">
-      <div className="max-w-[680px] mx-auto px-5 sm:px-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-7 sm:p-10 shadow-sm relative">
-          {/* Quote mark */}
+    <section className="relative py-16 sm:py-20 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-page via-red-50/20 to-page"
+      />
+      <div className="relative max-w-[680px] mx-auto px-5 sm:px-6">
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-7 sm:p-10 shadow-sm relative">
           <span className="absolute top-6 right-7 text-[80px] leading-none text-gray-100 font-serif select-none" aria-hidden>
             &ldquo;
           </span>
@@ -130,7 +137,6 @@ function TestimonialSection() {
               className="h-8 w-auto ml-auto opacity-70"
             />
           </div>
-
         </div>
       </div>
     </section>
@@ -157,9 +163,19 @@ function PillarsSection() {
     <section className="py-16 sm:py-20 bg-white border-t border-gray-100">
       <div className="max-w-[1100px] mx-auto px-5 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-          {pillars.map(({ label, text }) => (
+          {pillars.map(({ label, text }, i) => (
             <div key={label} className="flex flex-col gap-3">
-              <h2 className="text-[18px] font-bold text-gray-900">{label}</h2>
+              <div className="flex items-center gap-3">
+                <div className={[
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold text-white",
+                  i === 0 ? "bg-gradient-to-br from-brand to-red-400" :
+                  i === 1 ? "bg-gradient-to-br from-gray-800 to-gray-600" :
+                  "bg-gradient-to-br from-amber-600 to-amber-500",
+                ].join(" ")}>
+                  {i + 1}
+                </div>
+                <h2 className="text-[18px] font-bold text-gray-900">{label}</h2>
+              </div>
               <p className="text-[15px] text-gray-600 leading-relaxed">{text}</p>
             </div>
           ))}
@@ -171,10 +187,14 @@ function PillarsSection() {
 
 function MissionLetterSection() {
   return (
-    <section className="py-16 sm:py-20 bg-page">
-      <div className="max-w-[660px] mx-auto px-5 sm:px-6">
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="h-1 w-full bg-gradient-to-r from-brand to-red-400" />
+    <section className="relative py-16 sm:py-20 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-page via-amber-50/20 to-red-50/20"
+      />
+      <div className="relative max-w-[660px] mx-auto px-5 sm:px-6">
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="h-1.5 w-full bg-gradient-to-r from-brand via-red-400 to-amber-400" />
           <div className="px-7 sm:px-10 py-10">
             <div className="space-y-4 text-[15.5px] text-gray-700 leading-[1.8]">
               <p>
@@ -216,7 +236,7 @@ function MissionLetterSection() {
             <div className="mt-7">
               <a
                 href="/local"
-                className="inline-flex items-center justify-center min-h-[46px] px-7 py-3 text-[15px] font-semibold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors shadow-sm touch-manipulation"
+                className="inline-flex items-center justify-center min-h-[46px] px-7 py-3 text-[15px] font-semibold text-white bg-gradient-to-r from-brand to-red-500 rounded-xl hover:opacity-90 transition-opacity shadow-sm touch-manipulation"
               >
                 Subscribe to NV Local
               </a>
@@ -260,8 +280,12 @@ const civicsGap = [
 
 function StatsSection() {
   return (
-    <section className="py-20 sm:py-28 bg-page border-t border-gray-100">
-      <div className="max-w-[1100px] mx-auto px-5 sm:px-6">
+    <section className="relative py-20 sm:py-28 border-t border-gray-100 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-page via-amber-50/15 to-page"
+      />
+      <div className="relative max-w-[1100px] mx-auto px-5 sm:px-6">
         {/* Section header */}
         <div className="mb-16 sm:mb-20 max-w-2xl">
           <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-gray-400 mb-4">The problem</p>
@@ -275,19 +299,25 @@ function StatsSection() {
         </div>
 
         {/* Hero stat */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-10 sm:p-14 text-center mb-8 shadow-sm">
-          <div className="text-[64px] sm:text-[84px] md:text-[100px] font-bold leading-none text-gray-950 mb-4">
-            {heroStat.number}
+        <div className="relative bg-white border border-gray-200 rounded-2xl p-10 sm:p-14 text-center mb-8 shadow-sm overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-red-50/40 via-transparent to-amber-50/30"
+          />
+          <div className="relative">
+            <div className="text-[64px] sm:text-[84px] md:text-[100px] font-bold leading-none bg-gradient-to-r from-gray-950 to-gray-700 bg-clip-text text-transparent mb-4">
+              {heroStat.number}
+            </div>
+            <p className="text-[16px] sm:text-[18px] text-gray-700 max-w-xl mx-auto leading-relaxed">{heroStat.text}</p>
+            <p className="text-[12px] text-gray-400 mt-3">{heroStat.source}</p>
           </div>
-          <p className="text-[16px] sm:text-[18px] text-gray-700 max-w-xl mx-auto leading-relaxed">{heroStat.text}</p>
-          <p className="text-[12px] text-gray-400 mt-3">{heroStat.source}</p>
         </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
           {statsGrid.map((item, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6">
-              <div className="text-[30px] sm:text-[34px] font-bold leading-none text-amber-700 mb-2">{item.stat}</div>
+              <div className="text-[30px] sm:text-[34px] font-bold leading-none bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent mb-2">{item.stat}</div>
               <p className="text-[13.5px] text-gray-600 leading-snug">
                 {item.text}{" "}
                 <span className="text-gray-400 text-[12px]">({item.cite})</span>
@@ -318,7 +348,7 @@ function StatsSection() {
           <div className="bg-white border border-gray-200 rounded-2xl p-7 divide-y divide-gray-100">
             {genZStats.map((item, i) => (
               <div key={i} className={i === 0 ? "pb-6" : i === genZStats.length - 1 ? "pt-6" : "py-6"}>
-                <div className="text-[34px] sm:text-[40px] font-bold leading-none text-amber-700">{item.stat}</div>
+                <div className="text-[34px] sm:text-[40px] font-bold leading-none bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent">{item.stat}</div>
                 <p className="text-[13.5px] text-gray-600 mt-1 leading-snug">{item.label}</p>
                 <p className="text-[12px] text-gray-400 mt-0.5">({item.cite})</p>
               </div>
@@ -327,50 +357,59 @@ function StatsSection() {
         </div>
 
         {/* Trust crisis box */}
-        <div className="bg-gray-950 rounded-2xl p-8 sm:p-12 mb-16">
-          <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-gray-500 mb-4">A trust crisis</p>
-          <h3 className="text-[22px] md:text-[26px] font-semibold text-white mb-5">Who do you believe?</h3>
-          <p className="text-[15px] text-gray-400 leading-relaxed mb-8 max-w-2xl">
-            Young adults and some partisan groups now trust social media nearly as much as national news outlets. Only
-            10% place great trust in government information on social media, yet 40% use it daily for government-related
-            news.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {trustStats.map((item, i) => (
-              <div key={i} className="rounded-xl p-6 bg-white/5 border border-white/10">
-                <div className="text-[34px] font-bold text-amber-400">{item.stat}</div>
-                <p className="text-[13.5px] text-gray-400 mt-1 leading-snug">
-                  {item.text}{" "}
-                  <span className="text-gray-600">({item.cite})</span>
-                </p>
-              </div>
-            ))}
+        <div className="relative rounded-2xl p-8 sm:p-12 mb-16 overflow-hidden">
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800" />
+          <div className="relative">
+            <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-gray-500 mb-4">A trust crisis</p>
+            <h3 className="text-[22px] md:text-[26px] font-semibold text-white mb-5">Who do you believe?</h3>
+            <p className="text-[15px] text-gray-400 leading-relaxed mb-8 max-w-2xl">
+              Young adults and some partisan groups now trust social media nearly as much as national news outlets. Only
+              10% place great trust in government information on social media, yet 40% use it daily for government-related
+              news.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {trustStats.map((item, i) => (
+                <div key={i} className="rounded-xl p-6 bg-white/5 border border-white/10 backdrop-blur-sm">
+                  <div className="text-[34px] font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">{item.stat}</div>
+                  <p className="text-[13.5px] text-gray-400 mt-1 leading-snug">
+                    {item.text}{" "}
+                    <span className="text-gray-600">({item.cite})</span>
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Civic knowledge gap */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-7 sm:p-10">
-          <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-amber-700 mb-4">
-            The civic knowledge gap
-          </p>
-          <h3 className="text-[22px] md:text-[26px] font-semibold text-gray-950 mb-4 leading-tight">
-            Four questions. Most couldn't answer them.
-          </h3>
-          <p className="text-[15px] text-gray-600 leading-relaxed mb-8 max-w-2xl">
-            Young adults aged 18–24 show significant gaps in basic civic knowledge. On a standard four-question civics
-            assessment, only 4% answered all correctly; 40% could answer just one. 48% plan to vote vs. ~66% of the
-            general public.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {civicsGap.map((item, i) => (
-              <div key={i} className="rounded-xl p-5 bg-page border border-gray-200">
-                <div className="text-[28px] font-bold leading-none text-amber-700 mb-2">{item.stat}</div>
-                <p className="text-[13.5px] text-gray-600 leading-snug">
-                  {item.label}{" "}
-                  <span className="text-gray-400 text-[12px]">({item.cite})</span>
-                </p>
-              </div>
-            ))}
+        <div className="relative bg-white border border-gray-200 rounded-2xl p-7 sm:p-10 overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-amber-50/30"
+          />
+          <div className="relative">
+            <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-amber-700 mb-4">
+              The civic knowledge gap
+            </p>
+            <h3 className="text-[22px] md:text-[26px] font-semibold text-gray-950 mb-4 leading-tight">
+              Four questions. Most couldn't answer them.
+            </h3>
+            <p className="text-[15px] text-gray-600 leading-relaxed mb-8 max-w-2xl">
+              Young adults aged 18–24 show significant gaps in basic civic knowledge. On a standard four-question civics
+              assessment, only 4% answered all correctly; 40% could answer just one. 48% plan to vote vs. ~66% of the
+              general public.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {civicsGap.map((item, i) => (
+                <div key={i} className="rounded-xl p-5 bg-gradient-to-b from-page to-white border border-gray-200">
+                  <div className="text-[28px] font-bold leading-none bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent mb-2">{item.stat}</div>
+                  <p className="text-[13.5px] text-gray-600 leading-snug">
+                    {item.label}{" "}
+                    <span className="text-gray-400 text-[12px]">({item.cite})</span>
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -381,7 +420,7 @@ function StatsSection() {
           </p>
           <a
             href="/chat"
-            className="inline-flex items-center justify-center min-h-[48px] px-8 py-3 text-[15px] font-semibold text-white bg-gray-950 rounded-full hover:bg-gray-800 transition-colors touch-manipulation"
+            className="inline-flex items-center justify-center min-h-[48px] px-8 py-3 text-[15px] font-semibold text-white bg-gradient-to-r from-gray-900 to-gray-800 rounded-full hover:from-gray-800 hover:to-gray-700 transition-all touch-manipulation"
           >
             Start asking questions
           </a>
