@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ],
+    ...(plan === 'basic' && { payment_method_collection: 'if_required' as const }),
     success_url: `${origin}/local?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/local?checkout=cancel`,
     metadata: { contact: user.email, plan },
