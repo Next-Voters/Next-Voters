@@ -46,12 +46,6 @@ export function SubscriptionCards() {
   return (
     <div className="w-full min-h-[calc(100vh-56px)] bg-page">
       <section className="px-5 pt-16 pb-10 text-center max-w-[640px] mx-auto">
-        <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 mb-7 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
-          <span className="text-[12.5px] font-semibold text-gray-600 tracking-wide">
-            Your local politics, simplified
-          </span>
-        </div>
         <h1 className="text-[36px] sm:text-[48px] font-bold text-gray-950 leading-[1.05] tracking-tight mb-4">
           Welcome to NV Local
         </h1>
