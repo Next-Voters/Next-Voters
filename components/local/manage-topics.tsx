@@ -22,21 +22,22 @@ export function ManageTopics() {
   useEffect(() => {
     if (subLoading) return;
     getUserTopics().then((topics) => {
-      setSelected(topics);
+      // Cap to MAX_TOPICS in case user downgraded from Pro to Basic
+      setSelected(topics.slice(0, MAX_TOPICS));
       setTopicsLoading(false);
     });
-  }, [subLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subLoading, MAX_TOPICS]);
 
   const toggleTopic = (topic: string) => {
-    setSelected((prev) => {
-      const exists = prev.includes(topic);
-      if (exists) return prev.filter((t) => t !== topic);
-      if (prev.length >= MAX_TOPICS) {
-        setShowUpgrade(true);
-        return prev;
-      }
-      return [...prev, topic];
-    });
+    const exists = selected.includes(topic);
+    if (exists) {
+      setSelected(selected.filter((t) => t !== topic));
+    } else if (selected.length >= MAX_TOPICS) {
+      setShowUpgrade(true);
+    } else {
+      setSelected([...selected, topic]);
+    }
     setSavedMsg("");
   };
 
