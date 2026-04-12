@@ -26,10 +26,10 @@ const dancingScript = Dancing_Script({
 export const metadata: Metadata = {
   title: {
     default: 'Next Voters',
+    template: '%s | Next Voters',
   },
   description:
     'Next Voters helps students and young voters understand legislation, public policy, and North American politics through clear summaries and nonpartisan analysis. Get free civic education and policy alerts.',
-
   keywords: [
     'civic education',
     'political literacy',
@@ -44,7 +44,6 @@ export const metadata: Metadata = {
     'Gen Z voting',
     'civic alerts',
   ],
-
   authors: [{ name: 'Hemit Patel' }, { name: 'Krishiv Thakuria' }],
   creator: 'Next Voters',
   robots: {
@@ -55,7 +54,6 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
-
   openGraph: {
     title: 'Next Voters',
     description:
@@ -66,7 +64,6 @@ export const metadata: Metadata = {
     url: 'https://nextvoters.com',
     images: ['/logo/nextvoters.png'],
   },
-
   twitter: {
     card: 'summary_large_image',
     title: 'Next Voters | Civic Education & Policy Analysis',
@@ -74,13 +71,11 @@ export const metadata: Metadata = {
       'Clear explanations of legislation and public policy for the next generation of voters. Free civic alerts.',
     images: ['/logo/nextvoters.png'],
   },
-
   metadataBase: new URL('https://nextvoters.com'),
   alternates: {
     canonical: '/',
   },
 }
-
 
 export default function RootLayout({
   children,
@@ -88,12 +83,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthProvider>
-    <html lang="en" className={`${plusJakartaSans.variable} ${dancingScript.variable}`}>
-      <body className={`antialiased`}>
-        <Root>{children}</Root>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${dancingScript.variable}`}
+    >
+      <body className="antialiased">
+        <AuthProvider>
+          <Root>{children}</Root>
+        </AuthProvider>
       </body>
     </html>
-    </AuthProvider>
   )
 }
