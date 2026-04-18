@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mail, CheckCircle2, Link2, Users } from 'lucide-react';
+import { Mail, CheckCircle2, Link2, Users, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { ManageTopics } from '@/components/local/manage-topics';
@@ -14,6 +14,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import supportedRegions from '@/data/supported-regions';
+import { getPreference, setPreference } from '@/lib/country-preference';
 
 export function SubscriptionDashboard() {
   const { isPro, hasSubscription, tier, refetch } = useSubscription();
@@ -22,6 +25,8 @@ export function SubscriptionDashboard() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [canceledUntil, setCanceledUntil] = useState<string | null>(null);
+
+  const [selectedRegion, setSelectedRegion] = useState(getPreference() || '');
 
   // Referral state
   const [referralEmail, setReferralEmail] = useState('');
@@ -128,9 +133,48 @@ export function SubscriptionDashboard() {
       {/* ManageTopics handles topic selection, tier display, and upgrade prompt */}
       <ManageTopics />
 
+      {/* Region selector */}
+      <div className="w-full max-w-[560px] mx-auto px-5 sm:px-6 pb-0">
+        <div className="border-t border-gray-200 pt-8 mt-2">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Region
+          </p>
+          <div className="flex items-center gap-3">
+            <Globe className="h-4 w-4 text-gray-400 shrink-0" />
+            <Select
+              value={selectedRegion}
+              onValueChange={(value) => {
+                setPreference(value);
+                setSelectedRegion(value);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[240px] bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px]">
+                <SelectValue placeholder="Select your region" />
+              </SelectTrigger>
+              <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
+                {supportedRegions
+                  .filter((r) => r.type === 'country')
+                  .map((r) => (
+                    <SelectItem key={r.code} value={r.name} className="hover:bg-gray-100 focus:bg-gray-100">
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                {supportedRegions
+                  .filter((r) => r.type === 'sub-region')
+                  .map((r) => (
+                    <SelectItem key={r.code} value={r.name} className="hover:bg-gray-100 focus:bg-gray-100">
+                      {r.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
       {/* Subscription actions */}
       <div className="w-full max-w-[560px] mx-auto px-5 sm:px-6 pb-8">
-        <div className="border-t border-gray-200 pt-8 mt-2">
+        <div className="border-t border-gray-200 pt-8 mt-8">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5">
             Subscription
           </p>
