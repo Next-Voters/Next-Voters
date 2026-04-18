@@ -15,8 +15,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import supportedRegions from '@/data/supported-regions';
-import { getPreference, setPreference } from '@/lib/country-preference';
+import { getSupportedCities, getUserCity } from '@/server-actions/get-supported-cities';
+import { updateUserCity } from '@/server-actions/update-user-city';
 
 export function SubscriptionDashboard() {
   const { isPro, hasSubscription, tier, refetch } = useSubscription();
@@ -26,7 +26,8 @@ export function SubscriptionDashboard() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [canceledUntil, setCanceledUntil] = useState<string | null>(null);
 
-  const [selectedRegion, setSelectedRegion] = useState(getPreference() || '');
+  const [cities, setCities] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState('');
 
   // Referral state
   const [referralEmail, setReferralEmail] = useState('');
@@ -42,6 +43,12 @@ export function SubscriptionDashboard() {
     kFactor: number;
   } | null>(null);
   const { user } = useAuth();
+
+  // Load supported cities and user's current city
+  useEffect(() => {
+    getSupportedCities().then(setCities);
+    getUserCity().then((city) => { if (city) setSelectedCity(city); });
+  }, []);
 
   // Load referral code and stats
   useEffect(() => {
@@ -142,30 +149,21 @@ export function SubscriptionDashboard() {
           <div className="flex items-center gap-3">
             <Globe className="h-4 w-4 text-gray-400 shrink-0" />
             <Select
-              value={selectedRegion}
+              value={selectedCity}
               onValueChange={(value) => {
-                setPreference(value);
-                setSelectedRegion(value);
+                setSelectedCity(value);
+                updateUserCity(value);
               }}
             >
               <SelectTrigger className="w-full sm:w-[240px] bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px]">
-                <SelectValue placeholder="Select your region" />
+                <SelectValue placeholder="Select your city" />
               </SelectTrigger>
               <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-                {supportedRegions
-                  .filter((r) => r.type === 'country')
-                  .map((r) => (
-                    <SelectItem key={r.code} value={r.name} className="hover:bg-gray-100 focus:bg-gray-100">
-                      {r.name}
-                    </SelectItem>
-                  ))}
-                {supportedRegions
-                  .filter((r) => r.type === 'sub-region')
-                  .map((r) => (
-                    <SelectItem key={r.code} value={r.name} className="hover:bg-gray-100 focus:bg-gray-100">
-                      {r.name}
-                    </SelectItem>
-                  ))}
+                {cities.map((city) => (
+                  <SelectItem key={city} value={city} className="hover:bg-gray-100 focus:bg-gray-100">
+                    {city}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
