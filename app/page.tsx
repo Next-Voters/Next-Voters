@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PreferenceSelector from "@/components/preference-selector";
 import ClientMountWrapper from "@/components/client-mount-wrapper";
-import AuthButtons from "@/components/common/components/auth-buttons";
+
 
 type AnalyticsCounts = {
   requestCount: number;
@@ -56,9 +56,6 @@ const Home = () => {
       <div className="w-full">
         {/* Hero Section */}
         <section className="relative pt-20 pb-16">
-          <div className="absolute top-6 right-6 z-20">
-            <AuthButtons variant="desktop" />
-          </div>
           <div className="relative max-w-[1000px] mx-auto px-6 text-center">
             <h1 className="text-[48px] md:text-[56px] font-bold text-gray-900 mb-6 font-plus-jakarta-sans leading-tight">
               Next Voters
