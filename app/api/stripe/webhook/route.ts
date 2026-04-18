@@ -28,8 +28,7 @@ export async function POST(request: NextRequest) {
       const contact = session.metadata?.contact;
       if (!contact) break;
 
-      // Upsert: creates the row if the user upgraded before finishing the signup wizard
-      await supabase
+      const { error: checkoutError } = await supabase
         .from('subscriptions')
         .upsert(
           {
@@ -40,6 +39,10 @@ export async function POST(request: NextRequest) {
           },
           { onConflict: 'contact' }
         );
+      if (checkoutError) {
+        console.error(`Webhook ${event.type}:`, checkoutError);
+        return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
+      }
       break;
     }
 
@@ -48,13 +51,17 @@ export async function POST(request: NextRequest) {
       const contact = sub.metadata?.contact;
       if (!contact) break;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('subscriptions')
         .update({
           stripe_status: sub.status,
           stripe_period_end: new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
         })
         .eq('contact', contact);
+      if (updateError) {
+        console.error(`Webhook ${event.type}:`, updateError);
+        return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
+      }
       break;
     }
 
@@ -63,10 +70,14 @@ export async function POST(request: NextRequest) {
       const contact = sub.metadata?.contact;
       if (!contact) break;
 
-      await supabase
+      const { error: deleteError } = await supabase
         .from('subscriptions')
         .update({ stripe_status: 'canceled' })
         .eq('contact', contact);
+      if (deleteError) {
+        console.error(`Webhook ${event.type}:`, deleteError);
+        return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
+      }
       break;
     }
 
@@ -79,13 +90,17 @@ export async function POST(request: NextRequest) {
       const contact = stripeSub.metadata?.contact;
       if (!contact) break;
 
-      await supabase
+      const { error: paidError } = await supabase
         .from('subscriptions')
         .update({
           stripe_status: 'active',
           stripe_period_end: new Date((stripeSub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
         })
         .eq('contact', contact);
+      if (paidError) {
+        console.error(`Webhook ${event.type}:`, paidError);
+        return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
+      }
       break;
     }
 
@@ -98,10 +113,14 @@ export async function POST(request: NextRequest) {
       const contact = stripeSub.metadata?.contact;
       if (!contact) break;
 
-      await supabase
+      const { error: failedError } = await supabase
         .from('subscriptions')
         .update({ stripe_status: 'past_due' })
         .eq('contact', contact);
+      if (failedError) {
+        console.error(`Webhook ${event.type}:`, failedError);
+        return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
+      }
       break;
     }
   }

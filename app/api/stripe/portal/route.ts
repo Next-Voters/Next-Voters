@@ -10,20 +10,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('stripe_customer_id')
-    .eq('contact', user.email)
-    .maybeSingle();
+  const stripe = getStripe();
+  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+  const customer = customers.data[0];
 
-  if (!subscription?.stripe_customer_id) {
+  if (!customer) {
     return NextResponse.json({ error: 'No billing account found' }, { status: 404 });
   }
 
   const origin = request.headers.get('origin') ?? 'http://localhost:3000';
 
-  const portalSession = await getStripe().billingPortal.sessions.create({
-    customer: subscription.stripe_customer_id,
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: customer.id,
     return_url: `${origin}/local`,
   });
 

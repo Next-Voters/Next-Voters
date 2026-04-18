@@ -1,4 +1,3 @@
-import { protectedRegularRoutes } from "./data/protected-routes";
 import { NextResponse, NextRequest } from "next/server";
 import { updateSession } from "./lib/supabase/middleware";
 
@@ -9,15 +8,10 @@ const isPathAdminMatch = (route: string) => {
 export default async function proxy(req: NextRequest) {
   const route = req.nextUrl.pathname;
 
-  // Admin routes: redirect to home (auth removed - admin access disabled)
+  // Admin routes: redirect to home (admin access disabled)
   if (isPathAdminMatch(route)) {
     const homeURL = new URL("/", req.url);
     return NextResponse.redirect(homeURL);
-  }
-
-  // Protected routes: pass through (auth removed)
-  if (protectedRegularRoutes.includes(route)) {
-    return NextResponse.next();
   }
 
   // Refresh Supabase auth session on every request

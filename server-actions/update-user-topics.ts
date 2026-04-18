@@ -9,26 +9,24 @@ export async function updateUserTopics(topics: string[]): Promise<{ error?: stri
 
   if (!user?.email) return { error: "Unauthorized" }
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("stripe_subscription_id")
-    .eq("contact", user.email)
-    .maybeSingle()
+  // Determine tier via Stripe SDK
+  const stripe = getStripe()
+  const customers = await stripe.customers.list({ email: user.email, limit: 1 })
+  const customer = customers.data[0]
 
-  if (!subscription?.stripe_subscription_id) return { error: "No subscription found" }
+  if (!customer) return { error: "No subscription found" }
 
-  // Determine tier by checking the Stripe subscription's price
-  let isPro = false
-  try {
-    const stripeSub = await getStripe().subscriptions.retrieve(subscription.stripe_subscription_id)
-    const isActive = stripeSub.status === 'active' || stripeSub.status === 'trialing'
-    if (isActive) {
-      const proPriceId = process.env.STRIPE_PRO_PRICE_ID
-      isPro = stripeSub.items.data.some((item) => item.price?.id === proPriceId)
-    }
-  } catch {
-    isPro = false
-  }
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customer.id,
+    status: 'active',
+    limit: 1,
+  })
+
+  const stripeSub = subscriptions.data[0]
+  if (!stripeSub) return { error: "No subscription found" }
+
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID
+  const isPro = stripeSub.items.data.some((item) => item.price?.id === proPriceId)
 
   const maxTopics = isPro ? 3 : 1
   if (topics.length > maxTopics) {

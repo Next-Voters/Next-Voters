@@ -16,38 +16,34 @@ export async function getSubscriptionStatus(): Promise<{
     return { isPro: false, isAuthenticated: false, hasSubscription: false, tier: 'none' }
   }
 
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("stripe_subscription_id")
-    .eq("contact", user.email)
-    .maybeSingle()
+  // Look up customer and active subscription via Stripe SDK
+  const stripe = getStripe()
+  const customers = await stripe.customers.list({ email: user.email, limit: 1 })
+  const customer = customers.data[0]
 
-  // No row at all — never signed up
-  if (!data?.stripe_subscription_id) {
+  if (!customer) {
     return { isPro: false, isAuthenticated: true, hasSubscription: false, tier: 'none' }
   }
 
-  // Verify live status and determine tier from Stripe
-  try {
-    const stripeSub = await getStripe().subscriptions.retrieve(data.stripe_subscription_id)
-    const isActive = stripeSub.status === 'active' || stripeSub.status === 'trialing'
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customer.id,
+    status: 'active',
+    limit: 1,
+  })
 
-    if (!isActive) {
-      return { isPro: false, isAuthenticated: true, hasSubscription: true, tier: 'none' }
-    }
+  const stripeSub = subscriptions.data[0]
 
-    // Determine tier by checking the subscription's price against env vars
-    const proPriceId = process.env.STRIPE_PRO_PRICE_ID
-    const items = stripeSub.items?.data ?? []
-    const isPro = items.some((item) => item.price?.id === proPriceId)
+  if (!stripeSub) {
+    return { isPro: false, isAuthenticated: true, hasSubscription: false, tier: 'none' }
+  }
 
-    return {
-      isPro,
-      isAuthenticated: true,
-      hasSubscription: true,
-      tier: isPro ? 'pro' : 'basic',
-    }
-  } catch {
-    return { isPro: false, isAuthenticated: true, hasSubscription: true, tier: 'none' }
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID
+  const isPro = stripeSub.items.data.some((item) => item.price?.id === proPriceId)
+
+  return {
+    isPro,
+    isAuthenticated: true,
+    hasSubscription: true,
+    tier: isPro ? 'pro' : 'basic',
   }
 }

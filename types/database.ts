@@ -1,60 +1,10 @@
 import { Generated, Selectable, Insertable, Updateable } from 'kysely'
 
 export interface Database {
-  chat_count: ChatCountTable,
-  admin_table: UserAdminTable,
-  user_admin_request: UserAdminRequestTable,
-  subscriptions: SubscriptionTable,
-  user: UserTable,
-  session: SessionTable,
-  account: AccountTable,
-  verification: VerificationTable
-}
-
-export interface UserTable {
-  id: string
-  name: string
-  email: string
-  emailVerified: boolean
-  image: string | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface SessionTable {
-  id: string
-  expiresAt: Date
-  token: string
-  createdAt: Date
-  updatedAt: Date
-  ipAddress: string | null
-  userAgent: string | null
-  userId: string
-}
-
-export interface AccountTable {
-  id: string
-  accountId: string
-  providerId: string
-  userId: string
-  accessToken: string | null
-  refreshToken: string | null
-  idToken: string | null
-  accessTokenExpiresAt: Date | null
-  refreshTokenExpiresAt: Date | null
-  scope: string | null
-  password: string | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface VerificationTable {
-  id: string
-  identifier: string
-  value: string
-  expiresAt: Date
-  createdAt: Date | null
-  updatedAt: Date | null
+  chat_count: ChatCountTable
+  admin_table: UserAdminTable
+  user_admin_request: UserAdminRequestTable
+  subscriptions: SubscriptionTable
 }
 
 export interface ChatCountTable {
@@ -74,9 +24,14 @@ export interface UserAdminRequestTable {
 }
 
 export interface SubscriptionTable {
-  contact: string,
-  topics: string[],
-  type_contact: 'email' | 'sms'
+  contact: string
+  city: string | null
+  preferred_language: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  stripe_status: string | null
+  stripe_period_end: string | null
+  referral_code: string | null
 }
 
 export type ChatCount = Selectable<ChatCountTable>
@@ -84,5 +39,3 @@ export type NewChatCount = Insertable<ChatCountTable>
 export type ChatCountUpdate = Updateable<ChatCountTable>
 
 export type UserAdmin = Selectable<UserAdminTable>
-
-export type NewUserAdmin = Insertable<UserAdminTable>

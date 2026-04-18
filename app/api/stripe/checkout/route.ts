@@ -18,46 +18,35 @@ export async function POST(request: NextRequest) {
     : process.env.STRIPE_BASIC_PRICE_ID!;
 
   const origin = request.headers.get('origin') ?? 'http://localhost:3000';
+  const stripe = getStripe();
 
-  // Look up existing subscription
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('stripe_customer_id, stripe_subscription_id')
-    .eq('contact', user.email)
-    .maybeSingle();
+  // Look up existing customer and subscription via Stripe SDK
+  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+  const customer = customers.data[0];
 
-  // Block duplicate subscriptions — one per email
-  if (subscription?.stripe_subscription_id) {
-    try {
-      const existing = await getStripe().subscriptions.retrieve(subscription.stripe_subscription_id);
-      if (existing.status === 'active' || existing.status === 'trialing') {
-        return NextResponse.json({ error: 'You already have an active subscription. Manage it from your dashboard.' }, { status: 409 });
-      }
-    } catch {
-      // Subscription not found in Stripe — allow creating a new one
+  if (customer) {
+    const activeSubs = await stripe.subscriptions.list({
+      customer: customer.id,
+      status: 'active',
+      limit: 1,
+    });
+    if (activeSubs.data.length > 0) {
+      return NextResponse.json({ error: 'You already have an active subscription. Manage it from your dashboard.' }, { status: 409 });
     }
   }
 
-  let stripeCustomerId = subscription?.stripe_customer_id;
+  let stripeCustomerId = customer?.id;
 
   // Create a new Stripe customer if none exists
   if (!stripeCustomerId) {
-    const customer = await getStripe().customers.create({
+    const newCustomer = await stripe.customers.create({
       email: user.email,
       metadata: { supabase_user_id: user.id },
     });
-    stripeCustomerId = customer.id;
-
-    // Save the Stripe customer ID if the subscription row exists
-    if (subscription !== null) {
-      await supabase
-        .from('subscriptions')
-        .update({ stripe_customer_id: stripeCustomerId })
-        .eq('contact', user.email);
-    }
+    stripeCustomerId = newCustomer.id;
   }
 
-  const session = await getStripe().checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: stripeCustomerId,
     line_items: [
