@@ -7,7 +7,7 @@ export async function getSubscriptionStatus(): Promise<{
   isPro: boolean;
   isAuthenticated: boolean;
   hasSubscription: boolean;
-  tier: 'pro' | 'basic' | 'none';
+  tier: 'pro' | 'free' | 'none';
 }> {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -44,6 +44,6 @@ export async function getSubscriptionStatus(): Promise<{
     isPro,
     isAuthenticated: true,
     hasSubscription: true,
-    tier: isPro ? 'pro' : 'basic',
+    tier: isPro ? 'pro' : 'free',
   }
 }

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const plan = body.plan === 'pro' ? 'pro' : 'basic';
+  const plan = body.plan === 'pro' ? 'pro' : 'free';
 
   const rawCity = typeof body.city === 'string' ? body.city.trim() : '';
   const rawLanguage = typeof body.language === 'string' ? body.language.trim() : '';
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 
   const referralCode = typeof body.referralCode === 'string' ? body.referralCode.trim() : '';
 
+  // Env var intentionally named STRIPE_BASIC_PRICE_ID — UI labels the tier "Free" but the Stripe price config retains the original name to avoid a coordinated secrets rotation.
   const priceId = plan === 'pro'
     ? process.env.STRIPE_PRO_PRICE_ID!
     : process.env.STRIPE_BASIC_PRICE_ID!;
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ],
-    ...(plan === 'basic' && { payment_method_collection: 'if_required' as const }),
+    ...(plan === 'free' && { payment_method_collection: 'if_required' as const }),
     success_url: `${origin}/local?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/local/onboarding?checkout=cancel`,
     metadata,
