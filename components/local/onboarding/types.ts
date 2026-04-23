@@ -1,11 +1,7 @@
 export type OnboardingStep = 1 | 2 | 3 | 4;
 
 export interface CityRequest {
-  country: string;
-  state: string;
   city: string;
-  countryIso: string;
-  stateCode: string;
 }
 
 export interface OnboardingState {

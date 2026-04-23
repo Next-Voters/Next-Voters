@@ -5,13 +5,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe"
 import { submitRegionWaitlist } from "@/server-actions/request-region"
 
-function parseCityRequest(raw: string | undefined): { country: string; state: string; city: string } | null {
+function parseCityRequest(raw: string | undefined): { city: string } | null {
   if (!raw) return null
-  const parts = raw.split("|")
-  if (parts.length < 3) return null
-  const [country, state, city] = parts
-  if (!country.trim() || !city.trim()) return null
-  return { country: country.trim(), state: state.trim() || "—", city: city.trim() }
+  const city = raw.trim()
+  if (!city) return null
+  return { city }
 }
 
 export async function fulfillCheckout(sessionId: string): Promise<{ success: boolean; error?: string }> {
@@ -92,8 +90,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   if (cityRequest) {
     const referralCode = typeof metadata.referral_code === "string" ? metadata.referral_code.trim() : ""
     await submitRegionWaitlist({
-      country: cityRequest.country,
-      state: cityRequest.state,
       city: cityRequest.city,
       referralCode: referralCode || undefined,
     })

@@ -1,71 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Country, State, City } from "country-state-city";
-import type { IState, ICity } from "country-state-city";
+import { Search } from "lucide-react";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { trackReferralClick } from "@/server-actions/referrals";
 
-const selectClass =
-  "w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-[14.5px] font-semibold text-gray-900 " +
-  "focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 transition-all";
-
-const labelClass = "mb-1.5 block text-[13px] font-semibold text-gray-700";
-
-function sortByName<T extends { name: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-}
-
-function matchState(states: IState[], regionCode?: string, regionName?: string): IState | undefined {
-  if (regionCode) {
-    const rc = regionCode.toUpperCase();
-    const direct = states.find((s) => s.isoCode.toUpperCase() === rc);
-    if (direct) return direct;
-    const tail = rc.includes("-") ? rc.split("-").pop()! : rc;
-    const byTail = states.find((s) => s.isoCode.toUpperCase() === tail);
-    if (byTail) return byTail;
-  }
-  if (regionName?.trim()) {
-    const n = regionName.trim().toLowerCase();
-    return (
-      states.find((s) => s.name.toLowerCase() === n) ||
-      states.find(
-        (s) => n.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(n)
-      )
-    );
-  }
-  return undefined;
-}
-
-function matchCityName(cities: ICity[], city?: string): string | undefined {
-  if (!city?.trim()) return undefined;
-  const n = city.trim().toLowerCase();
-  const exact = cities.find((c) => c.name.toLowerCase() === n);
-  if (exact) return exact.name;
-  const partial = cities.find(
-    (c) => c.name.toLowerCase().includes(n) || n.includes(c.name.toLowerCase())
-  );
-  return partial?.name;
+interface Suggestion {
+  label: string;
+  name: string;
 }
 
 function RequestRegionForm() {
-  const countries = useMemo(() => sortByName(Country.getAllCountries()), []);
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref");
 
-  const [countryIso, setCountryIso] = useState("");
-  const [stateCode, setStateCode] = useState("");
-  const [cityName, setCityName] = useState("");
+  const [query, setQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const userEditedRef = useRef(false);
   const referralTrackedRef = useRef(false);
 
-  // Track referral click
   useEffect(() => {
     if (refCode && !referralTrackedRef.current) {
       referralTrackedRef.current = true;
@@ -74,113 +35,60 @@ function RequestRegionForm() {
   }, [refCode]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (trimmed === selectedCity) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setLoadingSuggestions(true);
       try {
-        const res = await fetch("/api/geo");
-        const data = (await res.json()) as
-          | {
-              ok: true;
-              countryCode: string;
-              regionCode?: string;
-              regionName?: string;
-              city?: string;
-            }
-          | { ok: false };
-        if (cancelled || !data.ok || userEditedRef.current) return;
-        const iso = data.countryCode;
-        if (!countries.some((c) => c.isoCode === iso)) return;
-
-        const subdivisions = sortByName(State.getStatesOfCountry(iso));
-
-        if (subdivisions.length > 0) {
-          const stateMatch = matchState(subdivisions, data.regionCode, data.regionName);
-          if (!stateMatch) {
-            if (userEditedRef.current) return;
-            setCountryIso(iso);
-            setStateCode("");
-            setCityName("");
-            return;
-          }
-          const cityList = sortByName(City.getCitiesOfState(iso, stateMatch.isoCode));
-          const cityPick = matchCityName(cityList, data.city);
-          if (userEditedRef.current) return;
-          setCountryIso(iso);
-          setStateCode(stateMatch.isoCode);
-          setCityName(cityPick ?? "");
+        const res = await fetch(`/api/cities/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setSuggestions([]);
           return;
         }
-
-        const cityList = sortByName(City.getCitiesOfCountry(iso) ?? []);
-        const cityPick = matchCityName(cityList, data.city);
-        if (userEditedRef.current) return;
-        setCountryIso(iso);
-        setStateCode("");
-        setCityName(cityPick ?? "");
-      } catch {
-        /* ignore — user can still pick manually */
+        const data = (await res.json()) as { cities?: Suggestion[] };
+        setSuggestions(data.cities ?? []);
+        setSuggestionsOpen(true);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
       }
-    })();
+    }, 250);
+
     return () => {
-      cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
     };
-  }, [countries]);
+  }, [query, selectedCity]);
 
-  const states: IState[] = useMemo(() => {
-    if (!countryIso) return [];
-    return sortByName(State.getStatesOfCountry(countryIso));
-  }, [countryIso]);
-
-  const cities: ICity[] = useMemo(() => {
-    if (!countryIso) return [];
-    if (states.length > 0) {
-      if (!stateCode) return [];
-      return sortByName(City.getCitiesOfState(countryIso, stateCode));
-    }
-    const all = City.getCitiesOfCountry(countryIso);
-    return sortByName(all ?? []);
-  }, [countryIso, stateCode, states.length]);
-
-  const onCountryChange = useCallback((iso: string) => {
-    userEditedRef.current = true;
-    setCountryIso(iso);
-    setStateCode("");
-    setCityName("");
-  }, []);
-
-  const onStateChange = useCallback((code: string) => {
-    userEditedRef.current = true;
-    setStateCode(code);
-    setCityName("");
-  }, []);
-
-  const countryLabel = useMemo(() => {
-    if (!countryIso) return "";
-    return countries.find((c) => c.isoCode === countryIso)?.name ?? countryIso;
-  }, [countryIso, countries]);
-
-  const stateLabel = useMemo(() => {
-    if (!stateCode || states.length === 0) return "";
-    return states.find((s) => s.isoCode === stateCode)?.name ?? stateCode;
-  }, [stateCode, states]);
+  const handlePick = (name: string) => {
+    setQuery(name);
+    setSelectedCity(name);
+    setSuggestions([]);
+    setSuggestionsOpen(false);
+    setError(null);
+  };
 
   const onDone = async () => {
     setError(null);
-    if (!countryIso || !cityName.trim()) {
-      setError("Please select a country and city.");
-      return;
-    }
-    if (states.length > 0 && !stateCode) {
-      setError("Please select a state or province.");
+    const cityName = query.trim();
+    if (!cityName) {
+      setError("Please enter a city.");
       return;
     }
 
     setSubmitting(true);
     try {
       const result = await submitRegionWaitlist({
-        country: countryLabel,
-        state: stateLabel || "—",
-        city: cityName.trim(),
+        city: cityName,
         referralCode: refCode || undefined,
       });
       if (result.ok === false) {
@@ -217,86 +125,71 @@ function RequestRegionForm() {
     <div className="flex min-h-[calc(100dvh-56px)] flex-col bg-page">
       <div className="flex flex-1 flex-col items-center px-5 pt-12 sm:pt-16">
         <h1 className="text-center text-[24px] sm:text-[28px] font-bold text-gray-950 tracking-tight">
-          Select your region.
+          Request your city.
         </h1>
         <p className="mt-2 text-center text-[15px] text-gray-500">
           We&apos;ll notify you when it&apos;s ready.
         </p>
 
-        <div className="mt-10 w-full max-w-md flex-1 space-y-5">
-          <div>
-            <label htmlFor="request-country" className={labelClass}>
-              Country
-            </label>
-            <select
-              id="request-country"
-              className={selectClass}
-              value={countryIso}
-              onChange={(e) => onCountryChange(e.target.value)}
-            >
-              <option value="">Select country</option>
-              {countries.map((c) => (
-                <option key={c.isoCode} value={c.isoCode}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="mt-10 w-full max-w-md flex-1">
+          <label htmlFor="request-city" className="mb-1.5 block text-[13px] font-semibold text-gray-700">
+            City
+          </label>
 
-          <div>
-            <label htmlFor="request-state" className={labelClass}>
-              State / province
-            </label>
-            <select
-              id="request-state"
-              className={selectClass}
-              value={stateCode}
-              disabled={!countryIso || states.length === 0}
-              onChange={(e) => onStateChange(e.target.value)}
-            >
-              <option value="">
-                {states.length === 0 && countryIso ? "No subdivisions — pick a city below" : "Select state / province"}
-              </option>
-              {states.map((s) => (
-                <option key={s.isoCode} value={s.isoCode}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="relative">
+            <div className="flex items-stretch border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
+              <div className="flex items-center justify-center px-3 border-r border-gray-200 bg-gray-50">
+                <Search className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                id="request-city"
+                type="text"
+                autoComplete="off"
+                placeholder="Start typing a city name…"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSelectedCity("");
+                  setError(null);
+                }}
+                onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
+                onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
+                className="flex-1 min-w-0 px-3 py-3 text-[14.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="request-city" className={labelClass}>
-              City
-            </label>
-            <select
-              id="request-city"
-              className={selectClass}
-              value={cityName}
-              disabled={
-                !countryIso ||
-                (states.length > 0 && !stateCode) ||
-                (states.length === 0 && cities.length === 0)
-              }
-              onChange={(e) => {
-                userEditedRef.current = true;
-                setCityName(e.target.value);
-              }}
-            >
-              <option value="">Select city</option>
-              {cities.map((c, i) => (
-                <option
-                  key={`${c.name}-${c.latitude ?? i}-${c.longitude ?? ""}`}
-                  value={c.name}
-                >
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            {suggestionsOpen && (suggestions.length > 0 || loadingSuggestions) && (
+              <ul
+                className="absolute left-0 right-0 z-[60] mt-1 max-h-[240px] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                role="listbox"
+              >
+                {loadingSuggestions && suggestions.length === 0 && (
+                  <li className="px-3 py-2.5 text-[13px] text-gray-400">Searching…</li>
+                )}
+                {suggestions.map((s) => (
+                  <li key={s.label} role="option" aria-selected={selectedCity === s.name}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handlePick(s.name)}
+                      className="w-full text-left px-3 py-2.5 text-[13.5px] text-gray-800 hover:bg-gray-50"
+                    >
+                      <span className="font-semibold">{s.name}</span>
+                      {s.label !== s.name && (
+                        <span className="text-gray-500">
+                          {" — "}
+                          {s.label.replace(`${s.name}, `, "")}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {error ? (
-            <p className="text-[13px] font-medium text-brand bg-brand/5 border border-brand/20 rounded-lg px-3 py-2" role="alert">
+            <p className="mt-4 text-[13px] font-medium text-brand bg-brand/5 border border-brand/20 rounded-lg px-3 py-2" role="alert">
               {error}
             </p>
           ) : null}

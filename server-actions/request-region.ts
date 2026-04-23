@@ -1,33 +1,43 @@
 "use server";
 
 import { transporter } from "@/lib/nodemailer";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { convertReferral } from "@/server-actions/referrals";
 
 export async function submitRegionWaitlist(input: {
-  country: string;
-  state: string;
   city: string;
   referralCode?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const country = input.country?.trim();
-  const state = input.state?.trim();
   const city = input.city?.trim();
   const referralCode = input.referralCode?.trim();
 
-  if (!country || !city) {
-    return { ok: false, error: "Please choose a country and city." };
+  if (!city) {
+    return { ok: false, error: "Please enter a city." };
   }
 
-  // If the visitor arrived via a referral link, upgrade the referral status
+  const admin = createSupabaseAdminClient();
+  const { data: existing } = await admin
+    .from("region_requests")
+    .select("id, vote_count")
+    .eq("city", city)
+    .maybeSingle();
+
+  if (existing) {
+    await admin
+      .from("region_requests")
+      .update({ vote_count: (existing.vote_count ?? 0) + 1 })
+      .eq("id", existing.id);
+  } else {
+    await admin.from("region_requests").insert({ city, vote_count: 1 });
+  }
+
   if (referralCode) {
-    await convertReferral(referralCode, "", { country, state: state || "\u2014", city });
+    await convertReferral(referralCode, "", { city });
   }
 
   const lines = [
-    "New region waitlist request (Next Voters)",
+    "New city waitlist request (Next Voters)",
     "",
-    `Country: ${country}`,
-    `State / province: ${state || "—"}`,
     `City: ${city}`,
     ...(referralCode ? [`Referral code: ${referralCode}`] : []),
   ];
@@ -41,7 +51,7 @@ export async function submitRegionWaitlist(input: {
     await transporter.sendMail({
       from: `Next Voters <${user}>`,
       to: user,
-      subject: `[Next Voters] Region request: ${city}, ${country}`,
+      subject: `[Next Voters] City request: ${city}`,
       text: lines.join("\n"),
       html: `<pre style="font-family:system-ui,sans-serif;font-size:14px;line-height:1.6">${lines
         .map((l) => (l === "" ? "<br/>" : l))
