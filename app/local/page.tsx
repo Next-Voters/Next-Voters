@@ -32,15 +32,8 @@ function NVLocalInner() {
   }, [isPostCheckout, sessionId, user]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login?redirectTo=/local');
-    }
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
     if (authLoading || subLoading || fulfilling) return;
-    if (!user) return;
-    if (!hasSubscription) {
+    if (!user || !hasSubscription) {
       router.replace('/local/onboarding');
     }
   }, [authLoading, subLoading, fulfilling, user, hasSubscription, router]);
