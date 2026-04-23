@@ -8,7 +8,7 @@ interface SubscriptionState {
   isAuthenticated: boolean;
   isLoading: boolean;
   hasSubscription: boolean;
-  tier: 'pro' | 'basic' | 'none';
+  tier: 'pro' | 'free' | 'none';
 }
 
 export function useSubscription(): SubscriptionState & { refetch: () => void } {

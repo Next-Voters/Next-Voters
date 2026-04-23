@@ -11,7 +11,7 @@ import {
 export const ONBOARDING_STORAGE_KEY = "nv_onboarding_v1";
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type PendingPlan = "basic" | "pro" | null;
+export type PendingPlan = "free" | "pro" | null;
 
 export interface StoredOnboardingBlob {
   version: 1;

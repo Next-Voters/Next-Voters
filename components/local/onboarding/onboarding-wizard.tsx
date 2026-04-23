@@ -72,7 +72,7 @@ export function OnboardingWizard() {
   };
 
   const handleCheckout = useCallback(
-    async (plan: "basic" | "pro") => {
+    async (plan: "free" | "pro") => {
       setCheckoutError(null);
 
       if (!user) {

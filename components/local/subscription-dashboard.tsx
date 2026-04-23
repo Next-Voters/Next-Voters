@@ -262,7 +262,7 @@ export function SubscriptionDashboard() {
               Cancel your subscription?
             </DialogTitle>
             <DialogDescription className="text-[14px] text-gray-500 mt-1 leading-relaxed">
-              You&apos;ll keep {tier === 'pro' ? 'Pro' : 'Basic'} access until the end of your current billing period. After that, your subscription will be removed.
+              You&apos;ll keep {tier === 'pro' ? 'Pro' : 'Free'} access until the end of your current billing period. After that, your subscription will be removed.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2.5 mt-4">

@@ -7,21 +7,20 @@ import { OnboardingState } from "./types";
 interface Props {
   state: OnboardingState;
   isRedirecting: boolean;
-  onCheckout: (plan: "basic" | "pro") => void;
+  onCheckout: (plan: "free" | "pro") => void;
 }
 
 export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
-  const [pending, setPending] = useState<"basic" | "pro" | null>(null);
+  const [pending, setPending] = useState<"free" | "pro" | null>(null);
 
   useEffect(() => {
     if (!isRedirecting) setPending(null);
   }, [isRedirecting]);
 
   const pickedCount = state.topics.length;
-  const firstTopic = state.topics[0];
-  const basicWouldTruncate = pickedCount >= 2;
+  const freeRequiresFewerTopics = pickedCount > 1;
 
-  const handleClick = (plan: "basic" | "pro") => {
+  const handleClick = (plan: "free" | "pro") => {
     setPending(plan);
     onCheckout(plan);
   };
@@ -42,11 +41,10 @@ export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
         <ExternalLink className="w-3.5 h-3.5" />
       </a>
 
-      {basicWouldTruncate && (
+      {freeRequiresFewerTopics && (
         <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
           <p className="text-[13px] text-gray-600 leading-relaxed">
-            Heads up: Basic includes one topic, so we&rsquo;ll keep{" "}
-            <span className="font-semibold text-gray-900">{firstTopic}</span>. Pro includes all three.
+            Free includes one topic. Deselect extras or pick Pro to unlock all three.
           </p>
         </div>
       )}
@@ -54,11 +52,11 @@ export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() => handleClick("basic")}
-          disabled={isRedirecting}
-          className="w-full min-h-[64px] px-6 py-4 text-[15.5px] font-bold text-gray-800 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          onClick={() => handleClick("free")}
+          disabled={isRedirecting || freeRequiresFewerTopics}
+          className="w-full min-h-[64px] px-6 py-4 text-[15.5px] font-bold text-gray-800 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {pending === "basic" && isRedirecting ? "Redirecting…" : "Start free"}
+          {pending === "free" && isRedirecting ? "Redirecting…" : "Start free"}
         </button>
 
         <button

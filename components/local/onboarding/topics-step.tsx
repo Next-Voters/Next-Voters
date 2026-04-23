@@ -31,7 +31,7 @@ export function TopicsStep({ state, updateState, onContinue }: Props) {
   return (
     <div>
       <p className="text-[15px] text-gray-500 leading-relaxed mb-6">
-        Pick the issues you care about. Basic sends one; Pro sends all three.
+        Pick the issues you care about. Free sends one; Pro sends all three.
       </p>
 
       <label className="block mb-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">

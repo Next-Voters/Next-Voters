@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 
 interface TierBadgeProps {
-  tier: 'pro' | 'basic' | 'none';
+  tier: 'pro' | 'free' | 'none';
 }
 
 export function TierBadge({ tier }: TierBadgeProps) {
@@ -17,7 +17,7 @@ export function TierBadge({ tier }: TierBadgeProps) {
 
   return (
     <Badge className="bg-gray-200 text-gray-600 border-transparent text-[11px] font-bold uppercase tracking-wide hover:bg-gray-200">
-      Local Basic
+      Local Free
     </Badge>
   );
 }
