@@ -3,6 +3,16 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe"
+import { submitRegionWaitlist } from "@/server-actions/request-region"
+
+function parseCityRequest(raw: string | undefined): { country: string; state: string; city: string } | null {
+  if (!raw) return null
+  const parts = raw.split("|")
+  if (parts.length < 3) return null
+  const [country, state, city] = parts
+  if (!country.trim() || !city.trim()) return null
+  return { country: country.trim(), state: state.trim() || "—", city: city.trim() }
+}
 
 export async function fulfillCheckout(sessionId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createSupabaseServerClient()
@@ -20,7 +30,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: "Session not completed" }
   }
 
-  // Accept both "paid" (pro) and "no_payment_required" (free/basic) as valid
   if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return { success: false, error: "Session not completed" }
   }
@@ -29,19 +38,66 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: "Session mismatch" }
   }
 
+  const metadata = session.metadata ?? {}
+  const plan = metadata.plan === "pro" ? "pro" : "basic"
+  const city = typeof metadata.city === "string" ? metadata.city.trim() : ""
+  const language = typeof metadata.language === "string" ? metadata.language.trim() : ""
+  const topicsRaw = typeof metadata.topics === "string" ? metadata.topics : ""
+  const topics = topicsRaw
+    .split("|")
+    .map((t) => t.trim())
+    .filter(Boolean)
+  const maxTopics = plan === "pro" ? 3 : 1
+  const truncatedTopics = topics.slice(0, maxTopics)
+
   const admin = createSupabaseAdminClient()
+
+  const upsertPayload: Record<string, string> = {
+    contact: user.email,
+    stripe_customer_id: session.customer as string,
+    stripe_subscription_id: session.subscription as string,
+    stripe_status: "active",
+  }
+  if (city) upsertPayload.city = city
+  if (language) upsertPayload.preferred_language = language
+
   const { error } = await admin
     .from("subscriptions")
-    .upsert(
-      {
-        contact: user.email,
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: session.subscription as string,
-        stripe_status: "active",
-      },
-      { onConflict: "contact" }
-    )
+    .upsert(upsertPayload, { onConflict: "contact" })
 
   if (error) return { success: false, error: error.message }
+
+  // Persist topics to subscription_topics (replace any prior selections).
+  if (truncatedTopics.length > 0) {
+    const normalized = truncatedTopics.map((t) => t.toLowerCase())
+    const { data: topicRows } = await admin
+      .from("supported_topics")
+      .select("topic_id, topic_name")
+      .in("topic_name", normalized)
+
+    await admin
+      .from("subscription_topics")
+      .delete()
+      .eq("subscription_id", user.email)
+
+    if (topicRows && topicRows.length > 0) {
+      await admin
+        .from("subscription_topics")
+        .insert(topicRows.map((row) => ({ subscription_id: user.email, topic_id: row.topic_id })))
+    }
+  }
+
+  // If the user requested an unsupported city, notify admin + convert any referral.
+  const cityRequest = parseCityRequest(metadata.city_request)
+  if (cityRequest) {
+    const referralCode = typeof metadata.referral_code === "string" ? metadata.referral_code.trim() : ""
+    await submitRegionWaitlist({
+      country: cityRequest.country,
+      state: cityRequest.state,
+      city: cityRequest.city,
+      referralCode: referralCode || undefined,
+    })
+  }
+
   return { success: true }
 }

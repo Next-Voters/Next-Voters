@@ -177,7 +177,7 @@ export function ManageTopics() {
             {saving ? "Saving…" : "Save changes"}
           </button>
           {savedMsg && (
-            <p className={`text-[13.5px] font-medium ${savedMsg === "Topics saved!" ? "text-green-600" : "text-red-500"}`}>
+            <p className={`text-[13.5px] font-medium ${savedMsg === "Saved!" ? "text-green-600" : "text-red-500"}`}>
               {savedMsg}
             </p>
           )}

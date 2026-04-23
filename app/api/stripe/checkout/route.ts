@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
+interface CityRequestBody {
+  country?: unknown;
+  state?: unknown;
+  city?: unknown;
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -13,6 +19,35 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const plan = body.plan === 'pro' ? 'pro' : 'basic';
 
+  const rawCity = typeof body.city === 'string' ? body.city.trim() : '';
+  const rawLanguage = typeof body.language === 'string' ? body.language.trim() : '';
+  const rawTopics: string[] = Array.isArray(body.topics)
+    ? body.topics.filter((t: unknown): t is string => typeof t === 'string' && t.trim().length > 0).map((t: string) => t.trim())
+    : [];
+
+  if (!rawCity) {
+    return NextResponse.json({ error: 'Please select a city.' }, { status: 400 });
+  }
+  if (!rawLanguage) {
+    return NextResponse.json({ error: 'Please select a language.' }, { status: 400 });
+  }
+  if (rawTopics.length === 0) {
+    return NextResponse.json({ error: 'Please select at least one topic.' }, { status: 400 });
+  }
+
+  const cityRequest = body.cityRequest as CityRequestBody | null | undefined;
+  let cityRequestMeta = '';
+  if (cityRequest && typeof cityRequest === 'object') {
+    const c = typeof cityRequest.country === 'string' ? cityRequest.country.trim() : '';
+    const s = typeof cityRequest.state === 'string' ? cityRequest.state.trim() : '';
+    const city = typeof cityRequest.city === 'string' ? cityRequest.city.trim() : '';
+    if (c && city) {
+      cityRequestMeta = `${c}|${s || '—'}|${city}`;
+    }
+  }
+
+  const referralCode = typeof body.referralCode === 'string' ? body.referralCode.trim() : '';
+
   const priceId = plan === 'pro'
     ? process.env.STRIPE_PRO_PRICE_ID!
     : process.env.STRIPE_BASIC_PRICE_ID!;
@@ -20,7 +55,6 @@ export async function POST(request: NextRequest) {
   const origin = request.headers.get('origin') ?? 'http://localhost:3000';
   const stripe = getStripe();
 
-  // Look up existing customer and subscription via Stripe SDK
   const customers = await stripe.customers.list({ email: user.email, limit: 1 });
   const customer = customers.data[0];
 
@@ -37,7 +71,6 @@ export async function POST(request: NextRequest) {
 
   let stripeCustomerId = customer?.id;
 
-  // Create a new Stripe customer if none exists
   if (!stripeCustomerId) {
     const newCustomer = await stripe.customers.create({
       email: user.email,
@@ -45,6 +78,16 @@ export async function POST(request: NextRequest) {
     });
     stripeCustomerId = newCustomer.id;
   }
+
+  const metadata: Record<string, string> = {
+    contact: user.email,
+    plan,
+    city: rawCity,
+    language: rawLanguage,
+    topics: rawTopics.join('|'),
+  };
+  if (cityRequestMeta) metadata.city_request = cityRequestMeta;
+  if (referralCode) metadata.referral_code = referralCode;
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -57,10 +100,10 @@ export async function POST(request: NextRequest) {
     ],
     ...(plan === 'basic' && { payment_method_collection: 'if_required' as const }),
     success_url: `${origin}/local?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/local?checkout=cancel`,
-    metadata: { contact: user.email, plan },
+    cancel_url: `${origin}/local/onboarding?checkout=cancel`,
+    metadata,
     subscription_data: {
-      metadata: { contact: user.email, plan },
+      metadata,
     },
   });
 
