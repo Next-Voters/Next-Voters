@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'edge';
+
+interface PhotonFeature {
+  properties?: {
+    name?: string;
+    city?: string;
+    country?: string;
+    state?: string;
+    osm_value?: string;
+  };
+}
+
+interface PhotonResponse {
+  features?: PhotonFeature[];
+}
+
+export async function GET(request: NextRequest) {
+  const q = request.nextUrl.searchParams.get('q')?.trim() ?? '';
+  if (q.length < 2) {
+    return NextResponse.json({ cities: [] });
+  }
+
+  const url = new URL('https://photon.komoot.io/api/');
+  url.searchParams.set('q', q);
+  url.searchParams.set('limit', '8');
+  url.searchParams.set('osm_tag', 'place:city');
+  url.searchParams.append('osm_tag', 'place:town');
+
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'User-Agent': 'NextVoters/1.0 (hello@nextvoters.com)' },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) {
+      return NextResponse.json({ cities: [] });
+    }
+    const data = (await res.json()) as PhotonResponse;
+
+    const seen = new Set<string>();
+    const cities: Array<{ label: string; name: string }> = [];
+    for (const feat of data.features ?? []) {
+      const name = feat.properties?.name?.trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const country = feat.properties?.country?.trim();
+      const state = feat.properties?.state?.trim();
+      const label = [name, state, country].filter(Boolean).join(', ');
+      cities.push({ label, name });
+    }
+
+    return NextResponse.json({ cities });
+  } catch {
+    return NextResponse.json({ cities: [] });
+  }
+}

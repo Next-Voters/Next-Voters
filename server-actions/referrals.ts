@@ -83,7 +83,7 @@ export async function trackReferralClick(code: string): Promise<void> {
 export async function convertReferral(
   code: string,
   email: string,
-  regionRequested?: { country: string; state: string; city: string },
+  regionRequested?: { city: string },
 ): Promise<void> {
   const supabase = createSupabaseAdminClient();
 
