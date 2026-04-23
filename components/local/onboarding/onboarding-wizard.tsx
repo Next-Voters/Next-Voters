@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
 import { TopicsStep } from "./topics-step";
 import { PlanStep } from "./plan-step";
-import { INITIAL_STATE, OnboardingState, OnboardingStep } from "./types";
+import { OnboardingStep } from "./types";
+import { useOnboardingState } from "./use-onboarding-state";
 
 const STEP_LABELS: Record<OnboardingStep, string> = {
   1: "City",
@@ -17,36 +19,51 @@ const STEP_LABELS: Record<OnboardingStep, string> = {
 };
 
 export function OnboardingWizard() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const referralCode = searchParams.get("ref");
+  const urlRef = searchParams.get("ref");
+  const { user } = useAuth();
 
-  const [step, setStep] = useState<OnboardingStep>(1);
-  const [state, setState] = useState<OnboardingState>(INITIAL_STATE);
+  const {
+    isHydrated,
+    storageAvailable,
+    state,
+    step,
+    referralCode,
+    updateState,
+    setStep,
+    setPendingPlan,
+    setReferralCode,
+  } = useOnboardingState();
+
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const isFirstRenderRef = useRef(true);
+  const isFirstStepChangeRef = useRef(true);
 
   useEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
+    if (!isHydrated) return;
+    if (isFirstStepChangeRef.current) {
+      isFirstStepChangeRef.current = false;
       return;
     }
     headingRef.current?.focus();
-  }, [step]);
+  }, [step, isHydrated]);
 
-  const updateState = useCallback(
-    (patch: Partial<OnboardingState>) => setState((s) => ({ ...s, ...patch })),
-    [],
-  );
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (urlRef && urlRef !== referralCode) {
+      setReferralCode(urlRef);
+    }
+  }, [isHydrated, urlRef, referralCode, setReferralCode]);
 
   const goBack = useCallback(() => {
-    setStep((s) => (s > 1 ? ((s - 1) as OnboardingStep) : s));
-  }, []);
+    if (step > 1) setStep((step - 1) as OnboardingStep);
+  }, [step, setStep]);
 
   const advance = useCallback(() => {
-    setStep((s) => (s < 4 ? ((s + 1) as OnboardingStep) : s));
-  }, []);
+    if (step < 4) setStep((step + 1) as OnboardingStep);
+  }, [step, setStep]);
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -57,6 +74,20 @@ export function OnboardingWizard() {
   const handleCheckout = useCallback(
     async (plan: "basic" | "pro") => {
       setCheckoutError(null);
+
+      if (!user) {
+        if (!storageAvailable) {
+          setCheckoutError(
+            "Your browser has saving progress disabled. Enable localStorage or sign in first to continue.",
+          );
+          scrollToBottom();
+          return;
+        }
+        setPendingPlan(plan);
+        router.push("/local/onboarding/signup");
+        return;
+      }
+
       setIsRedirecting(true);
       try {
         const res = await fetch("/api/stripe/checkout", {
@@ -85,12 +116,29 @@ export function OnboardingWizard() {
         scrollToBottom();
       }
     },
-    [state, referralCode],
+    [state, referralCode, user, storageAvailable, setPendingPlan, router],
   );
+
+  if (!isHydrated) {
+    return (
+      <div className="w-full min-h-[calc(100vh-56px)] bg-page flex items-center justify-center">
+        <p className="text-gray-400 text-[14px]">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-[calc(100vh-56px)] bg-page">
       <div className="max-w-[560px] mx-auto px-5 sm:px-6 pt-10 pb-16">
+        {!storageAvailable && (
+          <p
+            className="mb-6 text-[13px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+            role="status"
+          >
+            Your browser has saving progress disabled. Don&apos;t close this tab — your answers won&apos;t be saved between visits.
+          </p>
+        )}
+
         {/* Stepper + back arrow */}
         <div className="flex items-center gap-3 mb-8">
           <button

@@ -6,9 +6,20 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/';
 
+  let exchangeFailed = !code;
+
   if (code) {
-    const supabase = await createSupabaseServerClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) exchangeFailed = true;
+    } catch {
+      exchangeFailed = true;
+    }
+  }
+
+  if (exchangeFailed && next.startsWith('/local/onboarding')) {
+    return NextResponse.redirect(`${origin}/local/onboarding/signup?error=oauth_failed`);
   }
 
   return NextResponse.redirect(`${origin}${next}`);
