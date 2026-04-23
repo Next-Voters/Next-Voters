@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Globe, Plus } from "lucide-react";
-import { Country, State, City } from "country-state-city";
-import type { IState, ICity } from "country-state-city";
+import { Globe, Plus, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,42 +19,9 @@ interface Props {
   onContinue: () => void;
 }
 
-function sortByName<T extends { name: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-  );
-}
-
-function matchState(states: IState[], regionCode?: string, regionName?: string): IState | undefined {
-  if (regionCode) {
-    const rc = regionCode.toUpperCase();
-    const direct = states.find((s) => s.isoCode.toUpperCase() === rc);
-    if (direct) return direct;
-    const tail = rc.includes("-") ? rc.split("-").pop()! : rc;
-    const byTail = states.find((s) => s.isoCode.toUpperCase() === tail);
-    if (byTail) return byTail;
-  }
-  if (regionName?.trim()) {
-    const n = regionName.trim().toLowerCase();
-    return (
-      states.find((s) => s.name.toLowerCase() === n) ||
-      states.find(
-        (s) => n.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(n),
-      )
-    );
-  }
-  return undefined;
-}
-
-function matchCityName(cities: ICity[], city?: string): string | undefined {
-  if (!city?.trim()) return undefined;
-  const n = city.trim().toLowerCase();
-  const exact = cities.find((c) => c.name.toLowerCase() === n);
-  if (exact) return exact.name;
-  const partial = cities.find(
-    (c) => c.name.toLowerCase().includes(n) || n.includes(c.name.toLowerCase()),
-  );
-  return partial?.name;
+interface Suggestion {
+  label: string;
+  name: string;
 }
 
 export function CityStep({ state, updateState, onContinue }: Props) {
@@ -67,13 +32,15 @@ export function CityStep({ state, updateState, onContinue }: Props) {
   const initialDropdown = state.cityRequest ? REQUEST_CITY_VALUE : state.city;
   const [dropdownValue, setDropdownValue] = useState(initialDropdown);
 
-  const [countryIso, setCountryIso] = useState(state.cityRequest?.countryIso ?? "");
-  const [stateCode, setStateCode] = useState(state.cityRequest?.stateCode ?? "");
-  const [cityName, setCityName] = useState(state.cityRequest?.city ?? "");
+  const [query, setQuery] = useState(state.cityRequest?.city ?? "");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState(state.cityRequest?.city ?? "");
   const [formError, setFormError] = useState<string | null>(null);
 
-  const userEditedRef = useRef(Boolean(state.cityRequest));
   const formRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const loadCities = useCallback(() => {
     setLoadingCities(true);
@@ -88,71 +55,43 @@ export function CityStep({ state, updateState, onContinue }: Props) {
     loadCities();
   }, [loadCities]);
 
-  const countries = useMemo(() => sortByName(Country.getAllCountries()), []);
-
-  const states: IState[] = useMemo(() => {
-    if (!countryIso) return [];
-    return sortByName(State.getStatesOfCountry(countryIso));
-  }, [countryIso]);
-
-  const requestCities: ICity[] = useMemo(() => {
-    if (!countryIso) return [];
-    if (states.length > 0) {
-      if (!stateCode) return [];
-      return sortByName(City.getCitiesOfState(countryIso, stateCode));
-    }
-    return sortByName(City.getCitiesOfCountry(countryIso) ?? []);
-  }, [countryIso, stateCode, states.length]);
-
   const isRequestMode = dropdownValue === REQUEST_CITY_VALUE;
 
   useEffect(() => {
     if (!isRequestMode) return;
-    if (userEditedRef.current) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/geo");
-        const data = (await res.json()) as
-          | { ok: true; countryCode: string; regionCode?: string; regionName?: string; city?: string }
-          | { ok: false };
-        if (cancelled || !data.ok || userEditedRef.current) return;
-        const iso = data.countryCode;
-        if (!countries.some((c) => c.isoCode === iso)) return;
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (trimmed === selectedCity) return;
 
-        const subdivisions = sortByName(State.getStatesOfCountry(iso));
-        if (subdivisions.length > 0) {
-          const stateMatch = matchState(subdivisions, data.regionCode, data.regionName);
-          if (!stateMatch) {
-            if (userEditedRef.current) return;
-            setCountryIso(iso);
-            setStateCode("");
-            setCityName("");
-            return;
-          }
-          const cityList = sortByName(City.getCitiesOfState(iso, stateMatch.isoCode));
-          const cityPick = matchCityName(cityList, data.city);
-          if (userEditedRef.current) return;
-          setCountryIso(iso);
-          setStateCode(stateMatch.isoCode);
-          setCityName(cityPick ?? "");
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/cities/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setSuggestions([]);
           return;
         }
-
-        const cityList = sortByName(City.getCitiesOfCountry(iso) ?? []);
-        const cityPick = matchCityName(cityList, data.city);
-        if (userEditedRef.current) return;
-        setCountryIso(iso);
-        setStateCode("");
-        setCityName(cityPick ?? "");
-      } catch {
-        /* ignore */
+        const data = (await res.json()) as { cities?: Suggestion[] };
+        setSuggestions(data.cities ?? []);
+        setSuggestionsOpen(true);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
       }
-    })();
+    }, 250);
+
     return () => {
-      cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
     };
-  }, [isRequestMode, countries]);
+  }, [query, isRequestMode, selectedCity]);
 
   const handleDropdownChange = (value: string) => {
     setFormError(null);
@@ -161,75 +100,44 @@ export function CityStep({ state, updateState, onContinue }: Props) {
       updateState({ city: "", cityRequest: null });
       requestAnimationFrame(() => {
         formRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        inputRef.current?.focus();
       });
     } else {
       updateState({ city: value, cityRequest: null });
-      userEditedRef.current = false;
-      setCountryIso("");
-      setStateCode("");
-      setCityName("");
+      setQuery("");
+      setSelectedCity("");
+      setSuggestions([]);
     }
   };
 
-  const handleCountryChange = (iso: string) => {
-    userEditedRef.current = true;
-    setCountryIso(iso);
-    setStateCode("");
-    setCityName("");
+  const handlePick = (name: string) => {
+    setQuery(name);
+    setSelectedCity(name);
+    setSuggestions([]);
+    setSuggestionsOpen(false);
     setFormError(null);
   };
 
-  const handleStateChange = (code: string) => {
-    userEditedRef.current = true;
-    setStateCode(code);
-    setCityName("");
-    setFormError(null);
-  };
-
-  const handleCityChange = (name: string) => {
-    userEditedRef.current = true;
-    setCityName(name);
-    setFormError(null);
-  };
-
-  const canContinue = isRequestMode
-    ? Boolean(countryIso && cityName.trim() && (states.length === 0 || stateCode))
-    : Boolean(state.city);
+  const canContinue = useMemo(() => {
+    if (isRequestMode) return Boolean(query.trim());
+    return Boolean(state.city);
+  }, [isRequestMode, query, state.city]);
 
   const handleContinue = () => {
     setFormError(null);
     if (isRequestMode) {
-      if (!countryIso || !cityName.trim()) {
-        setFormError("Please select a country and city.");
+      const cityName = query.trim();
+      if (!cityName) {
+        setFormError("Please enter a city.");
         return;
       }
-      if (states.length > 0 && !stateCode) {
-        setFormError("Please select a state or province.");
-        return;
-      }
-      const countryLabel =
-        countries.find((c) => c.isoCode === countryIso)?.name ?? countryIso;
-      const stateLabel =
-        states.find((s) => s.isoCode === stateCode)?.name ?? "";
       updateState({
-        city: cityName.trim(),
-        cityRequest: {
-          country: countryLabel,
-          state: stateLabel || "—",
-          city: cityName.trim(),
-          countryIso,
-          stateCode,
-        },
+        city: cityName,
+        cityRequest: { city: cityName },
       });
     }
     onContinue();
   };
-
-  const stateDisabled = !countryIso || states.length === 0;
-  const cityDisabled =
-    !countryIso ||
-    (states.length > 0 && !stateCode) ||
-    (states.length === 0 && requestCities.length === 0);
 
   return (
     <div>
@@ -297,104 +205,72 @@ export function CityStep({ state, updateState, onContinue }: Props) {
       {isRequestMode && (
         <div
           ref={formRef}
-          className="mt-6 rounded-xl border border-gray-200 bg-white p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="mt-6 rounded-xl border border-gray-200 bg-white p-5 animate-in fade-in slide-in-from-top-2 duration-200"
         >
-          <p className="text-[13px] text-gray-600 leading-relaxed">
-            Tell us where you are. You&rsquo;ll still be able to subscribe now, and we&rsquo;ll email you as soon as your city launches.
+          <p className="text-[13px] text-gray-600 leading-relaxed mb-4">
+            Search for your city. You&rsquo;ll still be able to subscribe now, and we&rsquo;ll email you as soon as it launches.
           </p>
 
-          <div>
-            <label htmlFor="onb-country" className="mb-1.5 block text-[12px] font-semibold text-gray-700">
-              Country
-            </label>
-            <Select value={countryIso} onValueChange={handleCountryChange}>
-              <SelectTrigger
-                id="onb-country"
-                className="w-full bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px]"
-              >
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-                {countries.map((c) => (
-                  <SelectItem
-                    key={c.isoCode}
-                    value={c.isoCode}
-                    className="hover:bg-gray-100 focus:bg-gray-100"
-                  >
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <label htmlFor="onb-city-search" className="mb-1.5 block text-[12px] font-semibold text-gray-700">
+            City
+          </label>
 
-          <div>
-            <label htmlFor="onb-state" className="mb-1.5 block text-[12px] font-semibold text-gray-700">
-              State / province
-            </label>
-            <Select
-              value={stateCode}
-              onValueChange={handleStateChange}
-              disabled={stateDisabled}
-            >
-              <SelectTrigger
-                id="onb-state"
-                className="w-full bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-              >
-                <SelectValue
-                  placeholder={
-                    states.length === 0 && countryIso
-                      ? "No subdivisions — pick a city below"
-                      : "Select state / province"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-                {states.map((s) => (
-                  <SelectItem
-                    key={s.isoCode}
-                    value={s.isoCode}
-                    className="hover:bg-gray-100 focus:bg-gray-100"
-                  >
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="relative">
+            <div className="flex items-stretch border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
+              <div className="flex items-center justify-center px-3 border-r border-gray-200 bg-gray-50">
+                <Search className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                id="onb-city-search"
+                ref={inputRef}
+                type="text"
+                autoComplete="off"
+                placeholder="Start typing a city name…"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSelectedCity("");
+                  setFormError(null);
+                }}
+                onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
+                onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
+                className="flex-1 min-w-0 px-3 py-2.5 text-[14px] text-gray-950 placeholder:text-gray-400 focus:outline-none"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="onb-city" className="mb-1.5 block text-[12px] font-semibold text-gray-700">
-              City
-            </label>
-            <Select
-              value={cityName}
-              onValueChange={handleCityChange}
-              disabled={cityDisabled}
-            >
-              <SelectTrigger
-                id="onb-city"
-                className="w-full bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+            {suggestionsOpen && (suggestions.length > 0 || loadingSuggestions) && (
+              <ul
+                className="absolute left-0 right-0 z-[60] mt-1 max-h-[240px] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                role="listbox"
               >
-                <SelectValue placeholder="Select city" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-                {requestCities.map((c, i) => (
-                  <SelectItem
-                    key={`${c.name}-${c.latitude ?? i}-${c.longitude ?? ""}`}
-                    value={c.name}
-                    className="hover:bg-gray-100 focus:bg-gray-100"
-                  >
-                    {c.name}
-                  </SelectItem>
+                {loadingSuggestions && suggestions.length === 0 && (
+                  <li className="px-3 py-2.5 text-[13px] text-gray-400">Searching…</li>
+                )}
+                {suggestions.map((s) => (
+                  <li key={s.label} role="option" aria-selected={selectedCity === s.name}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handlePick(s.name)}
+                      className="w-full text-left px-3 py-2.5 text-[13.5px] text-gray-800 hover:bg-gray-50"
+                    >
+                      <span className="font-semibold">{s.name}</span>
+                      {s.label !== s.name && (
+                        <span className="text-gray-500">
+                          {" — "}
+                          {s.label.replace(`${s.name}, `, "")}
+                        </span>
+                      )}
+                    </button>
+                  </li>
                 ))}
-              </SelectContent>
-            </Select>
+              </ul>
+            )}
           </div>
 
           {formError && (
             <p
-              className="text-[13px] font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+              className="mt-3 text-[13px] font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
               role="alert"
               aria-live="polite"
             >

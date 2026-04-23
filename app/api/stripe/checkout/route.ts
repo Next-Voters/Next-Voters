@@ -3,8 +3,6 @@ import { getStripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 interface CityRequestBody {
-  country?: unknown;
-  state?: unknown;
   city?: unknown;
 }
 
@@ -38,12 +36,8 @@ export async function POST(request: NextRequest) {
   const cityRequest = body.cityRequest as CityRequestBody | null | undefined;
   let cityRequestMeta = '';
   if (cityRequest && typeof cityRequest === 'object') {
-    const c = typeof cityRequest.country === 'string' ? cityRequest.country.trim() : '';
-    const s = typeof cityRequest.state === 'string' ? cityRequest.state.trim() : '';
     const city = typeof cityRequest.city === 'string' ? cityRequest.city.trim() : '';
-    if (c && city) {
-      cityRequestMeta = `${c}|${s || '—'}|${city}`;
-    }
+    if (city) cityRequestMeta = city;
   }
 
   const referralCode = typeof body.referralCode === 'string' ? body.referralCode.trim() : '';
