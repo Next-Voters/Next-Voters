@@ -7,7 +7,10 @@ import { submitRegionWaitlist } from "@/server-actions/request-region"
 
 function parseCityRequest(raw: string | undefined): { city: string } | null {
   if (!raw) return null
-  const city = raw.trim()
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  // Legacy in-flight sessions encoded this as "country|state|city" — keep only the city segment.
+  const city = trimmed.includes("|") ? trimmed.split("|").pop()!.trim() : trimmed
   if (!city) return null
   return { city }
 }
