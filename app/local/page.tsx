@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
-import { SubscriptionCards } from '@/components/local/subscription-cards';
 import { SubscriptionDashboard } from '@/components/local/subscription-dashboard';
 import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
 
@@ -37,6 +36,14 @@ function NVLocalInner() {
     }
   }, [authLoading, user, router]);
 
+  useEffect(() => {
+    if (authLoading || subLoading || fulfilling) return;
+    if (!user) return;
+    if (!hasSubscription) {
+      router.replace('/local/onboarding');
+    }
+  }, [authLoading, subLoading, fulfilling, user, hasSubscription, router]);
+
   if (authLoading || subLoading || fulfilling) {
     return (
       <div className="w-full min-h-[calc(100vh-56px)] bg-page flex items-center justify-center">
@@ -45,11 +52,7 @@ function NVLocalInner() {
     );
   }
 
-  if (!user) return null;
-
-  if (!hasSubscription) {
-    return <SubscriptionCards />;
-  }
+  if (!user || !hasSubscription) return null;
 
   return <SubscriptionDashboard />;
 }
