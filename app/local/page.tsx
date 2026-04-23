@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { SubscriptionDashboard } from '@/components/local/subscription-dashboard';
 import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
+import { clearOnboardingBlob } from '@/components/local/onboarding/use-onboarding-state';
 
 function NVLocalInner() {
   const router = useRouter();
@@ -43,6 +44,10 @@ function NVLocalInner() {
       router.replace('/local/onboarding');
     }
   }, [authLoading, subLoading, fulfilling, user, hasSubscription, router]);
+
+  useEffect(() => {
+    if (hasSubscription) clearOnboardingBlob();
+  }, [hasSubscription]);
 
   if (authLoading || subLoading || fulfilling) {
     return (

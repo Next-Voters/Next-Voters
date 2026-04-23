@@ -13,11 +13,7 @@ function OnboardingInner() {
 
   useEffect(() => {
     if (authLoading || subLoading) return;
-    if (!user) {
-      router.replace("/login?redirectTo=/local/onboarding");
-      return;
-    }
-    if (hasSubscription) {
+    if (user && hasSubscription) {
       router.replace("/local");
     }
   }, [authLoading, subLoading, user, hasSubscription, router]);
@@ -30,7 +26,7 @@ function OnboardingInner() {
     );
   }
 
-  if (!user || hasSubscription) return null;
+  if (user && hasSubscription) return null;
 
   return <OnboardingWizard />;
 }
