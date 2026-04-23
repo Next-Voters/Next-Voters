@@ -10,14 +10,17 @@ import { AIAgentResponse } from "@/types/chat-platform/chat-platform";
 import { Message } from "@/types/chat-platform/message";
 import { useMutation } from "@tanstack/react-query";
 import { SendHorizonal } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import handleFindRegionDetails from "@/lib/chat-platform/find-info-region";
+import { useAuth } from "@/hooks/use-auth";
 
 const Chat = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('message');
+  const { user, isLoading: authLoading } = useAuth();
   const [message, setMessage] = useState('');
 
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
@@ -199,11 +202,29 @@ const Chat = () => {
   };
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      const redirectTo = initialMessage
+        ? `/chat?message=${encodeURIComponent(initialMessage)}`
+        : '/chat';
+      router.replace(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+    }
+  }, [authLoading, user, router, initialMessage]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
     if (initialMessage && !hasAutoSent.current) {
       hasAutoSent.current = true;
       sendMessage(initialMessage);
     }
-  }, [initialMessage, sendMessage]);
+  }, [authLoading, user, initialMessage, sendMessage]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="w-full min-h-screen bg-page flex items-center justify-center">
+        <p className="text-gray-400 text-[14px]">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <ClientMountWrapper className="h-screen bg-page flex flex-col">
