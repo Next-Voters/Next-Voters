@@ -6,7 +6,6 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getSupportedCities } from "@/server-actions/get-supported-cities";
-import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { syncSubscriptionFromStripe } from "@/server-actions/sync-subscription";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
@@ -59,10 +58,8 @@ export function OnboardingWizard() {
   );
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [preAuthNotice, setPreAuthNotice] = useState<string | null>(null);
-  const [autoKickoffLabel, setAutoKickoffLabel] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
-  const autoKickoffFiredRef = useRef(false);
   const hydratedFromCityParamRef = useRef(false);
 
   useEffect(() => {
@@ -86,7 +83,9 @@ export function OnboardingWizard() {
   }, [urlRef, referralCode, setReferralCode]);
 
   // Pre-fill city from `?city=` (e.g., from the landing-page hero). Runs once
-  // after cities load, so the supported-match check is valid.
+  // after cities load so the supported-match check is valid. The URL param is
+  // stripped after hydration so a remount (auth flip, back-nav) can't re-fire
+  // this effect and clobber user progress past step 2.
   useEffect(() => {
     if (citiesLoading || hydratedFromCityParamRef.current) return;
     if (!urlCity) return;
@@ -106,43 +105,17 @@ export function OnboardingWizard() {
       setMode("request");
       setStep(2);
     }
-  }, [citiesLoading, supportedCities, urlCity, updateState, setMode, setStep]);
 
-  // Auto-kickoff (request mode only): after returning from Google OAuth with a
-  // pending city request, submit the waitlist entry and advance to the
-  // alternatives step.
-  useEffect(() => {
-    if (!user || autoKickoffFiredRef.current) return;
-
-    const canAutoRequest =
-      mode === "request" &&
-      Boolean(state.cityRequest?.city) &&
-      step === 2;
-
-    if (canAutoRequest) {
-      autoKickoffFiredRef.current = true;
-      setAutoKickoffLabel(`Adding ${state.cityRequest!.city} to your waitlist…`);
-      (async () => {
-        try {
-          const result = await submitRegionWaitlist({
-            city: state.cityRequest!.city,
-            voterEmail: user.email,
-            referralCode: referralCode || undefined,
-          });
-          if (result.ok === false) {
-            setAutoKickoffLabel(null);
-            setCheckoutError(result.error);
-            return;
-          }
-          setStep(3);
-          setAutoKickoffLabel(null);
-        } catch {
-          setAutoKickoffLabel(null);
-          setCheckoutError("We couldn't save your request. Please try again.");
-        }
-      })();
-    }
-  }, [user, mode, state, step, referralCode, setStep]);
+    router.replace("/local/onboarding", { scroll: false });
+  }, [
+    citiesLoading,
+    supportedCities,
+    urlCity,
+    updateState,
+    setMode,
+    setStep,
+    router,
+  ]);
 
   const totalSteps = mode === "request" ? 3 : 4;
   const stepLabel =
@@ -363,34 +336,23 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      {(preAuthNotice || autoKickoffLabel) && (
+      {preAuthNotice && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-5 animate-in fade-in duration-150"
           role="status"
           aria-live="polite"
         >
           <div className="w-full max-w-[380px] bg-white rounded-2xl shadow-xl p-6 text-center">
-            {preAuthNotice ? (
-              <>
-                <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
-                  Last step: save your plan!
-                </p>
-                <p className="text-[14px] text-gray-500 mb-5">
-                  Login to a Next Voters account.
-                </p>
-                <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  Redirecting to Google…
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" aria-hidden="true" />
-                <p className="text-[14.5px] font-semibold text-gray-800">
-                  {autoKickoffLabel}
-                </p>
-              </div>
-            )}
+            <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
+              Last step: save your plan!
+            </p>
+            <p className="text-[14px] text-gray-500 mb-5">
+              Login to a Next Voters account.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              Redirecting to Google…
+            </div>
           </div>
         </div>
       )}
