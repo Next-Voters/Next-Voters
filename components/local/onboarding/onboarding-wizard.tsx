@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getSupportedCities } from "@/server-actions/get-supported-cities";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
@@ -28,10 +29,10 @@ const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
 };
 
 export function OnboardingWizard() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const urlRef = searchParams.get("ref");
   const { user } = useAuth();
+  const errorParam = searchParams.get("error");
 
   const {
     isHydrated,
@@ -49,8 +50,13 @@ export function OnboardingWizard() {
 
   const [supportedCities, setSupportedCities] = useState<string[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(
+    errorParam === "oauth_failed"
+      ? "We couldn't sign you in with Google. Try again, or email hello@nextvoters.com."
+      : null,
+  );
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [preAuthNotice, setPreAuthNotice] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
 
@@ -105,7 +111,20 @@ export function OnboardingWizard() {
           return;
         }
         setPendingPlan(plan);
-        router.push("/local/onboarding/signup");
+        setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const supabase = createSupabaseBrowserClient();
+        const { error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding/resume")}`,
+          },
+        });
+        if (oauthError) {
+          setPreAuthNotice(null);
+          setCheckoutError(oauthError.message);
+          scrollToBottom();
+        }
         return;
       }
 
@@ -137,7 +156,7 @@ export function OnboardingWizard() {
         scrollToBottom();
       }
     },
-    [state, referralCode, user, storageAvailable, setPendingPlan, router],
+    [state, referralCode, user, storageAvailable, setPendingPlan],
   );
 
   const handleCityContinue = useCallback(
@@ -285,6 +304,27 @@ export function OnboardingWizard() {
           </p>
         )}
       </div>
+
+      {preAuthNotice && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-5 animate-in fade-in duration-150"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="w-full max-w-[380px] bg-white rounded-2xl shadow-xl p-6 text-center">
+            <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
+              Last step: save your plan!
+            </p>
+            <p className="text-[14px] text-gray-500 mb-5">
+              Login to a Next Voters account.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              Redirecting to Google…
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (exchangeFailed && next.startsWith('/local/onboarding')) {
-    return NextResponse.redirect(`${origin}/local/onboarding/signup?error=oauth_failed`);
+    return NextResponse.redirect(`${origin}/local/onboarding?error=oauth_failed`);
   }
 
   return NextResponse.redirect(`${origin}${next}`);
