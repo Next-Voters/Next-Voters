@@ -6,7 +6,9 @@
 //
 // A cookie with SameSite=Lax survives top-level cross-site GET redirects,
 // so it's preserved through the Google → Supabase → /auth/callback → /local
-// redirect chain. Cleared on success or abandonment.
+// redirect chain. Cleared on success or explicit failure. Stale cookies
+// older than MAX_AGE_SECONDS are ignored on read even if the browser hasn't
+// evicted them yet.
 
 export type PendingAction =
   | {
@@ -24,21 +26,70 @@ export type PendingAction =
       referralCode: string | null;
     };
 
+interface StoredPendingAction {
+  ts: number;
+  action: PendingAction;
+}
+
 const COOKIE_NAME = "nv_pending_action";
 const MAX_AGE_SECONDS = 15 * 60;
+const MAX_AGE_MS = MAX_AGE_SECONDS * 1000;
 
 function encodeUtf8ToBase64(input: string): string {
-  // UTF-8 safe base64 encode. btoa() alone mangles non-ASCII characters.
-  return btoa(unescape(encodeURIComponent(input)));
+  const bytes = new TextEncoder().encode(input);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 function decodeBase64ToUtf8(input: string): string {
-  return decodeURIComponent(escape(atob(input)));
+  const binary = atob(input);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "string");
+}
+
+function isCityRequest(value: unknown): value is { city: string } | null {
+  if (value === null) return true;
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.city === "string";
+}
+
+function isPendingAction(value: unknown): value is PendingAction {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  if (v.type === "subscribe") {
+    return (
+      (v.plan === "free" || v.plan === "pro") &&
+      typeof v.city === "string" &&
+      typeof v.language === "string" &&
+      isStringArray(v.topics) &&
+      isCityRequest(v.cityRequest) &&
+      (v.referralCode === null || typeof v.referralCode === "string")
+    );
+  }
+  if (v.type === "request") {
+    return (
+      typeof v.city === "string" &&
+      (v.referralCode === null || typeof v.referralCode === "string")
+    );
+  }
+  return false;
 }
 
 export function writePendingAction(action: PendingAction): void {
   if (typeof document === "undefined") return;
-  const encoded = encodeUtf8ToBase64(JSON.stringify(action));
+  const stored: StoredPendingAction = { ts: Date.now(), action };
+  const encoded = encodeUtf8ToBase64(JSON.stringify(stored));
   const secure =
     typeof location !== "undefined" && location.protocol === "https:"
       ? "; Secure"
@@ -52,14 +103,18 @@ export function readPendingAction(): PendingAction | null {
     new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`),
   );
   if (!match) return null;
+  let parsed: unknown;
   try {
-    const json = decodeBase64ToUtf8(match[1]);
-    const parsed = JSON.parse(json) as PendingAction;
-    if (parsed.type !== "subscribe" && parsed.type !== "request") return null;
-    return parsed;
+    parsed = JSON.parse(decodeBase64ToUtf8(match[1]));
   } catch {
     return null;
   }
+  if (!parsed || typeof parsed !== "object") return null;
+  const stored = parsed as Partial<StoredPendingAction>;
+  if (typeof stored.ts !== "number") return null;
+  if (Date.now() - stored.ts > MAX_AGE_MS) return null;
+  if (!isPendingAction(stored.action)) return null;
+  return stored.action;
 }
 
 export function clearPendingAction(): void {
