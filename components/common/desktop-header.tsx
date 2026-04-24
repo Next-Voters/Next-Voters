@@ -14,14 +14,9 @@ const DesktopHeader: React.FC = () => {
         {/* Logo */}
         <a
           href="/"
-          aria-label="Next Voters"
-          className="shrink-0 hover:opacity-80 transition-opacity flex items-center"
+          className="text-[17px] font-bold text-gray-900 tracking-tight shrink-0 hover:opacity-80 transition-opacity"
         >
-          <img
-            src="/logo/nextvoters.png"
-            alt="Next Voters"
-            className="h-10 w-auto"
-          />
+          NV
         </a>
 
         {/* Center nav */}
