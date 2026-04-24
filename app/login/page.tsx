@@ -1,14 +1,36 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { readPendingAction } from '@/lib/pending-action';
 
 function LoginInner() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') ?? '/';
+  const urlRedirectTo = searchParams.get('redirectTo');
+  // Resolution priority: explicit ?redirectTo= URL param > pending-action
+  // cookie (so a mid-flow user who ended up on /login gets bounced back to
+  // /local or /local/onboarding to run the kickoff) > `/` home.
+  const [resolvedRedirect, setResolvedRedirect] = useState<string>(
+    urlRedirectTo ?? '/',
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (urlRedirectTo) {
+      setResolvedRedirect(urlRedirectTo);
+      return;
+    }
+    const pending = readPendingAction();
+    if (pending?.type === 'subscribe') {
+      setResolvedRedirect('/local');
+    } else if (pending?.type === 'request') {
+      setResolvedRedirect('/local/onboarding');
+    } else {
+      setResolvedRedirect('/');
+    }
+  }, [urlRedirectTo]);
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -17,7 +39,7 @@ function LoginInner() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(resolvedRedirect)}`,
       },
     });
     if (error) {
