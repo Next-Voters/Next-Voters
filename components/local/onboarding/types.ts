@@ -1,5 +1,7 @@
 export type OnboardingStep = 1 | 2 | 3 | 4;
 
+export type OnboardingMode = "subscribe" | "request";
+
 export interface CityRequest {
   city: string;
 }
@@ -17,5 +19,3 @@ export const INITIAL_STATE: OnboardingState = {
   language: "",
   topics: [],
 };
-
-export const REQUEST_CITY_VALUE = "__request_city__";

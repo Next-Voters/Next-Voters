@@ -6,28 +6,24 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  ONBOARDING_STORAGE_KEY,
   readOnboardingBlob,
   type StoredOnboardingBlob,
 } from "@/components/local/onboarding/use-onboarding-state";
+import { submitRegionWaitlist } from "@/server-actions/request-region";
 
 type ResumeStatus =
-  | { kind: "redirecting" }
+  | { kind: "redirecting"; label: string }
   | { kind: "already_subscribed" }
   | { kind: "error"; message: string };
-
-function blobReadyForCheckout(blob: StoredOnboardingBlob | null): blob is StoredOnboardingBlob {
-  if (!blob) return false;
-  if (!blob.pendingPlan) return false;
-  if (!blob.language) return false;
-  if (blob.topics.length === 0) return false;
-  if (!blob.city && !blob.cityRequest) return false;
-  return true;
-}
 
 export default function ResumePage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [status, setStatus] = useState<ResumeStatus>({ kind: "redirecting" });
+  const [status, setStatus] = useState<ResumeStatus>({
+    kind: "redirecting",
+    label: "Resuming your progress…",
+  });
   const [retryKey, setRetryKey] = useState(0);
   const firedRef = useRef(false);
 
@@ -40,13 +36,71 @@ export default function ResumePage() {
     }
 
     const blob = readOnboardingBlob();
-    if (!blobReadyForCheckout(blob)) {
+    if (!blob) {
+      router.replace("/local/onboarding");
+      return;
+    }
+
+    if (blob.mode === "request") {
+      const city = blob.cityRequest?.city;
+      if (!city) {
+        router.replace("/local/onboarding");
+        return;
+      }
+      if (firedRef.current) return;
+      firedRef.current = true;
+
+      setStatus({
+        kind: "redirecting",
+        label: `Adding ${city} to your waitlist…`,
+      });
+
+      (async () => {
+        try {
+          const result = await submitRegionWaitlist({
+            city,
+            voterEmail: user.email,
+            referralCode: blob.referralCode || undefined,
+          });
+          if (result.ok === false) {
+            setStatus({
+              kind: "error",
+              message: result.error ?? "We couldn't save your request. Please try again.",
+            });
+            return;
+          }
+          const updated: StoredOnboardingBlob = {
+            ...blob,
+            step: 3,
+            updatedAt: Date.now(),
+          };
+          window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(updated));
+          router.replace("/local/onboarding");
+        } catch {
+          setStatus({
+            kind: "error",
+            message: "We couldn't reach the waitlist service. Please try again.",
+          });
+        }
+      })();
+      return;
+    }
+
+    // Subscribe mode
+    if (
+      !blob.pendingPlan ||
+      !blob.language ||
+      blob.topics.length === 0 ||
+      !blob.city
+    ) {
       router.replace("/local/onboarding");
       return;
     }
 
     if (firedRef.current) return;
     firedRef.current = true;
+
+    setStatus({ kind: "redirecting", label: "Redirecting to secure checkout…" });
 
     const run = async () => {
       try {
@@ -90,7 +144,7 @@ export default function ResumePage() {
   }, [authLoading, user, router, retryKey]);
 
   const handleRetry = () => {
-    setStatus({ kind: "redirecting" });
+    setStatus({ kind: "redirecting", label: "Retrying…" });
     firedRef.current = false;
     setRetryKey((k) => k + 1);
   };
@@ -105,7 +159,7 @@ export default function ResumePage() {
               aria-hidden="true"
             />
             <p className="text-[15px] text-gray-600" role="status" aria-live="polite">
-              Redirecting to secure checkout…
+              {status.label}
             </p>
           </>
         )}
@@ -130,7 +184,7 @@ export default function ResumePage() {
         {status.kind === "error" && (
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
             <h1 className="text-[20px] font-bold text-gray-950 mb-2 tracking-tight">
-              Checkout didn&apos;t start.
+              Something went wrong.
             </h1>
             <p
               className="text-[14px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-6"

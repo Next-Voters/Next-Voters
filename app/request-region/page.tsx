@@ -2,24 +2,16 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { trackReferralClick } from "@/server-actions/referrals";
-
-interface Suggestion {
-  label: string;
-  name: string;
-}
 
 function RequestRegionForm() {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref");
 
-  const [query, setQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [city, setCity] = useState("");
+  const [email, setEmail] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -34,61 +26,24 @@ function RequestRegionForm() {
     }
   }, [refCode]);
 
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    if (trimmed === selectedCity) return;
-
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      setLoadingSuggestions(true);
-      try {
-        const res = await fetch(`/api/cities/search?q=${encodeURIComponent(trimmed)}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          setSuggestions([]);
-          return;
-        }
-        const data = (await res.json()) as { cities?: Suggestion[] };
-        setSuggestions(data.cities ?? []);
-        setSuggestionsOpen(true);
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") setSuggestions([]);
-      } finally {
-        setLoadingSuggestions(false);
-      }
-    }, 250);
-
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [query, selectedCity]);
-
-  const handlePick = (name: string) => {
-    setQuery(name);
-    setSelectedCity(name);
-    setSuggestions([]);
-    setSuggestionsOpen(false);
-    setError(null);
-  };
-
   const onDone = async () => {
     setError(null);
-    const cityName = query.trim();
-    if (!cityName) {
+    const trimmedCity = city.trim();
+    const trimmedEmail = email.trim();
+    if (!trimmedCity) {
       setError("Please enter a city.");
+      return;
+    }
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Please enter a valid email.");
       return;
     }
 
     setSubmitting(true);
     try {
       const result = await submitRegionWaitlist({
-        city: cityName,
+        city: trimmedCity,
+        voterEmail: trimmedEmail,
         referralCode: refCode || undefined,
       });
       if (result.ok === false) {
@@ -128,68 +83,54 @@ function RequestRegionForm() {
           Request your city.
         </h1>
         <p className="mt-2 text-center text-[15px] text-gray-500">
-          We&apos;ll notify you when it&apos;s ready.
+          We&apos;ll email you when it&apos;s ready.
         </p>
 
-        <div className="mt-10 w-full max-w-md flex-1">
-          <label htmlFor="request-city" className="mb-1.5 block text-[13px] font-semibold text-gray-700">
-            City
-          </label>
-
-          <div className="relative">
+        <div className="mt-10 w-full max-w-md flex-1 space-y-5">
+          <div>
+            <label htmlFor="request-city" className="mb-1.5 block text-[13px] font-semibold text-gray-700">
+              City
+            </label>
             <div className="flex items-stretch border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
               <div className="flex items-center justify-center px-3 border-r border-gray-200 bg-gray-50">
-                <Search className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                <MapPin className="h-4 w-4 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 id="request-city"
                 type="text"
                 autoComplete="off"
-                placeholder="Start typing a city name…"
-                value={query}
+                placeholder="E.g. Portland"
+                value={city}
                 onChange={(e) => {
-                  setQuery(e.target.value);
-                  setSelectedCity("");
+                  setCity(e.target.value);
                   setError(null);
                 }}
-                onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
-                onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
                 className="flex-1 min-w-0 px-3 py-3 text-[14.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none"
               />
             </div>
+          </div>
 
-            {suggestionsOpen && (suggestions.length > 0 || loadingSuggestions) && (
-              <ul
-                className="absolute left-0 right-0 z-[60] mt-1 max-h-[240px] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
-                role="listbox"
-              >
-                {loadingSuggestions && suggestions.length === 0 && (
-                  <li className="px-3 py-2.5 text-[13px] text-gray-400">Searching…</li>
-                )}
-                {suggestions.map((s) => (
-                  <li key={s.label} role="option" aria-selected={selectedCity === s.name}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handlePick(s.name)}
-                      className="w-full text-left px-3 py-2.5 text-[13.5px] text-gray-800 hover:bg-gray-50"
-                    >
-                      <span className="font-semibold">{s.name}</span>
-                      {s.label !== s.name && (
-                        <span className="text-gray-500">
-                          {" — "}
-                          {s.label.replace(`${s.name}, `, "")}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div>
+            <label htmlFor="request-email" className="mb-1.5 block text-[13px] font-semibold text-gray-700">
+              Your email
+            </label>
+            <input
+              id="request-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@email.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-[14.5px] text-gray-950 placeholder:text-gray-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+            />
           </div>
 
           {error ? (
-            <p className="mt-4 text-[13px] font-medium text-brand bg-brand/5 border border-brand/20 rounded-lg px-3 py-2" role="alert">
+            <p className="text-[13px] font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
               {error}
             </p>
           ) : null}

@@ -4,18 +4,27 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { getSupportedCities } from "@/server-actions/get-supported-cities";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
 import { TopicsStep } from "./topics-step";
 import { PlanStep } from "./plan-step";
-import { OnboardingStep } from "./types";
+import { RequestStep } from "./request-step";
+import { AlternativeCitiesStep } from "./alternative-cities-step";
+import { OnboardingMode, OnboardingStep } from "./types";
 import { useOnboardingState } from "./use-onboarding-state";
 
-const STEP_LABELS: Record<OnboardingStep, string> = {
+const SUBSCRIBE_LABELS: Record<OnboardingStep, string> = {
   1: "City",
   2: "Language",
   3: "Topics",
   4: "Plan",
+};
+
+const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
+  1: "City",
+  2: "Request",
+  3: "Other cities?",
 };
 
 export function OnboardingWizard() {
@@ -29,17 +38,27 @@ export function OnboardingWizard() {
     storageAvailable,
     state,
     step,
+    mode,
     referralCode,
     updateState,
     setStep,
+    setMode,
     setPendingPlan,
     setReferralCode,
   } = useOnboardingState();
 
+  const [supportedCities, setSupportedCities] = useState<string[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(true);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
+
+  useEffect(() => {
+    getSupportedCities()
+      .then(setSupportedCities)
+      .finally(() => setCitiesLoading(false));
+  }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -48,7 +67,7 @@ export function OnboardingWizard() {
       return;
     }
     headingRef.current?.focus();
-  }, [step, isHydrated]);
+  }, [step, mode, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -57,12 +76,14 @@ export function OnboardingWizard() {
     }
   }, [isHydrated, urlRef, referralCode, setReferralCode]);
 
+  const totalSteps = mode === "request" ? 3 : 4;
+  const stepLabel =
+    mode === "request"
+      ? REQUEST_LABELS[step as 1 | 2 | 3] ?? "City"
+      : SUBSCRIBE_LABELS[step];
+
   const goBack = useCallback(() => {
     if (step > 1) setStep((step - 1) as OnboardingStep);
-  }, [step, setStep]);
-
-  const advance = useCallback(() => {
-    if (step < 4) setStep((step + 1) as OnboardingStep);
   }, [step, setStep]);
 
   const scrollToBottom = () => {
@@ -119,6 +140,32 @@ export function OnboardingWizard() {
     [state, referralCode, user, storageAvailable, setPendingPlan, router],
   );
 
+  const handleCityContinue = useCallback(
+    (cityWasSupported: boolean) => {
+      const nextMode: OnboardingMode = cityWasSupported ? "subscribe" : "request";
+      setMode(nextMode);
+      setStep(2);
+    },
+    [setMode, setStep],
+  );
+
+  const handleSubscribeAdvance = useCallback(() => {
+    if (step < 4) setStep((step + 1) as OnboardingStep);
+  }, [step, setStep]);
+
+  const handleRequestSubmitted = useCallback(() => {
+    setStep(3);
+  }, [setStep]);
+
+  const handlePickAlternative = useCallback(
+    (city: string) => {
+      updateState({ city, cityRequest: null });
+      setMode("subscribe");
+      setStep(2);
+    },
+    [updateState, setMode, setStep],
+  );
+
   if (!isHydrated) {
     return (
       <div className="w-full min-h-[calc(100vh-56px)] bg-page flex items-center justify-center">
@@ -154,14 +201,13 @@ export function OnboardingWizard() {
             className="flex-1 flex items-center gap-2"
             role="progressbar"
             aria-valuemin={1}
-            aria-valuemax={4}
+            aria-valuemax={totalSteps}
             aria-valuenow={step}
-            aria-valuetext={`Step ${step} of 4: ${STEP_LABELS[step]}`}
+            aria-valuetext={`Step ${step} of ${totalSteps}: ${stepLabel}`}
           >
-            {([1, 2, 3, 4] as const).map((s) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
-                title={STEP_LABELS[s]}
                 className={[
                   "flex-1 h-1 rounded-full transition-colors",
                   s <= step ? "bg-brand" : "bg-gray-200",
@@ -170,7 +216,7 @@ export function OnboardingWizard() {
             ))}
           </div>
           <span className="text-[12px] font-semibold text-gray-500 tabular-nums">
-            {step} / 4
+            {step} / {totalSteps}
           </span>
         </div>
 
@@ -179,23 +225,53 @@ export function OnboardingWizard() {
           tabIndex={-1}
           className="text-[28px] sm:text-[34px] font-bold text-gray-950 leading-tight tracking-tight mb-8 outline-none"
         >
-          {STEP_LABELS[step]}
+          {stepLabel}
         </h1>
 
         {step === 1 && (
-          <CityStep state={state} updateState={updateState} onContinue={advance} />
+          <CityStep
+            state={state}
+            supportedCities={supportedCities}
+            citiesLoading={citiesLoading}
+            updateState={updateState}
+            onContinue={handleCityContinue}
+          />
         )}
-        {step === 2 && (
-          <LanguageStep state={state} updateState={updateState} onContinue={advance} />
+
+        {mode === "subscribe" && step === 2 && (
+          <LanguageStep
+            state={state}
+            updateState={updateState}
+            onContinue={handleSubscribeAdvance}
+          />
         )}
-        {step === 3 && (
-          <TopicsStep state={state} updateState={updateState} onContinue={advance} />
+        {mode === "subscribe" && step === 3 && (
+          <TopicsStep
+            state={state}
+            updateState={updateState}
+            onContinue={handleSubscribeAdvance}
+          />
         )}
-        {step === 4 && (
+        {mode === "subscribe" && step === 4 && (
           <PlanStep
             state={state}
             isRedirecting={isRedirecting}
             onCheckout={handleCheckout}
+          />
+        )}
+
+        {mode === "request" && step === 2 && (
+          <RequestStep
+            state={state}
+            referralCode={referralCode}
+            onContinue={handleRequestSubmitted}
+          />
+        )}
+        {mode === "request" && step === 3 && (
+          <AlternativeCitiesStep
+            state={state}
+            supportedCities={supportedCities}
+            onPick={handlePickAlternative}
           />
         )}
 
