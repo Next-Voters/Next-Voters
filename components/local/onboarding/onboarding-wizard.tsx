@@ -199,9 +199,20 @@ export function OnboardingWizard() {
         });
 
         // Stripe already has an active subscription for this customer. Sync
-        // the DB row from Stripe and send the user to their dashboard.
+        // the DB row from Stripe and send the user to their dashboard. If the
+        // sync fails, surface the error here — redirecting to /local blind
+        // would ping-pong the user back to this page.
         if (res.status === 409) {
-          await syncSubscriptionFromStripe();
+          const syncResult = await syncSubscriptionFromStripe();
+          if (!syncResult.ok) {
+            setCheckoutError(
+              syncResult.error ||
+                "You already have an active subscription, but we couldn't sync it. Contact hello@nextvoters.com.",
+            );
+            setIsRedirecting(false);
+            scrollToBottom();
+            return;
+          }
           router.replace("/local");
           return;
         }

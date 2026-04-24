@@ -53,6 +53,19 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
 
   const admin = createSupabaseAdminClient()
 
+  // Idempotency: if we've already fulfilled this exact session for this user,
+  // short-circuit so we don't re-send admin emails or re-convert referrals
+  // (submitRegionWaitlist below is not idempotent).
+  const { data: existingRow } = await admin
+    .from("subscriptions")
+    .select("stripe_subscription_id")
+    .eq("contact", user.email)
+    .maybeSingle()
+
+  if (existingRow?.stripe_subscription_id === session.subscription) {
+    return { success: true }
+  }
+
   const upsertPayload: Record<string, string> = {
     contact: user.email,
     stripe_customer_id: session.customer as string,
