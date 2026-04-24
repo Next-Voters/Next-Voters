@@ -101,6 +101,12 @@ export async function convertReferral(
 
 /**
  * Get referral stats for a user's dashboard.
+ *
+ * Conversions are sourced from region_votes, which records every
+ * waitlist signup with the recipient's referral_code. The referrals
+ * table can only hold one signed_up status per code due to the UNIQUE
+ * constraint on referral_code, so reading conversions from there
+ * undercounts when a single shared link drives multiple signups.
  */
 export async function getReferralStats(email: string): Promise<{
   totalReferrals: number;
@@ -110,20 +116,28 @@ export async function getReferralStats(email: string): Promise<{
 }> {
   const supabase = createSupabaseAdminClient();
 
-  const { data, error } = await supabase
+  const { data: refs, error } = await supabase
     .from("referrals")
-    .select("status")
+    .select("referral_code, status")
     .eq("referrer_email", email);
 
-  if (error || !data) {
+  if (error || !refs) {
     return { totalReferrals: 0, totalClicked: 0, totalConverted: 0, kFactor: 0 };
   }
 
-  const totalReferrals = data.length;
-  const totalClicked = data.filter((r) => r.status !== "pending").length;
-  const totalConverted = data.filter(
-    (r) => r.status === "signed_up" || r.status === "subscribed",
-  ).length;
+  const totalReferrals = refs.length;
+  const totalClicked = refs.filter((r) => r.status !== "pending").length;
+
+  let totalConverted = 0;
+  if (refs.length > 0) {
+    const codes = refs.map((r) => r.referral_code);
+    const { count } = await supabase
+      .from("region_votes")
+      .select("*", { count: "exact", head: true })
+      .in("referral_code", codes);
+    totalConverted = count ?? 0;
+  }
+
   const kFactor = totalReferrals > 0 ? totalConverted / totalReferrals : 0;
 
   return { totalReferrals, totalClicked, totalConverted, kFactor };
