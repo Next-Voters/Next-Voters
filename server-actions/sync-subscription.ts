@@ -9,9 +9,10 @@ import { getStripe } from "@/lib/stripe";
 // but Stripe still reports an active subscription — /api/stripe/checkout
 // 409s in that state, and we want /local to auto-heal rather than surface
 // an error card.
-export async function syncSubscriptionFromStripe(): Promise<
-  { ok: true } | { ok: false; error: string }
-> {
+export async function syncSubscriptionFromStripe(): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

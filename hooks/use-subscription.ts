@@ -11,7 +11,7 @@ interface SubscriptionState {
   tier: 'pro' | 'free' | 'none';
 }
 
-export function useSubscription(): SubscriptionState & { refetch: () => void } {
+export function useSubscription(): SubscriptionState & { refetch: () => Promise<void> } {
   const [state, setState] = useState<SubscriptionState>({
     isPro: false,
     isAuthenticated: false,
@@ -20,11 +20,10 @@ export function useSubscription(): SubscriptionState & { refetch: () => void } {
     tier: 'none',
   });
 
-  const refetch = useCallback(() => {
+  const refetch = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
-    getSubscriptionStatus().then((result) => {
-      setState({ ...result, isLoading: false });
-    });
+    const result = await getSubscriptionStatus();
+    setState({ ...result, isLoading: false });
   }, []);
 
   useEffect(() => {
