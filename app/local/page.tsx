@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { SubscriptionDashboard } from '@/components/local/subscription-dashboard';
 import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
+import { syncSubscriptionFromStripe } from '@/server-actions/sync-subscription';
 import {
   ONBOARDING_STORAGE_KEY,
   clearOnboardingBlob,
@@ -102,6 +103,18 @@ function NVLocalInner() {
             referralCode: blob!.referralCode || undefined,
           }),
         });
+
+        // Stripe already has an active subscription for this customer — the DB
+        // row is out of sync. Sync it from Stripe and re-render the dashboard.
+        if (res.status === 409) {
+          await syncSubscriptionFromStripe();
+          clearPendingPlanInStorage();
+          kickoffFiredRef.current = false;
+          setKickoffState('idle');
+          refetch();
+          return;
+        }
+
         const data = await res.json();
         if (data.url) {
           clearPendingPlanInStorage();
