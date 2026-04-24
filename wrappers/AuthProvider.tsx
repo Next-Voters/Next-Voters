@@ -49,6 +49,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    // Explicitly clear React state. createSupabaseBrowserClient() returns a
+    // fresh instance each call, so the onAuthStateChange listener installed
+    // above (on a different instance) doesn't fire a SIGNED_OUT event when
+    // we sign out on this one. Without this, `user` stayed set in state
+    // until the next page reload, making the UI look like the user was
+    // still signed in.
+    setUser(null);
+    setSession(null);
   };
 
   return (
