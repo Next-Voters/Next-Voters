@@ -1,13 +1,31 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useRouter,
+  useSearchParams,
+  type ReadonlyURLSearchParams,
+} from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { SubscriptionDashboard } from '@/components/local/subscription-dashboard';
 import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
 import { syncSubscriptionFromStripe } from '@/server-actions/sync-subscription';
+
+// Build a /local/onboarding URL that preserves any in-flight wizard state
+// params so the wizard hydrates back to the user's last step instead of
+// starting over at step 1.
+function onboardingReturnUrl(searchParams: ReadonlyURLSearchParams): string {
+  const KEEP = ['city', 'language', 'topics', 'cityRequest', 'ref'] as const;
+  const out = new URLSearchParams();
+  for (const key of KEEP) {
+    const value = searchParams.get(key);
+    if (value) out.set(key, value);
+  }
+  const qs = out.toString();
+  return qs ? `/local/onboarding?${qs}` : '/local/onboarding';
+}
 
 function NVLocalInner() {
   const router = useRouter();
@@ -32,6 +50,10 @@ function NVLocalInner() {
   const pendingRef = searchParams.get('ref');
   const hasPendingCheckout = Boolean(
     pendingPlan && pendingCity && pendingLanguage && pendingTopicsRaw,
+  );
+  const onboardingFallback = useMemo(
+    () => onboardingReturnUrl(searchParams),
+    [searchParams],
   );
 
   // Post-Stripe fulfillment. Ref keyed on sessionId guards against StrictMode
@@ -131,16 +153,17 @@ function NVLocalInner() {
   // stay put while a pending kickoff is about to fire (authed user just
   // returned from OAuth) — but if the user is null (genuinely unauth, or
   // the rare case of stale URL params with no session), send them through
-  // onboarding regardless, otherwise we'd render nothing.
+  // onboarding regardless. Preserve wizard state params on the redirect
+  // so the wizard hydrates back to the user's last step.
   useEffect(() => {
     if (authLoading || subLoading || fulfilling || kickingOff) return;
     if (!user) {
-      router.replace('/local/onboarding');
+      router.replace(onboardingFallback);
       return;
     }
     if (hasSubscription) return;
     if (hasPendingCheckout) return;
-    router.replace('/local/onboarding');
+    router.replace(onboardingFallback);
   }, [
     authLoading,
     subLoading,
@@ -150,6 +173,7 @@ function NVLocalInner() {
     user,
     hasSubscription,
     router,
+    onboardingFallback,
   ]);
 
   if (authLoading || subLoading || fulfilling || kickingOff) {
@@ -184,7 +208,7 @@ function NVLocalInner() {
           </p>
           <button
             type="button"
-            onClick={() => router.replace('/local/onboarding')}
+            onClick={() => router.replace(onboardingFallback)}
             className="inline-flex items-center justify-center min-h-[44px] px-6 text-[14.5px] font-semibold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors shadow-sm"
           >
             Back to plan selection
