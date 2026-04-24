@@ -14,16 +14,8 @@ const MobileHeader: React.FC = () => {
     <>
       <header className="w-full bg-page border-b border-gray-200/80 sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="px-4 h-14 flex justify-between items-center">
-          <a
-            href="/"
-            aria-label="Next Voters"
-            className="flex items-center hover:opacity-80 transition-opacity"
-          >
-            <img
-              src="/logo/nextvoters.png"
-              alt="Next Voters"
-              className="h-10 w-auto"
-            />
+          <a href="/" className="text-[17px] font-bold text-gray-900 tracking-tight">
+            NV
           </a>
 
           <div className="flex items-center gap-2">
