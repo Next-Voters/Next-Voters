@@ -1,36 +1,19 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
-import { readPendingAction } from '@/lib/pending-action';
 
 function LoginInner() {
   const searchParams = useSearchParams();
-  const urlRedirectTo = searchParams.get('redirectTo');
-  // Resolution priority: explicit ?redirectTo= URL param > pending-action
-  // cookie (so a mid-flow user who ended up on /login gets bounced back to
-  // /local or /local/onboarding to run the kickoff) > `/` home.
-  const [resolvedRedirect, setResolvedRedirect] = useState<string>(
-    urlRedirectTo ?? '/',
-  );
+  // Default post-auth destination is /local. /local itself routes based on
+  // subscription state and the nv_pending_action cookie (dashboard for
+  // subscribers; Stripe kickoff for subscribe-intent; otherwise bounce to
+  // /local/onboarding — which also reads the cookie for request-flow users).
+  // Explicit ?redirectTo= (e.g. from /chat's unauth redirect) still wins.
+  const resolvedRedirect = searchParams.get('redirectTo') ?? '/local';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (urlRedirectTo) {
-      setResolvedRedirect(urlRedirectTo);
-      return;
-    }
-    const pending = readPendingAction();
-    if (pending?.type === 'subscribe') {
-      setResolvedRedirect('/local');
-    } else if (pending?.type === 'request') {
-      setResolvedRedirect('/local/onboarding');
-    } else {
-      setResolvedRedirect('/');
-    }
-  }, [urlRedirectTo]);
 
   const handleGoogleSignIn = async () => {
     setError('');
