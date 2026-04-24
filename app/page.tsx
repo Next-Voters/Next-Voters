@@ -226,7 +226,7 @@ const Home = () => {
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="/next-voters-local"
+                href="/local"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-gray-50 text-gray-900 text-[15px] font-semibold px-6 h-12 border border-gray-200 transition-colors w-full sm:w-auto"
               >
                 Get weekly local alerts
@@ -440,7 +440,7 @@ const Home = () => {
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="/next-voters-local"
+                href="/local"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-[15px] font-semibold px-7 h-12 border border-white/15 transition-colors w-full sm:w-auto backdrop-blur"
               >
                 Subscribe to alerts
