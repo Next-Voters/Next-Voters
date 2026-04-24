@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  clearPendingAction,
+  readPendingAction,
+  writePendingAction,
+} from "@/lib/pending-action";
 import { getSupportedCities } from "@/server-actions/get-supported-cities";
+import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { syncSubscriptionFromStripe } from "@/server-actions/sync-subscription";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
@@ -58,9 +64,11 @@ export function OnboardingWizard() {
   );
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [preAuthNotice, setPreAuthNotice] = useState<string | null>(null);
+  const [autoKickoffLabel, setAutoKickoffLabel] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
   const hydratedFromCityParamRef = useRef(false);
+  const requestCookieHandledRef = useRef(false);
 
   useEffect(() => {
     getSupportedCities()
@@ -140,6 +148,50 @@ export function OnboardingWizard() {
     router,
   ]);
 
+  // Request-flow OAuth return: cookie carries the requested city. We land on
+  // /local/onboarding post-auth; read the cookie, auto-submit the waitlist,
+  // and advance to the alternatives step. One-shot via ref.
+  useEffect(() => {
+    if (requestCookieHandledRef.current) return;
+    if (!user?.email) return;
+    const pending = readPendingAction();
+    if (!pending || pending.type !== "request") return;
+    if (!pending.city) {
+      clearPendingAction();
+      return;
+    }
+    requestCookieHandledRef.current = true;
+
+    updateState({
+      city: "",
+      cityRequest: { city: pending.city },
+    });
+    setMode("request");
+    setStep(2);
+    setAutoKickoffLabel(`Adding ${pending.city} to your waitlist…`);
+
+    (async () => {
+      try {
+        const result = await submitRegionWaitlist({
+          city: pending.city,
+          voterEmail: user.email!,
+          referralCode: pending.referralCode || undefined,
+        });
+        clearPendingAction();
+        if (result.ok === false) {
+          setCheckoutError(result.error);
+        } else {
+          setStep(3);
+        }
+      } catch {
+        clearPendingAction();
+        setCheckoutError("We couldn't save your request. Please try again.");
+      } finally {
+        setAutoKickoffLabel(null);
+      }
+    })();
+  }, [user, updateState, setMode, setStep]);
+
   const totalSteps = mode === "request" ? 3 : 4;
   const stepLabel =
     mode === "request"
@@ -161,29 +213,33 @@ export function OnboardingWizard() {
       setCheckoutError(null);
 
       if (!user) {
-        // Carry the full plan selection through the OAuth round-trip via URL
-        // params (no client storage). /local reads these and auto-fires the
-        // Stripe checkout POST after the user is authed.
-        setPendingPlan(plan);
-        setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        const params = new URLSearchParams({
+        // Carry the full plan selection through the OAuth round-trip via a
+        // SameSite=Lax cookie. Embedding state in `redirectTo` (e.g.
+        // `?next=%2Flocal%3Fplan%3D...`) is fragile: Supabase strict-matches
+        // redirect URLs and falls back to the Site URL on mismatch, stranding
+        // the user on the home page. The redirectTo stays clean; /local reads
+        // the cookie and fires the Stripe POST after auth settles.
+        writePendingAction({
+          type: "subscribe",
           plan,
           city: state.city,
           language: state.language,
-          topics: state.topics.join(","),
+          topics: state.topics,
+          cityRequest: state.cityRequest,
+          referralCode: referralCode || null,
         });
-        if (state.cityRequest?.city) params.set("cityRequest", state.cityRequest.city);
-        if (referralCode) params.set("ref", referralCode);
-        const next = `/local?${params.toString()}`;
+        setPendingPlan(plan);
+        setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
         const supabase = createSupabaseBrowserClient();
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local")}`,
           },
         });
         if (oauthError) {
+          clearPendingAction();
           setPreAuthNotice(null);
           setCheckoutError(oauthError.message);
           scrollToBottom();
@@ -371,23 +427,34 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      {preAuthNotice && (
+      {(preAuthNotice || autoKickoffLabel) && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-5 animate-in fade-in duration-150"
           role="status"
           aria-live="polite"
         >
           <div className="w-full max-w-[380px] bg-white rounded-2xl shadow-xl p-6 text-center">
-            <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
-              Last step: save your plan!
-            </p>
-            <p className="text-[14px] text-gray-500 mb-5">
-              Login to a Next Voters account.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              Redirecting to Google…
-            </div>
+            {preAuthNotice ? (
+              <>
+                <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
+                  Last step: save your plan!
+                </p>
+                <p className="text-[14px] text-gray-500 mb-5">
+                  Login to a Next Voters account.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  Redirecting to Google…
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" aria-hidden="true" />
+                <p className="text-[14.5px] font-semibold text-gray-800">
+                  {autoKickoffLabel}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

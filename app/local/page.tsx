@@ -1,31 +1,18 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  useRouter,
-  useSearchParams,
-  type ReadonlyURLSearchParams,
-} from 'next/navigation';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { SubscriptionDashboard } from '@/components/local/subscription-dashboard';
+import {
+  clearPendingAction,
+  readPendingAction,
+  type PendingAction,
+} from '@/lib/pending-action';
 import { fulfillCheckout } from '@/server-actions/fulfill-checkout';
 import { syncSubscriptionFromStripe } from '@/server-actions/sync-subscription';
-
-// Build a /local/onboarding URL that preserves any in-flight wizard state
-// params so the wizard hydrates back to the user's last step instead of
-// starting over at step 1.
-function onboardingReturnUrl(searchParams: ReadonlyURLSearchParams): string {
-  const KEEP = ['city', 'language', 'topics', 'cityRequest', 'ref'] as const;
-  const out = new URLSearchParams();
-  for (const key of KEEP) {
-    const value = searchParams.get(key);
-    if (value) out.set(key, value);
-  }
-  const qs = out.toString();
-  return qs ? `/local/onboarding?${qs}` : '/local/onboarding';
-}
 
 function NVLocalInner() {
   const router = useRouter();
@@ -35,26 +22,21 @@ function NVLocalInner() {
   const [fulfilling, setFulfilling] = useState(false);
   const [kickingOff, setKickingOff] = useState(false);
   const [kickoffError, setKickoffError] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const [pendingChecked, setPendingChecked] = useState(false);
   const fulfilledSessionRef = useRef<string | null>(null);
   const kickoffFiredRef = useRef(false);
 
   const isPostCheckout = searchParams.get('checkout') === 'success';
   const sessionId = searchParams.get('session_id');
 
-  // URL-carried pending plan handed off from /local/onboarding after OAuth.
-  const pendingPlan = searchParams.get('plan');
-  const pendingCity = searchParams.get('city');
-  const pendingLanguage = searchParams.get('language');
-  const pendingTopicsRaw = searchParams.get('topics');
-  const pendingCityRequest = searchParams.get('cityRequest');
-  const pendingRef = searchParams.get('ref');
-  const hasPendingCheckout = Boolean(
-    pendingPlan && pendingCity && pendingLanguage && pendingTopicsRaw,
-  );
-  const onboardingFallback = useMemo(
-    () => onboardingReturnUrl(searchParams),
-    [searchParams],
-  );
+  // Read the pending-action cookie once on mount.
+  useEffect(() => {
+    setPending(readPendingAction());
+    setPendingChecked(true);
+  }, []);
+
+  const hasSubscribeIntent = pending?.type === 'subscribe';
 
   // Post-Stripe fulfillment. Ref keyed on sessionId guards against StrictMode
   // double-invocation (submitRegionWaitlist inside is not idempotent).
@@ -73,37 +55,35 @@ function NVLocalInner() {
     })();
   }, [isPostCheckout, sessionId, user, refetch]);
 
-  // Auto-kickoff Stripe checkout using URL-carried plan selection (after OAuth
-  // round-trip from /local/onboarding). Reads the params, POSTs to the checkout
-  // API, redirects the user to Stripe. Falls through to the dashboard if the
-  // user already has an active Stripe sub (via 409 + sync).
+  // Subscribe kickoff: cookie carries the pending selection after OAuth.
   useEffect(() => {
+    if (!pendingChecked) return;
     if (authLoading || subLoading || fulfilling) return;
     if (!user || hasSubscription) return;
-    if (!hasPendingCheckout) return;
+    if (!hasSubscribeIntent) return;
     if (kickoffFiredRef.current) return;
     kickoffFiredRef.current = true;
     setKickingOff(true);
 
-    const topics = pendingTopicsRaw!.split(',').filter(Boolean);
-    const body = {
-      plan: pendingPlan,
-      city: pendingCity,
-      language: pendingLanguage,
-      topics,
-      cityRequest: pendingCityRequest ? { city: pendingCityRequest } : null,
-      referralCode: pendingRef || undefined,
-    };
+    const sub = pending as Extract<PendingAction, { type: 'subscribe' }>;
 
     (async () => {
       try {
         const res = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            plan: sub.plan,
+            city: sub.city,
+            language: sub.language,
+            topics: sub.topics,
+            cityRequest: sub.cityRequest,
+            referralCode: sub.referralCode || undefined,
+          }),
         });
 
         if (res.status === 409) {
+          clearPendingAction();
           const syncResult = await syncSubscriptionFromStripe();
           if (!syncResult.ok) {
             setKickoffError(
@@ -113,8 +93,6 @@ function NVLocalInner() {
             setKickingOff(false);
             return;
           }
-          // Clear URL params before rendering dashboard.
-          router.replace('/local');
           await refetch();
           setKickingOff(false);
           return;
@@ -122,61 +100,57 @@ function NVLocalInner() {
 
         const data = await res.json();
         if (data.url) {
+          clearPendingAction();
           window.location.href = data.url;
           return;
         }
+        clearPendingAction();
         setKickoffError(data.error ?? 'Something went wrong. Please try again.');
         setKickingOff(false);
       } catch {
+        clearPendingAction();
         setKickoffError("We couldn't reach checkout. Please try again.");
         setKickingOff(false);
       }
     })();
   }, [
+    pendingChecked,
     authLoading,
     subLoading,
     fulfilling,
     user,
     hasSubscription,
-    hasPendingCheckout,
-    pendingPlan,
-    pendingCity,
-    pendingLanguage,
-    pendingTopicsRaw,
-    pendingCityRequest,
-    pendingRef,
+    hasSubscribeIntent,
+    pending,
     refetch,
-    router,
   ]);
 
-  // Redirect to onboarding for anyone without a subscription. Exception:
-  // stay put while a pending kickoff is about to fire (authed user just
-  // returned from OAuth) — but if the user is null (genuinely unauth, or
-  // the rare case of stale URL params with no session), send them through
-  // onboarding regardless. Preserve wizard state params on the redirect
-  // so the wizard hydrates back to the user's last step.
+  // Redirect for anyone without a subscription. Exception: stay put while a
+  // subscribe kickoff is about to fire or in flight. When user=null, always
+  // bounce through onboarding (cookie survives to the next /local visit).
   useEffect(() => {
+    if (!pendingChecked) return;
     if (authLoading || subLoading || fulfilling || kickingOff) return;
     if (!user) {
-      router.replace(onboardingFallback);
+      router.replace('/local/onboarding');
       return;
     }
     if (hasSubscription) return;
-    if (hasPendingCheckout) return;
-    router.replace(onboardingFallback);
+    if (hasSubscribeIntent) return;
+    router.replace('/local/onboarding');
   }, [
+    pendingChecked,
     authLoading,
     subLoading,
     fulfilling,
     kickingOff,
-    hasPendingCheckout,
     user,
     hasSubscription,
+    hasSubscribeIntent,
     router,
-    onboardingFallback,
   ]);
 
-  if (authLoading || subLoading || fulfilling || kickingOff) {
+  if (authLoading || subLoading || fulfilling || kickingOff || !pendingChecked) {
     const label = fulfilling
       ? 'Setting up your subscription…'
       : kickingOff
@@ -208,7 +182,7 @@ function NVLocalInner() {
           </p>
           <button
             type="button"
-            onClick={() => router.replace(onboardingFallback)}
+            onClick={() => router.replace('/local/onboarding')}
             className="inline-flex items-center justify-center min-h-[44px] px-6 text-[14.5px] font-semibold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors shadow-sm"
           >
             Back to plan selection
