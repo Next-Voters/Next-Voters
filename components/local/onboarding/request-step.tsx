@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { clearPendingAction, writePendingAction } from "@/lib/pending-action";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { OnboardingState } from "./types";
 
@@ -47,14 +48,21 @@ export function RequestStep({ state, referralCode, onContinue }: Props) {
   const handleGoogleSignIn = async () => {
     setError(null);
     setSubmitting(true);
+    // Carry requested city via cookie (see lib/pending-action.ts for why).
+    writePendingAction({
+      type: "request",
+      city,
+      referralCode: referralCode || null,
+    });
     const supabase = createSupabaseBrowserClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/local/onboarding?city=${encodeURIComponent(city)}`)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding")}`,
       },
     });
     if (oauthError) {
+      clearPendingAction();
       setError(oauthError.message);
       setSubmitting(false);
     }
