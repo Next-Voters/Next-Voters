@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, MapPin, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MapPin, Search } from "lucide-react";
 import { OnboardingState } from "./types";
 
 interface Props {
@@ -29,7 +29,7 @@ export function CityStep({
     state.city || state.cityRequest?.city || "",
   );
   const [error, setError] = useState<string | null>(null);
-  const [apiSuggestions, setApiSuggestions] = useState<PhotonSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<PhotonSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [pickedCity, setPickedCity] = useState("");
@@ -38,7 +38,7 @@ export function CityStep({
   useEffect(() => {
     const trimmed = input.trim();
     if (trimmed.length < 2 || trimmed === pickedCity) {
-      setApiSuggestions([]);
+      setSuggestions([]);
       return;
     }
     const controller = new AbortController();
@@ -50,13 +50,13 @@ export function CityStep({
           { signal: controller.signal },
         );
         if (!res.ok) {
-          setApiSuggestions([]);
+          setSuggestions([]);
           return;
         }
         const data = (await res.json()) as { cities?: PhotonSuggestion[] };
-        setApiSuggestions(data.cities ?? []);
+        setSuggestions(data.cities ?? []);
       } catch (err) {
-        if ((err as Error).name !== "AbortError") setApiSuggestions([]);
+        if ((err as Error).name !== "AbortError") setSuggestions([]);
       } finally {
         setSuggestionsLoading(false);
       }
@@ -67,26 +67,8 @@ export function CityStep({
     };
   }, [input, pickedCity]);
 
-  const { supportedMatches, otherSuggestions } = useMemo(() => {
-    const trimmed = input.trim().toLowerCase();
-    if (trimmed.length < 1) {
-      return { supportedMatches: [], otherSuggestions: apiSuggestions };
-    }
-    const supportedMatches = supportedCities.filter((c) =>
-      c.toLowerCase().includes(trimmed),
-    );
-    const supportedSet = new Set(supportedMatches.map((c) => c.toLowerCase()));
-    const otherSuggestions = apiSuggestions.filter(
-      (s) => !supportedSet.has(s.name.toLowerCase()),
-    );
-    return { supportedMatches, otherSuggestions };
-  }, [input, supportedCities, apiSuggestions]);
-
   const hasDropdown =
-    suggestionsOpen &&
-    (supportedMatches.length > 0 ||
-      otherSuggestions.length > 0 ||
-      suggestionsLoading);
+    suggestionsOpen && (suggestions.length > 0 || suggestionsLoading);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -101,7 +83,7 @@ export function CityStep({
   const handlePick = (name: string) => {
     setInput(name);
     setPickedCity(name);
-    setApiSuggestions([]);
+    setSuggestions([]);
     setSuggestionsOpen(false);
     setError(null);
   };
@@ -128,9 +110,9 @@ export function CityStep({
   return (
     <div>
       <p className="text-[15px] text-gray-500 leading-relaxed mb-6">
-        Where do you want civic updates for? Pick a city from the list or type
-        any city — if we don&rsquo;t cover it yet, we&rsquo;ll add you to the
-        waitlist.
+        Where do you want civic updates for? Start typing to see suggestions, or
+        enter any city — if we don&rsquo;t cover it yet, we&rsquo;ll add you to
+        the waitlist.
       </p>
 
       <label
@@ -173,73 +155,35 @@ export function CityStep({
         </div>
 
         {hasDropdown && (
-          <div
+          <ul
             className="absolute left-0 right-0 z-[60] mt-1 max-h-[320px] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
             role="listbox"
           >
-            {supportedMatches.length > 0 && (
-              <div>
-                <p className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-brand uppercase tracking-widest">
-                  Available now
-                </p>
-                <ul>
-                  {supportedMatches.map((city) => (
-                    <li key={`sup-${city}`} role="option" aria-selected={input === city}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handlePick(city)}
-                        className="w-full flex items-center gap-2 text-left px-3 py-2.5 text-[14px] text-gray-900 hover:bg-brand/5"
-                      >
-                        <Check className="w-4 h-4 text-brand shrink-0" aria-hidden="true" />
-                        <span className="font-semibold">{city}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {suggestions.length === 0 && suggestionsLoading && (
+              <li className="px-3 py-3 text-[13px] text-gray-400">Searching…</li>
             )}
-
-            {otherSuggestions.length > 0 && (
-              <div>
-                {supportedMatches.length > 0 && (
-                  <div className="border-t border-gray-100" />
-                )}
-                <p className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                  Request a city
-                </p>
-                <ul>
-                  {otherSuggestions.map((s) => (
-                    <li key={s.label} role="option" aria-selected={pickedCity === s.name}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handlePick(s.name)}
-                        className="w-full flex items-start gap-2 text-left px-3 py-2.5 text-[13.5px] hover:bg-gray-50"
-                      >
-                        <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" aria-hidden="true" />
-                        <span>
-                          <span className="font-semibold text-gray-900">{s.name}</span>
-                          {s.label !== s.name && (
-                            <span className="text-gray-500">
-                              {" — "}
-                              {s.label.replace(`${s.name}, `, "")}
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {supportedMatches.length === 0 &&
-              otherSuggestions.length === 0 &&
-              suggestionsLoading && (
-                <p className="px-3 py-3 text-[13px] text-gray-400">Searching…</p>
-              )}
-          </div>
+            {suggestions.map((s) => (
+              <li key={s.label} role="option" aria-selected={pickedCity === s.name}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handlePick(s.name)}
+                  className="w-full flex items-start gap-2 text-left px-3 py-2.5 text-[13.5px] hover:bg-gray-50"
+                >
+                  <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>
+                    <span className="font-semibold text-gray-900">{s.name}</span>
+                    {s.label !== s.name && (
+                      <span className="text-gray-500">
+                        {" — "}
+                        {s.label.replace(`${s.name}, `, "")}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
