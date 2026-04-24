@@ -127,13 +127,20 @@ function NVLocalInner() {
     router,
   ]);
 
-  // Redirect to onboarding only when there's no pending kickoff in flight.
+  // Redirect to onboarding for anyone without a subscription. Exception:
+  // stay put while a pending kickoff is about to fire (authed user just
+  // returned from OAuth) — but if the user is null (genuinely unauth, or
+  // the rare case of stale URL params with no session), send them through
+  // onboarding regardless, otherwise we'd render nothing.
   useEffect(() => {
     if (authLoading || subLoading || fulfilling || kickingOff) return;
-    if (hasPendingCheckout) return;
-    if (!user || !hasSubscription) {
+    if (!user) {
       router.replace('/local/onboarding');
+      return;
     }
+    if (hasSubscription) return;
+    if (hasPendingCheckout) return;
+    router.replace('/local/onboarding');
   }, [
     authLoading,
     subLoading,
