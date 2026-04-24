@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getSupportedCities } from "@/server-actions/get-supported-cities";
+import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
 import { TopicsStep } from "./topics-step";
@@ -13,7 +14,11 @@ import { PlanStep } from "./plan-step";
 import { RequestStep } from "./request-step";
 import { AlternativeCitiesStep } from "./alternative-cities-step";
 import { OnboardingMode, OnboardingStep } from "./types";
-import { useOnboardingState } from "./use-onboarding-state";
+import {
+  ONBOARDING_STORAGE_KEY,
+  useOnboardingState,
+  type StoredOnboardingBlob,
+} from "./use-onboarding-state";
 
 const SUBSCRIBE_LABELS: Record<OnboardingStep, string> = {
   1: "City",
@@ -28,6 +33,23 @@ const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
   3: "Other cities?",
 };
 
+// Writes to localStorage synchronously so the blob is flushed before we navigate
+// away to Stripe. Without this, the pending state-write effect may not run before
+// the browser unloads.
+function clearPendingPlanInStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (!raw) return;
+    const blob = JSON.parse(raw) as StoredOnboardingBlob;
+    blob.pendingPlan = null;
+    blob.updatedAt = Date.now();
+    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(blob));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function OnboardingWizard() {
   const searchParams = useSearchParams();
   const urlRef = searchParams.get("ref");
@@ -40,6 +62,7 @@ export function OnboardingWizard() {
     state,
     step,
     mode,
+    pendingPlan,
     referralCode,
     updateState,
     setStep,
@@ -57,8 +80,10 @@ export function OnboardingWizard() {
   );
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [preAuthNotice, setPreAuthNotice] = useState<string | null>(null);
+  const [autoKickoffLabel, setAutoKickoffLabel] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
+  const autoKickoffFiredRef = useRef(false);
 
   useEffect(() => {
     getSupportedCities()
@@ -81,6 +106,84 @@ export function OnboardingWizard() {
       setReferralCode(urlRef);
     }
   }, [isHydrated, urlRef, referralCode, setReferralCode]);
+
+  // Auto-kickoff: after returning from Google OAuth, pick up where the user
+  // left off. Either resume the Stripe checkout for a pending plan, or submit
+  // the pending city request and advance to the alternatives step.
+  useEffect(() => {
+    if (!isHydrated || !user || autoKickoffFiredRef.current) return;
+
+    const canAutoSubscribe =
+      mode === "subscribe" &&
+      Boolean(pendingPlan) &&
+      Boolean(state.city) &&
+      Boolean(state.language) &&
+      state.topics.length > 0;
+
+    if (canAutoSubscribe) {
+      autoKickoffFiredRef.current = true;
+      setAutoKickoffLabel("Finishing your setup…");
+      (async () => {
+        try {
+          const res = await fetch("/api/stripe/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              plan: pendingPlan,
+              city: state.city,
+              language: state.language,
+              topics: state.topics,
+              cityRequest: state.cityRequest,
+              referralCode: referralCode || undefined,
+            }),
+          });
+          const data = await res.json();
+          if (data.url) {
+            // Clear pending plan so a back-button bounce to this page doesn't
+            // re-fire into checkout again. User can manually retry from step 4.
+            clearPendingPlanInStorage();
+            window.location.href = data.url;
+            return;
+          }
+          setAutoKickoffLabel(null);
+          setCheckoutError(data.error ?? "Something went wrong. Please try again.");
+        } catch {
+          setAutoKickoffLabel(null);
+          setCheckoutError("We couldn't reach checkout. Please try again.");
+        }
+      })();
+      return;
+    }
+
+    const canAutoRequest =
+      mode === "request" &&
+      Boolean(state.cityRequest?.city) &&
+      step === 2;
+
+    if (canAutoRequest) {
+      autoKickoffFiredRef.current = true;
+      setAutoKickoffLabel(`Adding ${state.cityRequest!.city} to your waitlist…`);
+      (async () => {
+        try {
+          const result = await submitRegionWaitlist({
+            city: state.cityRequest!.city,
+            voterEmail: user.email,
+            referralCode: referralCode || undefined,
+          });
+          if (result.ok === false) {
+            setAutoKickoffLabel(null);
+            setCheckoutError(result.error);
+            return;
+          }
+          setStep(3);
+          setAutoKickoffLabel(null);
+        } catch {
+          setAutoKickoffLabel(null);
+          setCheckoutError("We couldn't save your request. Please try again.");
+        }
+      })();
+    }
+  }, [isHydrated, user, mode, pendingPlan, state, step, referralCode, setStep]);
 
   const totalSteps = mode === "request" ? 3 : 4;
   const stepLabel =
@@ -117,7 +220,7 @@ export function OnboardingWizard() {
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding/resume")}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding")}`,
           },
         });
         if (oauthError) {
@@ -305,23 +408,34 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      {preAuthNotice && (
+      {(preAuthNotice || autoKickoffLabel) && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-5 animate-in fade-in duration-150"
           role="status"
           aria-live="polite"
         >
           <div className="w-full max-w-[380px] bg-white rounded-2xl shadow-xl p-6 text-center">
-            <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
-              Last step: save your plan!
-            </p>
-            <p className="text-[14px] text-gray-500 mb-5">
-              Login to a Next Voters account.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              Redirecting to Google…
-            </div>
+            {preAuthNotice ? (
+              <>
+                <p className="text-[17px] font-bold text-gray-950 tracking-tight mb-1.5">
+                  Last step: save your plan!
+                </p>
+                <p className="text-[14px] text-gray-500 mb-5">
+                  Login to a Next Voters account.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  Redirecting to Google…
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" aria-hidden="true" />
+                <p className="text-[14.5px] font-semibold text-gray-800">
+                  {autoKickoffLabel}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
