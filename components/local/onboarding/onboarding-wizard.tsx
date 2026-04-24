@@ -138,14 +138,26 @@ export function OnboardingWizard() {
       setCheckoutError(null);
 
       if (!user) {
+        // Carry the full plan selection through the OAuth round-trip via URL
+        // params (no client storage). /local reads these and auto-fires the
+        // Stripe checkout POST after the user is authed.
         setPendingPlan(plan);
         setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
         await new Promise((resolve) => setTimeout(resolve, 1200));
+        const params = new URLSearchParams({
+          plan,
+          city: state.city,
+          language: state.language,
+          topics: state.topics.join(","),
+        });
+        if (state.cityRequest?.city) params.set("cityRequest", state.cityRequest.city);
+        if (referralCode) params.set("ref", referralCode);
+        const next = `/local?${params.toString()}`;
         const supabase = createSupabaseBrowserClient();
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local")}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
           },
         });
         if (oauthError) {

@@ -51,7 +51,7 @@ export function RequestStep({ state, referralCode, onContinue }: Props) {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding")}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/local/onboarding?city=${encodeURIComponent(city)}`)}`,
       },
     });
     if (oauthError) {
