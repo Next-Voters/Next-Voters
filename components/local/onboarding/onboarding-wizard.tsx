@@ -82,10 +82,13 @@ export function OnboardingWizard() {
     }
   }, [urlRef, referralCode, setReferralCode]);
 
-  // Pre-fill city from `?city=` (e.g., from the landing-page hero). Runs once
-  // after cities load so the supported-match check is valid. The URL param is
-  // stripped after hydration so a remount (auth flip, back-nav) can't re-fire
-  // this effect and clobber user progress past step 2.
+  // Pre-fill city from `?city=` (e.g., from the landing-page hero or the
+  // /local → onboarding "Back to plan selection" path). Also accepts
+  // `?language=` and `?topics=` (comma-sep) so a user returning from a failed
+  // kickoff or from a Supabase cookie-delay redirect lands back on their
+  // furthest-completed step instead of step 1. Runs once after cities load so
+  // the supported-match check is valid. URL is stripped after hydration so a
+  // remount (auth flip, back-nav) can't re-fire this effect.
   useEffect(() => {
     if (citiesLoading || hydratedFromCityParamRef.current) return;
     if (!urlCity) return;
@@ -93,15 +96,34 @@ export function OnboardingWizard() {
     if (!trimmed) return;
     hydratedFromCityParamRef.current = true;
 
+    const urlLanguage = searchParams.get("language")?.trim() ?? "";
+    const urlTopicsRaw = searchParams.get("topics");
+    const urlTopics = urlTopicsRaw
+      ? urlTopicsRaw.split(",").map((t) => t.trim()).filter(Boolean)
+      : [];
+
     const match = supportedCities.find(
       (c) => c.toLowerCase() === trimmed.toLowerCase(),
     );
     if (match) {
-      updateState({ city: match, cityRequest: null });
+      updateState({
+        city: match,
+        cityRequest: null,
+        language: urlLanguage,
+        topics: urlTopics,
+      });
       setMode("subscribe");
-      setStep(2);
+      // Jump to the furthest step the hydrated state unlocks.
+      if (urlLanguage && urlTopics.length > 0) setStep(4);
+      else if (urlLanguage) setStep(3);
+      else setStep(2);
     } else {
-      updateState({ city: "", cityRequest: { city: trimmed } });
+      updateState({
+        city: "",
+        cityRequest: { city: trimmed },
+        language: urlLanguage,
+        topics: urlTopics,
+      });
       setMode("request");
       setStep(2);
     }
@@ -111,6 +133,7 @@ export function OnboardingWizard() {
     citiesLoading,
     supportedCities,
     urlCity,
+    searchParams,
     updateState,
     setMode,
     setStep,
