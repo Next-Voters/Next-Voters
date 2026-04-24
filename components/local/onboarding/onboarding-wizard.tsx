@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getSupportedCities } from "@/server-actions/get-supported-cities";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
+import { syncSubscriptionFromStripe } from "@/server-actions/sync-subscription";
 import { CityStep } from "./city-step";
 import { LanguageStep } from "./language-step";
 import { TopicsStep } from "./topics-step";
@@ -30,14 +31,14 @@ const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
 };
 
 export function OnboardingWizard() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlRef = searchParams.get("ref");
+  const urlCity = searchParams.get("city");
   const { user } = useAuth();
   const errorParam = searchParams.get("error");
 
   const {
-    isHydrated,
-    storageAvailable,
     state,
     step,
     mode,
@@ -62,6 +63,7 @@ export function OnboardingWizard() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstStepChangeRef = useRef(true);
   const autoKickoffFiredRef = useRef(false);
+  const hydratedFromCityParamRef = useRef(false);
 
   useEffect(() => {
     getSupportedCities()
@@ -70,27 +72,47 @@ export function OnboardingWizard() {
   }, []);
 
   useEffect(() => {
-    if (!isHydrated) return;
     if (isFirstStepChangeRef.current) {
       isFirstStepChangeRef.current = false;
       return;
     }
     headingRef.current?.focus();
-  }, [step, mode, isHydrated]);
+  }, [step, mode]);
 
   useEffect(() => {
-    if (!isHydrated) return;
     if (urlRef && urlRef !== referralCode) {
       setReferralCode(urlRef);
     }
-  }, [isHydrated, urlRef, referralCode, setReferralCode]);
+  }, [urlRef, referralCode, setReferralCode]);
+
+  // Pre-fill city from `?city=` (e.g., from the landing-page hero). Runs once
+  // after cities load, so the supported-match check is valid.
+  useEffect(() => {
+    if (citiesLoading || hydratedFromCityParamRef.current) return;
+    if (!urlCity) return;
+    const trimmed = urlCity.trim();
+    if (!trimmed) return;
+    hydratedFromCityParamRef.current = true;
+
+    const match = supportedCities.find(
+      (c) => c.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (match) {
+      updateState({ city: match, cityRequest: null });
+      setMode("subscribe");
+      setStep(2);
+    } else {
+      updateState({ city: "", cityRequest: { city: trimmed } });
+      setMode("request");
+      setStep(2);
+    }
+  }, [citiesLoading, supportedCities, urlCity, updateState, setMode, setStep]);
 
   // Auto-kickoff (request mode only): after returning from Google OAuth with a
   // pending city request, submit the waitlist entry and advance to the
-  // alternatives step. The subscribe-mode kickoff lives on /local now — plan
-  // CTA's OAuth redirects there directly.
+  // alternatives step.
   useEffect(() => {
-    if (!isHydrated || !user || autoKickoffFiredRef.current) return;
+    if (!user || autoKickoffFiredRef.current) return;
 
     const canAutoRequest =
       mode === "request" &&
@@ -120,7 +142,7 @@ export function OnboardingWizard() {
         }
       })();
     }
-  }, [isHydrated, user, mode, state, step, referralCode, setStep]);
+  }, [user, mode, state, step, referralCode, setStep]);
 
   const totalSteps = mode === "request" ? 3 : 4;
   const stepLabel =
@@ -143,13 +165,6 @@ export function OnboardingWizard() {
       setCheckoutError(null);
 
       if (!user) {
-        if (!storageAvailable) {
-          setCheckoutError(
-            "Your browser has saving progress disabled. Enable localStorage or sign in first to continue.",
-          );
-          scrollToBottom();
-          return;
-        }
         setPendingPlan(plan);
         setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
         await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -182,6 +197,15 @@ export function OnboardingWizard() {
             referralCode: referralCode || undefined,
           }),
         });
+
+        // Stripe already has an active subscription for this customer. Sync
+        // the DB row from Stripe and send the user to their dashboard.
+        if (res.status === 409) {
+          await syncSubscriptionFromStripe();
+          router.replace("/local");
+          return;
+        }
+
         const data = await res.json();
         if (data.url) {
           window.location.href = data.url;
@@ -196,7 +220,7 @@ export function OnboardingWizard() {
         scrollToBottom();
       }
     },
-    [state, referralCode, user, storageAvailable, setPendingPlan],
+    [state, referralCode, user, setPendingPlan, router],
   );
 
   const handleCityContinue = useCallback(
@@ -225,26 +249,9 @@ export function OnboardingWizard() {
     [updateState, setMode, setStep],
   );
 
-  if (!isHydrated) {
-    return (
-      <div className="w-full min-h-[calc(100vh-56px)] bg-page flex items-center justify-center">
-        <p className="text-gray-400 text-[14px]">Loading…</p>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full min-h-[calc(100vh-56px)] bg-page">
       <div className="max-w-[560px] mx-auto px-5 sm:px-6 pt-10 pb-16">
-        {!storageAvailable && (
-          <p
-            className="mb-6 text-[13px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
-            role="status"
-          >
-            Your browser has saving progress disabled. Don&apos;t close this tab — your answers won&apos;t be saved between visits.
-          </p>
-        )}
-
         {/* Stepper + back arrow */}
         <div className="flex items-center gap-3 mb-8">
           <button
