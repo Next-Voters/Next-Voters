@@ -219,6 +219,11 @@ export function OnboardingWizard() {
         // redirect URLs and falls back to the Site URL on mismatch, stranding
         // the user on the home page. The redirectTo stays clean; /local reads
         // the cookie and fires the Stripe POST after auth settles.
+        setPendingPlan(plan);
+        setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        // Write the cookie just before OAuth so a user who bails during the
+        // 1.2s notice window doesn't leave a stale cookie behind.
         writePendingAction({
           type: "subscribe",
           plan,
@@ -228,9 +233,6 @@ export function OnboardingWizard() {
           cityRequest: state.cityRequest,
           referralCode: referralCode || null,
         });
-        setPendingPlan(plan);
-        setPreAuthNotice("Last step: save your plan! Login to a Next Voters account.");
-        await new Promise((resolve) => setTimeout(resolve, 1200));
         const supabase = createSupabaseBrowserClient();
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
