@@ -14,11 +14,7 @@ import { PlanStep } from "./plan-step";
 import { RequestStep } from "./request-step";
 import { AlternativeCitiesStep } from "./alternative-cities-step";
 import { OnboardingMode, OnboardingStep } from "./types";
-import {
-  ONBOARDING_STORAGE_KEY,
-  useOnboardingState,
-  type StoredOnboardingBlob,
-} from "./use-onboarding-state";
+import { useOnboardingState } from "./use-onboarding-state";
 
 const SUBSCRIBE_LABELS: Record<OnboardingStep, string> = {
   1: "City",
@@ -33,23 +29,6 @@ const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
   3: "Other cities?",
 };
 
-// Writes to localStorage synchronously so the blob is flushed before we navigate
-// away to Stripe. Without this, the pending state-write effect may not run before
-// the browser unloads.
-function clearPendingPlanInStorage() {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    if (!raw) return;
-    const blob = JSON.parse(raw) as StoredOnboardingBlob;
-    blob.pendingPlan = null;
-    blob.updatedAt = Date.now();
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(blob));
-  } catch {
-    /* ignore */
-  }
-}
-
 export function OnboardingWizard() {
   const searchParams = useSearchParams();
   const urlRef = searchParams.get("ref");
@@ -62,7 +41,6 @@ export function OnboardingWizard() {
     state,
     step,
     mode,
-    pendingPlan,
     referralCode,
     updateState,
     setStep,
@@ -107,53 +85,12 @@ export function OnboardingWizard() {
     }
   }, [isHydrated, urlRef, referralCode, setReferralCode]);
 
-  // Auto-kickoff: after returning from Google OAuth, pick up where the user
-  // left off. Either resume the Stripe checkout for a pending plan, or submit
-  // the pending city request and advance to the alternatives step.
+  // Auto-kickoff (request mode only): after returning from Google OAuth with a
+  // pending city request, submit the waitlist entry and advance to the
+  // alternatives step. The subscribe-mode kickoff lives on /local now — plan
+  // CTA's OAuth redirects there directly.
   useEffect(() => {
     if (!isHydrated || !user || autoKickoffFiredRef.current) return;
-
-    const canAutoSubscribe =
-      mode === "subscribe" &&
-      Boolean(pendingPlan) &&
-      Boolean(state.city) &&
-      Boolean(state.language) &&
-      state.topics.length > 0;
-
-    if (canAutoSubscribe) {
-      autoKickoffFiredRef.current = true;
-      setAutoKickoffLabel("Finishing your setup…");
-      (async () => {
-        try {
-          const res = await fetch("/api/stripe/checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              plan: pendingPlan,
-              city: state.city,
-              language: state.language,
-              topics: state.topics,
-              cityRequest: state.cityRequest,
-              referralCode: referralCode || undefined,
-            }),
-          });
-          const data = await res.json();
-          if (data.url) {
-            // Clear pending plan so a back-button bounce to this page doesn't
-            // re-fire into checkout again. User can manually retry from step 4.
-            clearPendingPlanInStorage();
-            window.location.href = data.url;
-            return;
-          }
-          setAutoKickoffLabel(null);
-          setCheckoutError(data.error ?? "Something went wrong. Please try again.");
-        } catch {
-          setAutoKickoffLabel(null);
-          setCheckoutError("We couldn't reach checkout. Please try again.");
-        }
-      })();
-      return;
-    }
 
     const canAutoRequest =
       mode === "request" &&
@@ -183,7 +120,7 @@ export function OnboardingWizard() {
         }
       })();
     }
-  }, [isHydrated, user, mode, pendingPlan, state, step, referralCode, setStep]);
+  }, [isHydrated, user, mode, state, step, referralCode, setStep]);
 
   const totalSteps = mode === "request" ? 3 : 4;
   const stepLabel =
@@ -220,7 +157,7 @@ export function OnboardingWizard() {
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local/onboarding")}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local")}`,
           },
         });
         if (oauthError) {
