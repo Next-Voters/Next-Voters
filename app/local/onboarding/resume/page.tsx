@@ -35,7 +35,7 @@ export default function ResumePage() {
     if (authLoading) return;
 
     if (!user) {
-      router.replace("/local/onboarding/signup?error=oauth_failed");
+      router.replace("/local/onboarding?error=oauth_failed");
       return;
     }
 
