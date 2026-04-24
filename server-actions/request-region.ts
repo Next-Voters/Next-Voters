@@ -6,9 +6,11 @@ import { convertReferral } from "@/server-actions/referrals";
 
 export async function submitRegionWaitlist(input: {
   city: string;
+  voterEmail?: string;
   referralCode?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const city = input.city?.trim();
+  const voterEmail = input.voterEmail?.trim();
   const referralCode = input.referralCode?.trim();
 
   if (!city) {
@@ -16,35 +18,52 @@ export async function submitRegionWaitlist(input: {
   }
 
   const admin = createSupabaseAdminClient();
+
   const { data: existing } = await admin
     .from("region_requests")
     .select("id, vote_count")
     .eq("city", city)
     .maybeSingle();
 
+  let requestId: number | null = null;
   if (existing) {
     await admin
       .from("region_requests")
       .update({ vote_count: (existing.vote_count ?? 0) + 1 })
       .eq("id", existing.id);
+    requestId = existing.id;
   } else {
-    await admin.from("region_requests").insert({ city, vote_count: 1 });
+    const { data: inserted } = await admin
+      .from("region_requests")
+      .insert({ city, vote_count: 1 })
+      .select("id")
+      .single();
+    requestId = inserted?.id ?? null;
+  }
+
+  if (requestId && voterEmail) {
+    await admin.from("region_votes").insert({
+      request_id: requestId,
+      voter_email: voterEmail,
+      referral_code: referralCode || null,
+    });
   }
 
   if (referralCode) {
-    await convertReferral(referralCode, "", { city });
+    await convertReferral(referralCode, voterEmail || "", { city });
   }
 
   const lines = [
     "New city waitlist request (Next Voters)",
     "",
     `City: ${city}`,
+    ...(voterEmail ? [`Voter: ${voterEmail}`] : []),
     ...(referralCode ? [`Referral code: ${referralCode}`] : []),
   ];
 
   const user = process.env.EMAIL_USER;
   if (!user) {
-    return { ok: false, error: "Email is not configured on the server." };
+    return { ok: true };
   }
 
   try {
@@ -57,9 +76,8 @@ export async function submitRegionWaitlist(input: {
         .map((l) => (l === "" ? "<br/>" : l))
         .join("<br/>")}</pre>`,
     });
-    return { ok: true };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to send";
-    return { ok: false, error: message };
+  } catch {
+    // Admin email is best-effort; the DB write above is the source of truth.
   }
+  return { ok: true };
 }
