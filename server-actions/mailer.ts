@@ -54,8 +54,8 @@ export const sendReferralEmail = async (referrerEmail: string, referredEmail: st
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding: 30px 30px 20px 30px; text-align: center;">
-                    <span style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 72px; color: #FFFFFF; letter-spacing: 4px; line-height: 1; display: block;">NV</span>
-                    <span style="font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; color: #FFFFFF; letter-spacing: 6px; text-transform: uppercase; font-weight: 500; display: block; padding-top: 8px;">Next Voters</span>
+                    <img src="https://nextvoters.com/logo/nextvoters-white.png" alt="Next Voters" width="72" style="display: block; margin: 0 auto; height: auto; border: 0;" />
+                    <span style="font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; color: #FFFFFF; letter-spacing: 6px; text-transform: uppercase; font-weight: 500; display: block; padding-top: 12px;">Next Voters</span>
                   </td>
                 </tr>
               </table>
@@ -146,7 +146,7 @@ export const sendReferralEmail = async (referrerEmail: string, referredEmail: st
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding-bottom: 20px;">
-                    <span style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 28px; color: #FFFFFF; letter-spacing: 3px;">NV</span>
+                    <img src="https://nextvoters.com/logo/nextvoters-white.png" alt="Next Voters" width="36" style="display: inline-block; height: auto; border: 0;" />
                   </td>
                 </tr>
                 <tr>
