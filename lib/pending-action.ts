@@ -31,7 +31,12 @@ interface StoredPendingAction {
   action: PendingAction;
 }
 
-const COOKIE_NAME = "nv_pending_action";
+// Bumped from `nv_pending_action` to `_v2` for a clean cutover after the
+// post-OAuth flow rewrite (PRs #98 / #101 / #102). Anyone with a stale
+// legacy cookie set by the older code is intentionally ignored — they
+// fall back to a fresh wizard run, which is the desired behavior.
+const COOKIE_NAME = "nv_pending_action_v2";
+const LEGACY_COOKIE_NAME = "nv_pending_action";
 const MAX_AGE_SECONDS = 15 * 60;
 const MAX_AGE_MS = MAX_AGE_SECONDS * 1000;
 
@@ -120,4 +125,8 @@ export function readPendingAction(): PendingAction | null {
 export function clearPendingAction(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+  // Defensive: also wipe any legacy cookie still sitting in the browser
+  // from a session that started before the rename. The new code never
+  // reads it, but actively clearing keeps the cookie jar clean.
+  document.cookie = `${LEGACY_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
 }
