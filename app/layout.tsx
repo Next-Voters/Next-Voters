@@ -1,8 +1,11 @@
 import { type Metadata, type Viewport } from 'next'
 import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import Root from '@/components/common/root'
 import { AuthProvider } from '@/wrappers/AuthProvider'
+
+const GOOGLE_ADS_ID = 'AW-18024404483'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -87,6 +90,20 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${dancingScript.variable}`}
     >
+      <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_ADS_ID}');
+          `}
+        </Script>
+      </head>
       <body className="antialiased">
         <AuthProvider>
           <Root>{children}</Root>
