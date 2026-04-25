@@ -33,6 +33,47 @@
   .message {
     animation: fade-in 0.5s ease-in-out;
   }
+
+  /* Continuous shine sweep for high-emphasis CTAs.
+     Pair with a `relative overflow-hidden` button. */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    animation: btn-shine-sweep 3.2s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-shine::after {
+      animation: none;
+      display: none;
+    }
+  }
+}
+
+@keyframes btn-shine-sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  55% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
 }
 
 @keyframes fade-in {

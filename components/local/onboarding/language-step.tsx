@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Languages } from "lucide-react";
 import {
   Select,
@@ -9,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getSupportedLanguages } from "@/server-actions/get-supported-languages";
 import { OnboardingState } from "./types";
 
 interface Props {
@@ -18,16 +16,13 @@ interface Props {
   onContinue: () => void;
 }
 
+// Mirrors `supported_languages` in the DB. Kept inline because the list is
+// small, near-static, and adding a new language requires translation work
+// elsewhere anyway. Avoiding the server-action round-trip also keeps the dev
+// RSC stream from hanging when the action endpoint is slow to compile.
+const LANGUAGES = ["English", "French", "Spanish"];
+
 export function LanguageStep({ state, updateState, onContinue }: Props) {
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getSupportedLanguages()
-      .then(setLanguages)
-      .finally(() => setLoading(false));
-  }, []);
-
   const handleChange = (value: string) => {
     updateState({ language: value });
   };
@@ -41,15 +36,15 @@ export function LanguageStep({ state, updateState, onContinue }: Props) {
       <label className="block mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
         Preferred language
       </label>
-      <Select value={state.language} onValueChange={handleChange} disabled={loading}>
+      <Select value={state.language} onValueChange={handleChange}>
         <SelectTrigger className="w-full bg-white border border-gray-200 text-gray-900 text-[14px] rounded-xl min-h-[44px] pl-3">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <Languages className="h-4 w-4 text-gray-400 shrink-0" />
-            <SelectValue placeholder={loading ? "Loading languages…" : "Select your language"} />
+            <SelectValue placeholder="Select your language" />
           </div>
         </SelectTrigger>
         <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-          {languages.map((lang) => (
+          {LANGUAGES.map((lang) => (
             <SelectItem
               key={lang}
               value={lang}
