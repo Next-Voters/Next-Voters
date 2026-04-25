@@ -15,6 +15,11 @@ interface RootProps {
 // Routes where the footer should not appear
 const NO_FOOTER_PATTERNS = ["/chat", "/local"];
 
+// Routes where the global header should not appear. Used on dedicated
+// ad-traffic landings so paid-traffic visitors land on a clean page with no
+// site-nav distractions.
+const NO_HEADER_PATTERNS = ["/local/sf", "/local/nyc"];
+
 const Root: FC<RootProps> = ({ children }) => {
   const [queryClient] = useState(
     () =>
@@ -30,12 +35,13 @@ const Root: FC<RootProps> = ({ children }) => {
 
   const pathname = usePathname();
   const showFooter = !NO_FOOTER_PATTERNS.some((p) => pathname.startsWith(p));
+  const showHeader = !NO_HEADER_PATTERNS.some((p) => pathname.startsWith(p));
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen flex flex-col">
         <main className="flex min-h-0 flex-1 flex-col">
-          <Header />
+          {showHeader && <Header />}
           {children}
         </main>
         {showFooter && <Footer />}
