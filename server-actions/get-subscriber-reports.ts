@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { citySlug, topicSlug, languageCode } from "@/lib/report-paths";
 import { getUserTopics } from "@/server-actions/get-user-topics";
 
@@ -83,6 +84,11 @@ export async function getSubscriberReports(
   const offsets = decodeCursor(input?.cursor);
   const cSlug = citySlug(sub.city);
 
+  // The cookie-based server client has no SELECT RLS on storage.objects, so
+  // .list() would silently return []. Auth check above already validated the
+  // user; switch to the admin client for the privileged listing only.
+  const storage = createSupabaseAdminClient();
+
   type PerTopic = {
     topic: string;
     slug: string;
@@ -95,7 +101,7 @@ export async function getSubscriberReports(
       const slug = topicSlug(topic);
       const offset = offsets[slug] ?? 0;
       try {
-        const { data, error } = await supabase.storage
+        const { data, error } = await storage.storage
           .from("reports")
           .list(`${cSlug}/${slug}/${langCode}`, {
             limit: fetchPerTopic,
