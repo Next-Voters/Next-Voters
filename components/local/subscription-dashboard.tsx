@@ -5,6 +5,7 @@ import { Mail, CheckCircle2, Link2, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { ManageTopics } from '@/components/local/manage-topics';
+import { EmailHistory } from '@/components/local/email-history';
 import { createReferral, getOrCreateReferralCode, getReferralStats } from '@/server-actions/referrals';
 import { buildReferralLink } from '@/lib/referral';
 import {
@@ -30,6 +31,8 @@ export function SubscriptionDashboard() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  // Bumped on settings save → remounts EmailHistory so it refetches from page 1.
+  const [historyVersion, setHistoryVersion] = useState(0);
   const [stats, setStats] = useState<{
     totalReferrals: number;
     totalClicked: number;
@@ -124,13 +127,16 @@ export function SubscriptionDashboard() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-56px)] bg-page flex flex-col">
-      {/* ManageTopics handles topic selection, tier display, and upgrade prompt */}
-      <ManageTopics />
+    <div className="w-full min-h-[calc(100vh-56px)] bg-page">
+      <div className="w-full max-w-[1200px] mx-auto px-5 sm:px-6 grid gap-8 md:gap-12 md:grid-cols-2">
+        {/* LEFT: settings */}
+        <div className="flex flex-col">
+          {/* ManageTopics handles topic selection, tier display, and upgrade prompt */}
+          <ManageTopics onSaved={() => setHistoryVersion((v) => v + 1)} />
 
-      {/* Subscription actions */}
-      <div className="w-full max-w-[560px] mx-auto px-5 sm:px-6 pb-8">
-        <div className="border-t border-gray-200 pt-8 mt-8">
+          {/* Subscription actions */}
+          <div className="w-full pb-8">
+            <div className="border-t border-gray-200 pt-8 mt-8">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5">
             Subscription
           </p>
@@ -251,6 +257,14 @@ export function SubscriptionDashboard() {
               </div>
             </div>
           )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: past reports — sticky on desktop so it stays in view as the
+            left settings pane scrolls. */}
+        <div className="md:sticky md:top-12 md:self-start pt-12 pb-8">
+          <EmailHistory key={historyVersion} />
         </div>
       </div>
 

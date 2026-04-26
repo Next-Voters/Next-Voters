@@ -13,7 +13,7 @@ import { getSupportedLanguages, getUserLanguage } from "@/server-actions/get-sup
 import { updateUserLanguage } from "@/server-actions/update-user-language";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function ManageTopics() {
+export function ManageTopics({ onSaved }: { onSaved?: () => void } = {}) {
   const { isPro, isLoading: subLoading, tier } = useSubscription();
   const MAX_TOPICS = isPro ? 3 : 1;
 
@@ -71,6 +71,7 @@ export function ManageTopics() {
       setSavedMsg(error);
     } else {
       setSavedMsg("Saved!");
+      onSaved?.();
     }
   };
 
@@ -84,7 +85,7 @@ export function ManageTopics() {
 
   return (
     <div className="w-full bg-page flex flex-col">
-      <div className="flex-1 w-full max-w-[560px] mx-auto px-5 sm:px-6 pt-12 pb-8">
+      <div className="flex-1 w-full pt-12 pb-8">
         <div className="flex items-center gap-2.5 mb-3">
           <h1 className="text-[30px] sm:text-[38px] font-bold text-gray-950 leading-tight tracking-tight">
             NV Local

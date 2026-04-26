@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { marked } from "marked";
 
 const allowedFileTypes = ["html", "md"];
+const ALLOWED_BUCKETS = new Set(["next-voters-summaries", "reports"]);
 
 export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path");
@@ -9,17 +10,30 @@ export async function GET(req: NextRequest) {
     return new Response("Missing ?path=", { status: 400 });
   }
 
-  const [fileName, fileExtension] = filePath.split(".");
+  // Reject anything that could escape the bucket prefix via path traversal.
+  if (
+    filePath.includes("..") ||
+    filePath.startsWith("/") ||
+    filePath.includes("\\")
+  ) {
+    return new Response("Invalid path", { status: 400 });
+  }
 
-  if (!allowedFileTypes.includes(fileExtension)) {
+  const fileExtension = filePath.split(".").pop();
+  if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
     return new Response("File type not allowed", { status: 403 });
+  }
+
+  const bucket = req.nextUrl.searchParams.get("bucket") ?? "next-voters-summaries";
+  if (!ALLOWED_BUCKETS.has(bucket)) {
+    return new Response("Bucket not allowed", { status: 403 });
   }
 
   const allowedHost = "ihzytkomakaqhkqdrval.supabase.co";
   let url: URL;
 
   try {
-    url = new URL(`https://${allowedHost}/storage/v1/object/public/next-voters-summaries/${filePath}`);
+    url = new URL(`https://${allowedHost}/storage/v1/object/public/${bucket}/${filePath}`);
     if (url.host !== allowedHost) {
       return new Response("Host not allowed", { status: 403 });
     }
