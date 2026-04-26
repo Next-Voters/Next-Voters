@@ -8,21 +8,11 @@ import { ManageTopics } from '@/components/local/manage-topics';
 import { EmailHistory } from '@/components/local/email-history';
 import { createReferral, getOrCreateReferralCode, getReferralStats } from '@/server-actions/referrals';
 import { buildReferralLink } from '@/lib/referral';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 
 export function SubscriptionDashboard() {
-  const { isPro, hasSubscription, tier, refetch } = useSubscription();
+  const { isPro, refetch } = useSubscription();
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
-  const [canceledUntil, setCanceledUntil] = useState<string | null>(null);
 
   // Referral state
   const [referralEmail, setReferralEmail] = useState('');
@@ -82,20 +72,6 @@ export function SubscriptionDashboard() {
     }
   };
 
-  const handleCancel = async () => {
-    setCancelLoading(true);
-    try {
-      const res = await fetch('/api/stripe/cancel', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setCanceledUntil(data.periodEnd);
-        setShowCancelDialog(false);
-      }
-    } finally {
-      setCancelLoading(false);
-    }
-  };
-
   const handleReferral = async () => {
     const trimmed = referralEmail.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -141,43 +117,24 @@ export function SubscriptionDashboard() {
             Subscription
           </p>
 
-          {canceledUntil ? (
-            <p className="text-[13px] text-gray-500">
-              Access until{' '}
-              {new Date(canceledUntil).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {!isPro && (
-                <button
-                  onClick={handleUpgrade}
-                  disabled={checkoutLoading}
-                  className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 text-[14px] font-bold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors disabled:opacity-50 shadow-sm"
-                >
-                  {checkoutLoading ? 'Loading…' : 'Upgrade to Pro — $2/mo'}
-                </button>
-              )}
+          <div className="flex flex-col gap-2.5">
+            {!isPro && (
               <button
-                onClick={handlePortal}
+                onClick={handleUpgrade}
                 disabled={checkoutLoading}
-                className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 text-[14px] font-bold text-gray-700 border border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 text-[14px] font-bold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors disabled:opacity-50 shadow-sm"
               >
-                {checkoutLoading ? 'Loading…' : 'Manage Billing'}
+                {checkoutLoading ? 'Loading…' : 'Upgrade to Pro — $2/mo'}
               </button>
-              {hasSubscription && (
-                <button
-                  onClick={() => setShowCancelDialog(true)}
-                  className="text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors py-1"
-                >
-                  Cancel subscription
-                </button>
-              )}
-            </div>
-          )}
+            )}
+            <button
+              onClick={handlePortal}
+              disabled={checkoutLoading}
+              className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 text-[14px] font-bold text-gray-700 border border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {checkoutLoading ? 'Loading…' : 'Manage Billing'}
+            </button>
+          </div>
         </div>
 
         {/* Refer a friend */}
@@ -267,35 +224,6 @@ export function SubscriptionDashboard() {
           <EmailHistory key={historyVersion} />
         </div>
       </div>
-
-      {/* Cancel dialog */}
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="max-w-[360px]">
-          <DialogHeader>
-            <DialogTitle className="text-[18px] font-bold text-gray-950">
-              Cancel your subscription?
-            </DialogTitle>
-            <DialogDescription className="text-[14px] text-gray-500 mt-1 leading-relaxed">
-              You&apos;ll keep {tier === 'pro' ? 'Pro' : 'Free'} access until the end of your current billing period. After that, your subscription will be removed.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2.5 mt-4">
-            <button
-              onClick={handleCancel}
-              disabled={cancelLoading}
-              className="w-full px-6 py-3 text-[14.5px] font-bold text-white bg-gray-900 rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-60"
-            >
-              {cancelLoading ? 'Canceling…' : 'Yes, cancel'}
-            </button>
-            <button
-              onClick={() => setShowCancelDialog(false)}
-              className="w-full px-6 py-3 text-[14px] font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-            >
-              Keep my subscription
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
