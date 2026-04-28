@@ -139,7 +139,7 @@ export function CityAutocomplete({
           }}
           className={
             isHero
-              ? "flex-1 min-w-0 pr-2 text-[15.5px] sm:text-[16px] text-gray-950 placeholder:text-gray-400 focus:outline-none bg-transparent h-12"
+              ? "flex-1 min-w-0 pl-1 pr-2 text-[17px] sm:text-[18.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none bg-transparent h-16"
               : "flex-1 min-w-0 px-3 py-3 text-[14.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none"
           }
           disabled={disabled}
@@ -174,7 +174,7 @@ export function CityAutocomplete({
                   <span className="font-semibold text-gray-900">{s.name}</span>
                   {s.label !== s.name && (
                     <span className="text-gray-500">
-                      {" — "}
+                      {" - "}
                       {s.label.replace(`${s.name}, `, "")}
                     </span>
                   )}

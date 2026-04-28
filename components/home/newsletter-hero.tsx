@@ -1,14 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { CityAutocomplete } from "@/components/local/city-autocomplete";
+
+const FALLBACK_PLACEHOLDER_CITY = "Vancouver";
+
+// Pull a coarse city guess from the browser's IANA timezone - automatic, no
+// permission prompt, and accurate enough for a placeholder. e.g.
+// "America/Los_Angeles" → "Los Angeles", "Europe/Paris" → "Paris".
+// Returns null on UTC-like zones with no city segment.
+function cityFromTimezone(): string | null {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz || !tz.includes("/")) return null;
+    const last = tz.split("/").pop();
+    if (!last) return null;
+    if (/^(UTC|GMT|Etc|Universal|Zulu)$/i.test(last)) return null;
+    return last.replace(/_/g, " ");
+  } catch {
+    return null;
+  }
+}
 
 export function NewsletterHero() {
   const router = useRouter();
   const [city, setCity] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Initial value runs in render. SSR sees the fallback (timezone API isn't
+  // useful server-side), but on client mount the initialiser fires synchronously
+  // so the timezone-derived city paints on first frame, no flicker through
+  // "Vancouver" → real city.
+  const [placeholderCity, setPlaceholderCity] = useState<string>(() => {
+    if (typeof window === "undefined") return FALLBACK_PLACEHOLDER_CITY;
+    return cityFromTimezone() ?? FALLBACK_PLACEHOLDER_CITY;
+  });
+
+  // Personalise the input placeholder with the visitor's likely city via a
+  // client-side IP geolocation call. Browser-direct so the visitor's IP is
+  // used automatically; no key needed; CORS-enabled. If the lookup fails or
+  // returns no city, the fallback stays in place - the placeholder is purely
+  // cosmetic so a degraded result is fine.
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 3500);
+
+    fetch("https://ipapi.co/json/", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((data: { city?: string }) => {
+        if (cancelled) return;
+        const detected = data?.city?.toString().trim();
+        if (detected) setPlaceholderCity(detected);
+      })
+      .catch(() => {
+        // Swallow - fallback already applied.
+      })
+      .finally(() => {
+        window.clearTimeout(timer);
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   const handleSubmit = () => {
     setError(null);
@@ -21,74 +79,140 @@ export function NewsletterHero() {
   };
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white">
+      {/* Soft cool atmospheric wash (no warm/yellow tones) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-32 h-[620px] opacity-70"
+        className="pointer-events-none absolute inset-x-0 -top-40 h-[680px]"
         style={{
           background:
-            "radial-gradient(60% 50% at 50% 40%, rgba(235, 34, 64, 0.18) 0%, rgba(235, 34, 64, 0.06) 45%, rgba(235, 34, 64, 0) 78%)",
+            "radial-gradient(55% 50% at 50% 35%, rgba(148, 163, 184, 0.16) 0%, rgba(148, 163, 184, 0.04) 50%, rgba(148, 163, 184, 0) 80%)",
         }}
       />
+      {/* A whisper of brand red, tucked behind the headline only */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        className="pointer-events-none absolute left-1/2 top-[24%] -translate-x-1/2 h-[260px] w-[680px] rounded-full blur-3xl opacity-60"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(17,17,17,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,17,0.05) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage:
-            "radial-gradient(ellipse at center top, black 40%, transparent 80%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse at center top, black 40%, transparent 80%)",
+          background:
+            "radial-gradient(ellipse at center, rgba(235, 34, 64, 0.08) 0%, rgba(235, 34, 64, 0) 70%)",
         }}
       />
+      {/* Faint cityscape silhouette spanning the bottom of the hero */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 text-slate-700"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+        }}
+      >
+        {/* Back layer - distant skyline, fainter and shorter */}
+        <svg
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          className="absolute inset-x-0 bottom-0 w-full h-[180px] md:h-[230px] opacity-[0.05]"
+          fill="currentColor"
+        >
+          {[
+            [0, 80, 110], [78, 56, 90], [128, 72, 140], [196, 50, 100],
+            [240, 84, 160], [320, 60, 120], [374, 70, 95], [438, 54, 145],
+            [486, 78, 175], [560, 60, 110], [614, 88, 200], [696, 56, 130],
+            [746, 72, 165], [812, 50, 100], [856, 84, 185], [934, 60, 120],
+            [988, 76, 150], [1058, 54, 105], [1106, 90, 215], [1190, 56, 135],
+            [1240, 70, 170], [1304, 50, 100], [1348, 80, 195], [1422, 60, 130],
+          ].map(([x, w, h]) => (
+            <rect key={`b${x}`} x={x} y={320 - h} width={w} height={h} />
+          ))}
+        </svg>
 
-      <div className="relative max-w-[1100px] mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-24">
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-3 rounded-full bg-gray-950 text-white ring-1 ring-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] pl-3 pr-4 py-2 text-[13px] font-medium">
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-white text-gray-950">
-                <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden>
-                  <path
-                    fill="currentColor"
-                    d="M21.35 11.1H12v2.98h5.35c-.23 1.47-1.8 4.32-5.35 4.32-3.22 0-5.85-2.67-5.85-5.96S8.78 6.48 12 6.48c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.88 4.05 14.63 3 12 3 6.98 3 3 6.98 3 12s3.98 9 9 9c5.19 0 8.63-3.65 8.63-8.78 0-.59-.06-1.04-.13-1.5z"
-                  />
-                </svg>
-              </span>
-              <span className="whitespace-nowrap">Google for Nonprofits</span>
-            </span>
+        {/* Front layer - closer, taller, more varied buildings with subtle details */}
+        <svg
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          className="relative w-full h-[210px] md:h-[270px] opacity-[0.085]"
+          fill="currentColor"
+        >
+          {/* base ground line */}
+          <rect x="0" y="316" width="1440" height="4" />
 
-            <span aria-hidden className="h-4 w-px bg-white/20" />
+          {/* buildings: [x, w, h, accent] where accent: "antenna" | "step" | "spire" | "dome" | null */}
+          {[
+            { x: 0, w: 70, h: 170, a: null },
+            { x: 72, w: 50, h: 120, a: null },
+            { x: 124, w: 84, h: 230, a: "antenna" },
+            { x: 210, w: 56, h: 150, a: null },
+            { x: 268, w: 76, h: 200, a: "step" },
+            { x: 346, w: 48, h: 135, a: null },
+            { x: 396, w: 92, h: 260, a: "antenna" },
+            { x: 490, w: 58, h: 175, a: null },
+            { x: 550, w: 70, h: 145, a: null },
+            // domed civic building (capitol-like) - sits in the cluster, doesn't dominate
+            { x: 622, w: 110, h: 165, a: "dome" },
+            { x: 734, w: 54, h: 200, a: null },
+            { x: 790, w: 80, h: 245, a: "antenna" },
+            { x: 872, w: 50, h: 140, a: null },
+            // church/spire
+            { x: 924, w: 64, h: 175, a: "spire" },
+            { x: 990, w: 58, h: 150, a: null },
+            { x: 1050, w: 86, h: 270, a: "antenna" },
+            { x: 1138, w: 50, h: 165, a: null },
+            { x: 1190, w: 74, h: 215, a: "step" },
+            { x: 1266, w: 56, h: 145, a: null },
+            { x: 1324, w: 80, h: 235, a: "antenna" },
+            { x: 1406, w: 34, h: 160, a: null },
+          ].map(({ x, w, h, a }) => {
+            const top = 316 - h;
+            return (
+              <g key={`f${x}`}>
+                <rect x={x} y={top} width={w} height={h} />
+                {a === "antenna" && (
+                  <rect x={x + w / 2 - 1.5} y={top - 22} width="3" height="22" />
+                )}
+                {a === "step" && (
+                  <rect x={x + 6} y={top - 12} width={w - 12} height="12" />
+                )}
+                {a === "spire" && (
+                  <>
+                    <polygon
+                      points={`${x},${top} ${x + w / 2},${top - 60} ${x + w},${top}`}
+                    />
+                    <rect x={x + w / 2 - 1.5} y={top - 78} width="3" height="20" />
+                  </>
+                )}
+                {a === "dome" && (
+                  <>
+                    {/* drum */}
+                    <rect x={x + w / 2 - 22} y={top - 14} width="44" height="14" />
+                    {/* dome */}
+                    <path
+                      d={`M ${x + w / 2 - 26} ${top - 14} Q ${x + w / 2 - 26} ${top - 60} ${x + w / 2} ${top - 60} Q ${x + w / 2 + 26} ${top - 60} ${x + w / 2 + 26} ${top - 14} Z`}
+                    />
+                    {/* finial */}
+                    <rect x={x + w / 2 - 1.5} y={top - 76} width="3" height="16" />
+                  </>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
 
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-white text-gray-950">
-                <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden>
-                  <path
-                    fill="currentColor"
-                    d="M12 2 4 5v6c0 5 3.4 9.5 8 11 4.6-1.5 8-6 8-11V5l-8-3zm-1 14.17-3.59-3.58L6 14l5 5 9-9-1.41-1.42L11 16.17z"
-                  />
-                </svg>
-              </span>
-              <span className="whitespace-nowrap">Nonpartisan &amp; cited</span>
-            </span>
-          </div>
-        </div>
-
-        <h1 className="text-center text-[44px] sm:text-[56px] md:text-[68px] font-bold tracking-tight text-gray-900 leading-[1.05] max-w-[900px] mx-auto">
-          Local civic updates, delivered{" "}
-          <span className="relative inline-block">
-            <span className="relative z-10">weekly.</span>
-            <span
-              aria-hidden
-              className="absolute inset-x-0 bottom-1 md:bottom-2 h-2 md:h-3 bg-red-200/70 -z-0 rounded"
-            />
+      <div className="relative max-w-[1100px] mx-auto px-6 pt-20 pb-32 md:pt-28 md:pb-44">
+        <h1 className="text-center text-[44px] sm:text-[56px] md:text-[68px] font-bold tracking-tight text-gray-900 leading-[1.15] max-w-[900px] mx-auto">
+          Catch up with your local politics in{" "}
+          <span className="inline-block pr-1 pb-1 italic font-extrabold bg-gradient-to-br from-red-500 via-red-500 to-rose-600 bg-clip-text text-transparent">
+            minutes
           </span>
+          .
         </h1>
 
         <p className="mt-6 text-center text-[17px] md:text-[19px] text-gray-600 leading-relaxed max-w-2xl mx-auto">
-          Nonpartisan summaries of council meetings, bylaws, and local bills —
-          in your inbox, every week. Just enter your city to start.
+          Get a free weekly bias-free email summarizing what the politicians
+          in your region are up to. Know your local politics in minutes,
+          without the noise.
         </p>
 
         <form
@@ -96,10 +220,10 @@ export function NewsletterHero() {
             e.preventDefault();
             handleSubmit();
           }}
-          className="mt-10 max-w-[640px] mx-auto"
+          className="mt-10 max-w-[720px] mx-auto"
           noValidate
         >
-          <div className="relative rounded-2xl bg-white border border-gray-200 shadow-[0_1px_0_rgba(17,17,17,0.04),0_20px_40px_-20px_rgba(17,17,17,0.12)] p-1.5 transition-shadow focus-within:shadow-[0_0_0_4px_rgba(235,34,64,0.08),0_20px_40px_-20px_rgba(17,17,17,0.18)]">
+          <div className="relative rounded-2xl bg-white border border-gray-200 shadow-[0_1px_0_rgba(17,17,17,0.04),0_24px_48px_-20px_rgba(17,17,17,0.14)] p-2 transition-shadow focus-within:shadow-[0_0_0_4px_rgba(235,34,64,0.08),0_24px_48px_-20px_rgba(17,17,17,0.2)]">
             <div className="flex items-stretch gap-2">
               <div className="flex-1 min-w-0">
                 <CityAutocomplete
@@ -110,17 +234,16 @@ export function NewsletterHero() {
                     setError(null);
                   }}
                   onSubmit={handleSubmit}
-                  placeholder="e.g. Vancouver"
+                  placeholder={`e.g. ${placeholderCity}`}
                   inputId="home-city"
                 />
               </div>
               <button
                 type="submit"
-                disabled={!city.trim()}
-                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[14px] sm:text-[14.5px] font-semibold px-4 sm:px-5 h-12 transition-colors shadow-sm"
+                className="btn-shine shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-[18px] sm:text-[20px] font-black uppercase tracking-[0.08em] px-7 sm:px-9 h-16 transition-colors shadow-sm"
               >
-                <span>Subscribe</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>SIGN ME UP</span>
+                <ArrowRight className="w-[22px] h-[22px] stroke-[2.75]" />
               </button>
             </div>
           </div>

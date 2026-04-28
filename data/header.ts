@@ -10,13 +10,6 @@ const headerItems: HeaderItem[] = [
     href: "/local"
 },
 {
-    name: "Chat",
-    href: "/chat"
-}, {
-    name: "Team",
-    href: "/team"
-},
-{
     name: "Blog",
     href: "/blog"
 },
