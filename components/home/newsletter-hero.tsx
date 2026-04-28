@@ -209,10 +209,9 @@ export function NewsletterHero() {
           .
         </h1>
 
-        <p className="mt-6 text-center text-[17px] md:text-[19px] text-gray-600 leading-relaxed max-w-2xl mx-auto">
-          Get a free weekly bias-free email summarizing what the politicians
-          in your region are up to. Know your local politics in minutes,
-          without the noise.
+        <p className="mt-6 text-center text-[14.5px] md:text-[16px] text-gray-600 leading-relaxed max-w-[720px] mx-auto">
+          Get a free, weekly, bias-free email summarizing what the politicians
+          in your region are up to. Stay in the know with the topics you care about.
         </p>
 
         <form
