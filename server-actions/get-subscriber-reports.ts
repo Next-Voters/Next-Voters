@@ -60,12 +60,14 @@ export async function getSubscriberReports(
   } = await supabase.auth.getUser();
   if (!user?.email) return { cards: [], nextCursor: null };
 
-  const email = user.email.toLowerCase();
-
+  // Match the rest of the codebase, which stores and queries `subscriptions.contact`
+  // and `subscription_topics.subscription_id` using raw `user.email` (no
+  // normalization). Lowercasing here would miss the row when the JWT email has
+  // any uppercase characters.
   const { data: sub } = await supabase
     .from("subscriptions")
     .select("city, preferred_language")
-    .eq("contact", email)
+    .eq("contact", user.email)
     .maybeSingle();
   if (!sub?.city || !sub?.preferred_language) {
     return { cards: [], nextCursor: null };
