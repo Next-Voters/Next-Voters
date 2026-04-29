@@ -20,7 +20,7 @@ const Home = () => {
               <img
                 src="/google-for-nonprofits-logo.png"
                 alt="Google for Nonprofits"
-                className="h-20 md:h-24 object-contain grayscale hover:grayscale-0 transition"
+                className="h-24 md:h-28 object-contain grayscale hover:grayscale-0 transition"
               />
               <img
                 src="/lookup-live-logo.png"
