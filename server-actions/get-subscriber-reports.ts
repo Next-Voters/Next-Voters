@@ -105,7 +105,7 @@ export async function getSubscriberReports(
       try {
         const { data, error } = await storage.storage
           .from("reports")
-          .list(`${cSlug}/${slug}/${langCode}`, {
+          .list(`public/${cSlug}/${slug}/${langCode}`, {
             limit: fetchPerTopic,
             offset,
             sortBy: { column: "name", order: "desc" },
@@ -174,7 +174,7 @@ export async function getSubscriberReports(
     return {
       date,
       reports: sortedTopics.map((topic) => {
-        const path = `${cSlug}/${topicSlug(topic)}/${langCode}/${date}.html`;
+        const path = `public/${cSlug}/${topicSlug(topic)}/${langCode}/${date}.html`;
         return {
           topic,
           renderUrl: `/api/render?bucket=reports&path=${encodeURIComponent(path)}`,
