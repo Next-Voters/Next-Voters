@@ -7,6 +7,78 @@ import { CityAutocomplete } from "@/components/local/city-autocomplete";
 
 const FALLBACK_PLACEHOLDER_CITY = "Vancouver";
 
+type BackBuilding = readonly [x: number, w: number, h: number];
+type FrontAccent = "antenna" | "step" | "spire" | "dome" | null;
+type FrontBuilding = { x: number; w: number; h: number; a: FrontAccent };
+
+const BACK_BUILDINGS: readonly BackBuilding[] = [
+  [0, 80, 110], [78, 56, 90], [128, 72, 140], [196, 50, 100],
+  [240, 84, 160], [320, 60, 120], [374, 70, 95], [438, 54, 145],
+  [486, 78, 175], [560, 60, 110], [614, 88, 200], [696, 56, 130],
+  [746, 72, 165], [812, 50, 100], [856, 84, 185], [934, 60, 120],
+  [988, 76, 150], [1058, 54, 105], [1106, 90, 215], [1190, 56, 135],
+  [1240, 70, 170], [1304, 50, 100], [1348, 80, 195], [1422, 60, 130],
+];
+
+const FRONT_BUILDINGS: readonly FrontBuilding[] = [
+  { x: 0, w: 70, h: 170, a: null },
+  { x: 72, w: 50, h: 120, a: null },
+  { x: 124, w: 84, h: 230, a: "antenna" },
+  { x: 210, w: 56, h: 150, a: null },
+  { x: 268, w: 76, h: 200, a: "step" },
+  { x: 346, w: 48, h: 135, a: null },
+  { x: 396, w: 92, h: 260, a: "antenna" },
+  { x: 490, w: 58, h: 175, a: null },
+  { x: 550, w: 70, h: 145, a: null },
+  // domed civic building (capitol-like)
+  { x: 622, w: 110, h: 165, a: "dome" },
+  { x: 734, w: 54, h: 200, a: null },
+  { x: 790, w: 80, h: 245, a: "antenna" },
+  { x: 872, w: 50, h: 140, a: null },
+  // church/spire
+  { x: 924, w: 64, h: 175, a: "spire" },
+  { x: 990, w: 58, h: 150, a: null },
+  { x: 1050, w: 86, h: 270, a: "antenna" },
+  { x: 1138, w: 50, h: 165, a: null },
+  { x: 1190, w: 74, h: 215, a: "step" },
+  { x: 1266, w: 56, h: 145, a: null },
+  { x: 1324, w: 80, h: 235, a: "antenna" },
+  { x: 1406, w: 34, h: 160, a: null },
+];
+
+function renderFrontBuilding(b: FrontBuilding) {
+  const { x, w, h, a } = b;
+  const top = 316 - h;
+  return (
+    <g key={`f${x}`}>
+      <rect x={x} y={top} width={w} height={h} />
+      {a === "antenna" && (
+        <rect x={x + w / 2 - 1.5} y={top - 22} width="3" height="22" />
+      )}
+      {a === "step" && (
+        <rect x={x + 6} y={top - 12} width={w - 12} height="12" />
+      )}
+      {a === "spire" && (
+        <>
+          <polygon
+            points={`${x},${top} ${x + w / 2},${top - 60} ${x + w},${top}`}
+          />
+          <rect x={x + w / 2 - 1.5} y={top - 78} width="3" height="20" />
+        </>
+      )}
+      {a === "dome" && (
+        <>
+          <rect x={x + w / 2 - 22} y={top - 14} width="44" height="14" />
+          <path
+            d={`M ${x + w / 2 - 26} ${top - 14} Q ${x + w / 2 - 26} ${top - 60} ${x + w / 2} ${top - 60} Q ${x + w / 2 + 26} ${top - 60} ${x + w / 2 + 26} ${top - 14} Z`}
+          />
+          <rect x={x + w / 2 - 1.5} y={top - 76} width="3" height="16" />
+        </>
+      )}
+    </g>
+  );
+}
+
 // Pull a coarse city guess from the browser's IANA timezone - automatic, no
 // permission prompt, and accurate enough for a placeholder. e.g.
 // "America/Los_Angeles" → "Los Angeles", "Europe/Paris" → "Paris".
@@ -98,7 +170,7 @@ export function NewsletterHero() {
             "radial-gradient(ellipse at center, rgba(235, 34, 64, 0.08) 0%, rgba(235, 34, 64, 0) 70%)",
         }}
       />
-      {/* Faint cityscape silhouette spanning the bottom of the hero */}
+      {/* Faint cityscape silhouette - two layers slowly drift left in a seamless loop */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 text-slate-700"
@@ -109,95 +181,42 @@ export function NewsletterHero() {
             "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
         }}
       >
-        {/* Back layer - distant skyline, fainter and shorter */}
-        <svg
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-          className="absolute inset-x-0 bottom-0 w-full h-[180px] md:h-[230px] opacity-[0.05]"
-          fill="currentColor"
-        >
-          {[
-            [0, 80, 110], [78, 56, 90], [128, 72, 140], [196, 50, 100],
-            [240, 84, 160], [320, 60, 120], [374, 70, 95], [438, 54, 145],
-            [486, 78, 175], [560, 60, 110], [614, 88, 200], [696, 56, 130],
-            [746, 72, 165], [812, 50, 100], [856, 84, 185], [934, 60, 120],
-            [988, 76, 150], [1058, 54, 105], [1106, 90, 215], [1190, 56, 135],
-            [1240, 70, 170], [1304, 50, 100], [1348, 80, 195], [1422, 60, 130],
-          ].map(([x, w, h]) => (
-            <rect key={`b${x}`} x={x} y={320 - h} width={w} height={h} />
-          ))}
-        </svg>
+        {/* Back layer - distant skyline, fainter, slower drift */}
+        <div className="absolute inset-x-0 bottom-0 h-[180px] md:h-[230px] overflow-hidden">
+          <div className="flex h-full w-[200%] animate-city-drift-back">
+            {[0, 1].map((i) => (
+              <svg
+                key={i}
+                viewBox="0 0 1440 320"
+                preserveAspectRatio="none"
+                className="w-1/2 h-full opacity-[0.05] flex-shrink-0"
+                fill="currentColor"
+              >
+                {BACK_BUILDINGS.map(([x, w, h]) => (
+                  <rect key={`b${x}`} x={x} y={320 - h} width={w} height={h} />
+                ))}
+              </svg>
+            ))}
+          </div>
+        </div>
 
-        {/* Front layer - closer, taller, more varied buildings with subtle details */}
-        <svg
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-          className="relative w-full h-[210px] md:h-[270px] opacity-[0.085]"
-          fill="currentColor"
-        >
-          {/* base ground line */}
-          <rect x="0" y="316" width="1440" height="4" />
-
-          {/* buildings: [x, w, h, accent] where accent: "antenna" | "step" | "spire" | "dome" | null */}
-          {[
-            { x: 0, w: 70, h: 170, a: null },
-            { x: 72, w: 50, h: 120, a: null },
-            { x: 124, w: 84, h: 230, a: "antenna" },
-            { x: 210, w: 56, h: 150, a: null },
-            { x: 268, w: 76, h: 200, a: "step" },
-            { x: 346, w: 48, h: 135, a: null },
-            { x: 396, w: 92, h: 260, a: "antenna" },
-            { x: 490, w: 58, h: 175, a: null },
-            { x: 550, w: 70, h: 145, a: null },
-            // domed civic building (capitol-like) - sits in the cluster, doesn't dominate
-            { x: 622, w: 110, h: 165, a: "dome" },
-            { x: 734, w: 54, h: 200, a: null },
-            { x: 790, w: 80, h: 245, a: "antenna" },
-            { x: 872, w: 50, h: 140, a: null },
-            // church/spire
-            { x: 924, w: 64, h: 175, a: "spire" },
-            { x: 990, w: 58, h: 150, a: null },
-            { x: 1050, w: 86, h: 270, a: "antenna" },
-            { x: 1138, w: 50, h: 165, a: null },
-            { x: 1190, w: 74, h: 215, a: "step" },
-            { x: 1266, w: 56, h: 145, a: null },
-            { x: 1324, w: 80, h: 235, a: "antenna" },
-            { x: 1406, w: 34, h: 160, a: null },
-          ].map(({ x, w, h, a }) => {
-            const top = 316 - h;
-            return (
-              <g key={`f${x}`}>
-                <rect x={x} y={top} width={w} height={h} />
-                {a === "antenna" && (
-                  <rect x={x + w / 2 - 1.5} y={top - 22} width="3" height="22" />
-                )}
-                {a === "step" && (
-                  <rect x={x + 6} y={top - 12} width={w - 12} height="12" />
-                )}
-                {a === "spire" && (
-                  <>
-                    <polygon
-                      points={`${x},${top} ${x + w / 2},${top - 60} ${x + w},${top}`}
-                    />
-                    <rect x={x + w / 2 - 1.5} y={top - 78} width="3" height="20" />
-                  </>
-                )}
-                {a === "dome" && (
-                  <>
-                    {/* drum */}
-                    <rect x={x + w / 2 - 22} y={top - 14} width="44" height="14" />
-                    {/* dome */}
-                    <path
-                      d={`M ${x + w / 2 - 26} ${top - 14} Q ${x + w / 2 - 26} ${top - 60} ${x + w / 2} ${top - 60} Q ${x + w / 2 + 26} ${top - 60} ${x + w / 2 + 26} ${top - 14} Z`}
-                    />
-                    {/* finial */}
-                    <rect x={x + w / 2 - 1.5} y={top - 76} width="3" height="16" />
-                  </>
-                )}
-              </g>
-            );
-          })}
-        </svg>
+        {/* Front layer - closer, taller, faster drift for subtle parallax */}
+        <div className="relative h-[210px] md:h-[270px] overflow-hidden">
+          <div className="flex h-full w-[200%] animate-city-drift-front">
+            {[0, 1].map((i) => (
+              <svg
+                key={i}
+                viewBox="0 0 1440 320"
+                preserveAspectRatio="none"
+                className="w-1/2 h-full opacity-[0.085] flex-shrink-0"
+                fill="currentColor"
+              >
+                <rect x="0" y="316" width="1440" height="4" />
+                {FRONT_BUILDINGS.map(renderFrontBuilding)}
+              </svg>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="relative max-w-[1100px] mx-auto px-6 pt-20 pb-32 md:pt-28 md:pb-44">
