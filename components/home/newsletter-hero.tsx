@@ -210,7 +210,7 @@ export function NewsletterHero() {
         </h1>
 
         <p className="mt-6 text-center text-[14.5px] md:text-[16px] text-gray-600 leading-relaxed max-w-[720px] mx-auto">
-          Get a weekly, bias-free email summarizing new legislation in your region. Stay in the know with the topics you care about.
+          Get a weekly, bias-free email summarizing new legislation in your region. Stay in the know with the topics you care about from immigration, economics and civil rights.
         </p>
 
         <form
