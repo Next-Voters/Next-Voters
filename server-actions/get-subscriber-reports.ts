@@ -130,12 +130,12 @@ export async function getSubscriberReports(
   );
 
   // For each non-exhausted topic, its batch's last entry is the oldest date
-  // we have visibility for in that topic. Dates strictly NEWER than that are
-  // fully known for that topic. The conservative cross-topic horizon is the
-  // MAX of those last entries — only above the max can we be sure every
-  // non-exhausted topic has been fully queried (its next batch starts strictly
-  // below its own last entry, so dates above max(last entries) cannot appear
-  // in any future batch from any topic).
+  // we have visibility for in that topic — every report it has on that date
+  // or newer is already in `files`. The cross-topic horizon is the MAX of
+  // those last entries: at the max, every non-exhausted topic's batch still
+  // covers that date (its own last entry is <= max), so we have full
+  // cross-topic visibility for dates >= horizon. Below the horizon, the
+  // topic that set the max may have unread reports waiting in its next page.
   const horizons = perTopic
     .filter((r) => !r.exhausted && r.files.length > 0)
     .map((r) => r.files[r.files.length - 1].date);
@@ -145,12 +145,12 @@ export async function getSubscriberReports(
       : horizons.reduce((a, b) => (a > b ? a : b));
 
   // When horizon is null (all topics exhausted), include every fetched file.
-  // Otherwise only include dates strictly newer than horizon — those are the
-  // dates for which we have full visibility across every topic.
+  // Otherwise include dates >= horizon — those are the dates for which every
+  // non-exhausted topic's batch already covers any report it might have.
   const byDate = new Map<string, Set<string>>();
   for (const r of perTopic) {
     for (const f of r.files) {
-      if (horizon !== null && f.date <= horizon) continue;
+      if (horizon !== null && f.date < horizon) continue;
       let set = byDate.get(f.date);
       if (!set) {
         set = new Set<string>();
