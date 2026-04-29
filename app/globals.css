@@ -176,6 +176,32 @@
   }
 }
 
+/* Hero cityscape drift - very slow seamless horizontal scroll. The container
+ * holds two side-by-side copies of the skyline SVG (200% wide); translating
+ * by -50% lands the second copy exactly where the first started, so the loop
+ * is invisible. Back layer runs slower than front for subtle parallax. */
+@keyframes city-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-city-drift-front {
+  animation: city-drift 200s linear infinite;
+  will-change: transform;
+}
+
+.animate-city-drift-back {
+  animation: city-drift 320s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-city-drift-front,
+  .animate-city-drift-back {
+    animation: none;
+  }
+}
+
 
 /* Article content - blog post typography */
 .article-content > *:first-child {
