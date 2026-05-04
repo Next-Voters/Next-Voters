@@ -54,19 +54,7 @@ export async function GET(req: NextRequest) {
   }
 
   const raw = await upstream.text();
-  // The report template stores actual content in an HTML comment immediately
-  // after {{TOPIC_SECTIONS}}. Extract and uncomment it; fall back to a
-  // placeholder message if the comment block isn't present yet.
-  const sanitized = raw
-    .replace(
-      /\{\{TOPIC_SECTIONS\}\}\s*<!--([\s\S]*?)-->/,
-      (_, commentContent: string) => commentContent.trim(),
-    )
-    .replace(
-      /\{\{TOPIC_SECTIONS\}\}/g,
-      '<p style="color:#888;text-align:center;padding:2rem;">Report content is being generated — check back shortly.</p>',
-    )
-    .replace(/\{\{UNSUBSCRIBE_URL\}\}/g, "#");
+  const sanitized = raw.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, "#");
   let html = fileExtension === "md" ? await marked(sanitized) : sanitized;
 
   if (fileExtension === "md") {
