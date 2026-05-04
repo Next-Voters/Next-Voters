@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { marked } from "marked";
 
 const allowedFileTypes = ["html", "md"];
-const ALLOWED_BUCKETS = new Set(["next-voters-summaries", "reports", "report"]);
+const ALLOWED_BUCKETS = new Set(["next-voters-summaries", "reports"]);
 
 export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path");
