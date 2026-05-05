@@ -135,7 +135,7 @@ export function EmailHistory() {
             )}
             {activeHtml !== null && (
               <iframe
-                srcdoc={activeHtml}
+                srcDoc={activeHtml}
                 className="flex-1 w-full border-0"
                 title="Report"
                 sandbox="allow-same-origin allow-popups"
