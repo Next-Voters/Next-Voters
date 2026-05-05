@@ -47,7 +47,8 @@ export function EmailHistory() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [activeUrl, setActiveUrl] = useState<string | null>(null);
+  const [activeHtml, setActiveHtml] = useState<string | null>(null);
+  const [fetchingReport, setFetchingReport] = useState(false);
 
   const loadMore = useCallback(async () => {
     if (inflightRef.current || done) return;
@@ -91,18 +92,33 @@ export function EmailHistory() {
     return () => observer.disconnect();
   }, [loadMore, done]);
 
+  const handleView = useCallback((url: string) => {
+    setFetchingReport(true);
+    setActiveHtml(null);
+    fetch(url)
+      .then((r) => r.text())
+      .then((html) => setActiveHtml(html))
+      .finally(() => setFetchingReport(false));
+  }, []);
+
   return (
     <div className="w-full">
-      <Dialog open={activeUrl !== null} onOpenChange={(open) => { if (!open) setActiveUrl(null); }}>
+      <Dialog
+        open={fetchingReport || activeHtml !== null}
+        onOpenChange={(open) => { if (!open) { setActiveHtml(null); setFetchingReport(false); } }}
+      >
         <DialogContent className="max-w-none w-screen h-screen p-0 flex flex-col gap-0 rounded-none">
           <div className="flex items-center justify-end px-4 py-2 border-b border-gray-200 bg-white shrink-0">
             <DialogClose className="text-gray-500 hover:text-gray-900 text-sm font-medium">
               Close ✕
             </DialogClose>
           </div>
-          {activeUrl && (
+          {fetchingReport && (
+            <p className="flex-1 flex items-center justify-center text-gray-400 text-sm">Loading…</p>
+          )}
+          {activeHtml !== null && (
             <iframe
-              src={activeUrl}
+              srcdoc={activeHtml}
               className="flex-1 w-full border-0"
               title="Report"
               sandbox="allow-same-origin allow-popups"
@@ -127,7 +143,7 @@ export function EmailHistory() {
         ) : (
           <div className="flex flex-col gap-3">
             {cards.map((card) => (
-              <DateCardView key={card.date} card={card} onView={setActiveUrl} />
+              <DateCardView key={card.date} card={card} onView={handleView} />
             ))}
 
             {!done && (
