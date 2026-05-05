@@ -284,6 +284,10 @@ export function OnboardingWizard() {
         }
 
         const data = await res.json();
+        if (data.success) {
+          router.replace("/local");
+          return;
+        }
         if (data.url) {
           window.location.href = data.url;
           return;

@@ -99,6 +99,12 @@ function NVLocalInner() {
         }
 
         const data = await res.json();
+        if (data.success) {
+          clearPendingAction();
+          await refetch();
+          setKickingOff(false);
+          return;
+        }
         if (data.url) {
           clearPendingAction();
           window.location.href = data.url;
