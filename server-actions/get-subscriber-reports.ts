@@ -1,12 +1,18 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { citySlug } from "@/lib/report-paths";
 
-export type DateCard = {
-  date: string;
-  renderUrl: string;
+export type ReportItem = {
+  header: string;
+  description: string;
+};
+
+export type ReportCard = {
+  report_id: number;
+  report_date: string;
+  topic_name: string;
+  items: ReportItem[];
+  sources: string[];
 };
 
 export type GetSubscriberReportsInput = {
@@ -15,12 +21,23 @@ export type GetSubscriberReportsInput = {
 };
 
 export type GetSubscriberReportsResult = {
-  cards: DateCard[];
+  cards: ReportCard[];
   nextCursor: string | null;
 };
 
-const REPORT_FILE_RE = /^(\d{4}-\d{2}-\d{2})\.html$/;
 const DEFAULT_PAGE_SIZE = 10;
+
+type ReportRow = {
+  report_id: number;
+  report_date: string;
+  items: ReportItem[];
+  sources: string[];
+  supported_topics: { topic_name: string } | null;
+};
+
+type TopicRow = {
+  topic_id: number;
+};
 
 export async function getSubscriberReports(
   input?: GetSubscriberReportsInput,
@@ -41,31 +58,34 @@ export async function getSubscriberReports(
     .maybeSingle();
   if (!sub?.city) return { cards: [], nextCursor: null };
 
-  const cSlug = citySlug(sub.city);
+  const { data: topicRows } = await supabase
+    .from("subscription_topics")
+    .select("topic_id")
+    .eq("subscription_id", user.email);
 
-  // Admin client required — cookie-based client has no SELECT RLS on storage.objects.
-  const storage = createSupabaseAdminClient();
-  const { data, error } = await storage.storage
+  const topicIds = ((topicRows ?? []) as TopicRow[]).map((r) => r.topic_id);
+
+  let query = supabase
     .from("reports")
-    .list(cSlug, {
-      limit: pageSize,
-      offset,
-      sortBy: { column: "name", order: "desc" },
-    });
+    .select("report_id, report_date, items, sources, supported_topics(topic_name)")
+    .eq("city", sub.city)
+    .order("report_date", { ascending: false })
+    .range(offset, offset + pageSize - 1);
 
+  if (topicIds.length > 0) {
+    query = query.in("topic_id", topicIds);
+  }
+
+  const { data, error } = await query;
   if (error || !data) return { cards: [], nextCursor: null };
 
-  const cards: DateCard[] = data
-    .map((row) => {
-      const m = row.name.match(REPORT_FILE_RE);
-      if (!m) return null;
-      const date = m[1];
-      return {
-        date,
-        renderUrl: `/api/render?path=${encodeURIComponent(`${cSlug}/${date}.html`)}`,
-      };
-    })
-    .filter((x): x is DateCard => x !== null);
+  const cards: ReportCard[] = (data as unknown as ReportRow[]).map((row) => ({
+    report_id: row.report_id,
+    report_date: row.report_date,
+    topic_name: row.supported_topics?.topic_name ?? "Unknown",
+    items: (row.items as ReportItem[]) ?? [],
+    sources: (row.sources as string[]) ?? [],
+  }));
 
   const nextCursor = data.length === pageSize ? String(offset + data.length) : null;
   return { cards, nextCursor };

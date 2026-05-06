@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Mail, X } from "lucide-react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { ChevronDown, ChevronUp, Mail } from "lucide-react";
 import {
   getSubscriberReports,
-  type DateCard,
+  type ReportCard,
 } from "@/server-actions/get-subscriber-reports";
 
 const PAGE_SIZE = 10;
@@ -21,15 +20,13 @@ const formatDate = (yyyyMmDd: string): string => {
   });
 };
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function EmailHistory() {
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const inflightRef = useRef(false);
   const initialLoadedRef = useRef(false);
-  // Drops setState from any in-flight request whose response arrives after the
-  // component has unmounted (the parent remounts us via key={historyVersion}
-  // when settings save, and a stale fetch could otherwise paint old data into
-  // the about-to-unmount instance).
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -38,12 +35,11 @@ export function EmailHistory() {
     };
   }, []);
 
-  const [cards, setCards] = useState<DateCard[]>([]);
+  const [cards, setCards] = useState<ReportCard[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [activeUrl, setActiveUrl] = useState<string | null>(null);
 
   const loadMore = useCallback(async () => {
     if (inflightRef.current || done) return;
@@ -87,39 +83,13 @@ export function EmailHistory() {
     return () => observer.disconnect();
   }, [loadMore, done]);
 
-
   return (
     <div className="w-full">
-      <DialogPrimitive.Root
-        open={activeUrl !== null}
-        onOpenChange={(open) => { if (!open) setActiveUrl(null); }}
-      >
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60" />
-          <DialogPrimitive.Content className="fixed inset-0 z-50 flex flex-col bg-white">
-            <div className="flex items-center justify-end px-4 py-2 border-b border-gray-200 shrink-0">
-              <DialogPrimitive.Close className="rounded p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                <X className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only">Close</span>
-              </DialogPrimitive.Close>
-            </div>
-            {activeUrl && (
-              <iframe
-                src={activeUrl}
-                className="flex-1 w-full border-0"
-                title="Report"
-                sandbox="allow-same-origin allow-popups"
-              />
-            )}
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
-
       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
         Past reports
       </p>
       <p className="text-[13px] text-gray-500 mb-4">
-        Reports we&apos;ve sent for your city, topics, and language.
+        Reports we&apos;ve sent for your city and topics.
       </p>
 
       <div
@@ -131,7 +101,7 @@ export function EmailHistory() {
         ) : (
           <div className="flex flex-col gap-3">
             {cards.map((card) => (
-              <DateCardView key={card.date} card={card} onView={setActiveUrl} />
+              <ReportCardView key={card.report_id} card={card} />
             ))}
 
             {!done && (
@@ -140,7 +110,7 @@ export function EmailHistory() {
                 className="py-4 text-center text-[12px] text-gray-400"
                 aria-hidden="true"
               >
-                {loadingMore ? "Loading more…" : " "}
+                {loadingMore ? "Loading more…" : " "}
               </div>
             )}
 
@@ -165,17 +135,78 @@ export function EmailHistory() {
   );
 }
 
-function DateCardView({ card, onView }: { card: DateCard; onView: (url: string) => void }) {
+function ReportCardView({ card }: { card: ReportCard }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="border border-gray-200 rounded-xl bg-white px-4 py-2.5 flex items-center justify-between gap-3">
-      <p className="text-[13.5px] font-medium text-gray-900">{formatDate(card.date)}</p>
+    <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
       <button
-        onClick={() => onView(card.renderUrl)}
-        className="inline-flex items-center gap-1 text-[12.5px] font-bold text-brand hover:text-brand-hover shrink-0"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-gray-50 transition-colors"
       >
-        View
-        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0 inline-block px-2 py-0.5 rounded-full bg-gray-100 text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+            {capitalize(card.topic_name)}
+          </span>
+          <span className="text-[13px] font-medium text-gray-900 truncate">
+            {formatDate(card.report_date)}
+          </span>
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" aria-hidden="true" />
+        )}
       </button>
+
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-gray-100">
+          <div className="flex flex-col gap-3 pt-3">
+            {card.items.length === 0 ? (
+              <p className="text-[13px] text-gray-400">No items in this report.</p>
+            ) : (
+              card.items.map((item, i) => (
+                <article key={i}>
+                  <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-1">
+                    {item.header}
+                  </h3>
+                  <p className="text-[13px] text-gray-600 leading-relaxed">{item.description}</p>
+                </article>
+              ))
+            )}
+          </div>
+
+          {card.sources.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                Sources
+              </p>
+              <ul className="flex flex-col gap-1">
+                {card.sources.map((url, i) => {
+                  let hostname = url;
+                  try {
+                    hostname = new URL(url).hostname;
+                  } catch {
+                    // fall back to raw url
+                  }
+                  return (
+                    <li key={i}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12px] text-brand hover:underline"
+                      >
+                        {hostname}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
