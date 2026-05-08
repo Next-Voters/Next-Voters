@@ -42,7 +42,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   const metadata = session.metadata ?? {}
   const plan = metadata.plan === "pro" ? "pro" : "free"
   const city = typeof metadata.city === "string" ? metadata.city.trim() : ""
-  const language = typeof metadata.language === "string" ? metadata.language.trim() : ""
   const topicsRaw = typeof metadata.topics === "string" ? metadata.topics : ""
   const topics = topicsRaw
     .split("|")
@@ -74,7 +73,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     tier: plan,
   }
   if (city) upsertPayload.city = city
-  if (language) upsertPayload.preferred_language = language
 
   const { error } = await admin
     .from("subscriptions")

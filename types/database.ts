@@ -26,7 +26,6 @@ export interface UserAdminRequestTable {
 export interface SubscriptionTable {
   contact: string
   city: string | null
-  preferred_language: string | null
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   stripe_status: string | null

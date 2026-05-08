@@ -17,7 +17,6 @@ import { PaymentModal } from '@/components/local/payment-modal';
 
 interface ProModalData {
   city: string;
-  language: string;
   topics: string[];
   cityRequest: { city: string } | null;
   referralCode: string | null;
@@ -82,7 +81,6 @@ function NVLocalInner() {
     if (sub.plan === 'pro') {
       setProModalData({
         city: sub.city,
-        language: sub.language,
         topics: sub.topics,
         cityRequest: sub.cityRequest,
         referralCode: sub.referralCode,
@@ -101,7 +99,6 @@ function NVLocalInner() {
           body: JSON.stringify({
             plan: sub.plan,
             city: sub.city,
-            language: sub.language,
             topics: sub.topics,
             cityRequest: sub.cityRequest,
             referralCode: sub.referralCode || undefined,
@@ -197,7 +194,6 @@ function NVLocalInner() {
       onClose={handleProModalClose}
       onSuccess={handleProModalSuccess}
       city={proModalData?.city}
-      language={proModalData?.language}
       topics={proModalData?.topics}
       cityRequest={proModalData?.cityRequest}
       referralCode={proModalData?.referralCode}

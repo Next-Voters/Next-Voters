@@ -14,7 +14,6 @@ import { getSupportedCities } from "@/server-actions/get-supported-cities";
 import { submitRegionWaitlist } from "@/server-actions/request-region";
 import { syncSubscriptionFromStripe } from "@/server-actions/sync-subscription";
 import { CityStep } from "./city-step";
-import { LanguageStep } from "./language-step";
 import { TopicsStep } from "./topics-step";
 import { PlanStep } from "./plan-step";
 import { RequestStep } from "./request-step";
@@ -25,9 +24,8 @@ import { PaymentModal } from "@/components/local/payment-modal";
 
 const SUBSCRIBE_LABELS: Record<OnboardingStep, string> = {
   1: "City",
-  2: "Language",
-  3: "Topics",
-  4: "Plan",
+  2: "Topics",
+  3: "Plan",
 };
 
 const REQUEST_LABELS: Record<1 | 2 | 3, string> = {
@@ -94,10 +92,10 @@ export function OnboardingWizard() {
 
   // Pre-fill city from `?city=` (e.g., from the landing-page hero or the
   // /local → onboarding "Back to plan selection" path). Also accepts
-  // `?language=` and `?topics=` (comma-sep) so a user returning from a failed
-  // kickoff or from a Supabase cookie-delay redirect lands back on their
-  // furthest-completed step instead of step 1. Runs once after cities load so
-  // the supported-match check is valid. URL is stripped after hydration so a
+  // `?topics=` (comma-sep) so a user returning from a failed kickoff or from
+  // a Supabase cookie-delay redirect lands back on their furthest-completed
+  // step instead of step 1. Runs once after cities load so the
+  // supported-match check is valid. URL is stripped after hydration so a
   // remount (auth flip, back-nav) can't re-fire this effect.
   useEffect(() => {
     if (citiesLoading || hydratedFromCityParamRef.current) return;
@@ -106,7 +104,6 @@ export function OnboardingWizard() {
     if (!trimmed) return;
     hydratedFromCityParamRef.current = true;
 
-    const urlLanguage = searchParams.get("language")?.trim() ?? "";
     const urlTopicsRaw = searchParams.get("topics");
     const urlTopics = urlTopicsRaw
       ? urlTopicsRaw.split(",").map((t) => t.trim()).filter(Boolean)
@@ -119,19 +116,16 @@ export function OnboardingWizard() {
       updateState({
         city: match,
         cityRequest: null,
-        language: urlLanguage,
         topics: urlTopics,
       });
       setMode("subscribe");
       // Jump to the furthest step the hydrated state unlocks.
-      if (urlLanguage && urlTopics.length > 0) setStep(4);
-      else if (urlLanguage) setStep(3);
+      if (urlTopics.length > 0) setStep(3);
       else setStep(2);
     } else {
       updateState({
         city: "",
         cityRequest: { city: trimmed },
-        language: urlLanguage,
         topics: urlTopics,
       });
       setMode("request");
@@ -194,7 +188,7 @@ export function OnboardingWizard() {
     })();
   }, [user, updateState, setMode, setStep]);
 
-  const totalSteps = mode === "request" ? 3 : 4;
+  const totalSteps = 3;
   const stepLabel =
     mode === "request"
       ? REQUEST_LABELS[step as 1 | 2 | 3] ?? "City"
@@ -230,7 +224,6 @@ export function OnboardingWizard() {
           type: "subscribe",
           plan,
           city: state.city,
-          language: state.language,
           topics: state.topics,
           cityRequest: state.cityRequest,
           referralCode: referralCode || null,
@@ -265,7 +258,6 @@ export function OnboardingWizard() {
           body: JSON.stringify({
             plan,
             city: state.city,
-            language: state.language,
             topics: state.topics,
             cityRequest: state.cityRequest,
             referralCode: referralCode || undefined,
@@ -318,7 +310,7 @@ export function OnboardingWizard() {
   );
 
   const handleSubscribeAdvance = useCallback(() => {
-    if (step < 4) setStep((step + 1) as OnboardingStep);
+    if (step < 3) setStep((step + 1) as OnboardingStep);
   }, [step, setStep]);
 
   const handleRequestSubmitted = useCallback(() => {
@@ -390,20 +382,13 @@ export function OnboardingWizard() {
         )}
 
         {mode === "subscribe" && step === 2 && (
-          <LanguageStep
-            state={state}
-            updateState={updateState}
-            onContinue={handleSubscribeAdvance}
-          />
-        )}
-        {mode === "subscribe" && step === 3 && (
           <TopicsStep
             state={state}
             updateState={updateState}
             onContinue={handleSubscribeAdvance}
           />
         )}
-        {mode === "subscribe" && step === 4 && (
+        {mode === "subscribe" && step === 3 && (
           <PlanStep
             state={state}
             isRedirecting={isRedirecting}
@@ -442,7 +427,6 @@ export function OnboardingWizard() {
         onClose={() => setShowPaymentModal(false)}
         onSuccess={() => router.replace("/local")}
         city={state.city}
-        language={state.language}
         topics={state.topics}
         cityRequest={state.cityRequest}
         referralCode={referralCode || null}

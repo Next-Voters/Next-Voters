@@ -25,7 +25,6 @@ interface PaymentFormProps {
   onSuccess: () => void;
   onError: (msg: string) => void;
   city?: string;
-  language?: string;
   topics?: string[];
   cityRequest?: { city: string } | null;
   referralCode?: string | null;
@@ -35,7 +34,6 @@ function PaymentForm({
   onSuccess,
   onError,
   city,
-  language,
   topics,
   cityRequest,
   referralCode,
@@ -82,7 +80,6 @@ function PaymentForm({
           body: JSON.stringify({
             paymentMethodId,
             city,
-            language,
             topics,
             cityRequest,
             referralCode,
@@ -101,7 +98,7 @@ function PaymentForm({
         setSubmitting(false);
       }
     },
-    [stripe, elements, onSuccess, onError, city, language, topics, cityRequest, referralCode],
+    [stripe, elements, onSuccess, onError, city, topics, cityRequest, referralCode],
   );
 
   return (
@@ -136,7 +133,6 @@ export interface PaymentModalProps {
   onClose: () => void;
   onSuccess: () => void;
   city?: string;
-  language?: string;
   topics?: string[];
   cityRequest?: { city: string } | null;
   referralCode?: string | null;
@@ -147,7 +143,6 @@ export function PaymentModal({
   onClose,
   onSuccess,
   city,
-  language,
   topics,
   cityRequest,
   referralCode,
@@ -234,7 +229,6 @@ export function PaymentModal({
                 onSuccess={handleSuccess}
                 onError={setPaymentError}
                 city={city}
-                language={language}
                 topics={topics}
                 cityRequest={cityRequest}
                 referralCode={referralCode}

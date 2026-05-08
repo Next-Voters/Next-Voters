@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
 
   // Onboarding data — present for new Pro signups, absent for upgrades (already saved in DB).
   const rawCity = typeof body.city === 'string' ? body.city.trim() : '';
-  const rawLanguage = typeof body.language === 'string' ? body.language.trim() : '';
   const rawTopics: string[] = Array.isArray(body.topics)
     ? body.topics.filter((t: unknown): t is string => typeof t === 'string' && t.trim().length > 0).map((t: string) => t.trim())
     : [];
@@ -86,13 +85,12 @@ export async function POST(request: NextRequest) {
   }
 
   // No existing subscription — create a fresh Pro subscription.
-  const isNewSignup = rawCity && rawLanguage && rawTopics.length > 0;
+  const isNewSignup = rawCity && rawTopics.length > 0;
 
   const metadata: Record<string, string> = {
     contact: user.email,
     plan: 'pro',
     ...(rawCity && { city: rawCity }),
-    ...(rawLanguage && { language: rawLanguage }),
     ...(rawTopics.length > 0 && { topics: rawTopics.join('|') }),
   };
   if (cityRequestMeta) metadata.city_request = cityRequestMeta;
@@ -112,7 +110,6 @@ export async function POST(request: NextRequest) {
     stripe_status: 'active',
     tier: 'pro',
     ...(rawCity && { city: rawCity }),
-    ...(rawLanguage && { preferred_language: rawLanguage }),
   };
 
   const { error: upsertError } = await admin

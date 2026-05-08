@@ -20,16 +20,12 @@ export async function POST(request: NextRequest) {
   const plan = body.plan === 'pro' ? 'pro' : 'free';
 
   const rawCity = typeof body.city === 'string' ? body.city.trim() : '';
-  const rawLanguage = typeof body.language === 'string' ? body.language.trim() : '';
   const rawTopics: string[] = Array.isArray(body.topics)
     ? body.topics.filter((t: unknown): t is string => typeof t === 'string' && t.trim().length > 0).map((t: string) => t.trim())
     : [];
 
   if (!rawCity) {
     return NextResponse.json({ error: 'Please select a city.' }, { status: 400 });
-  }
-  if (!rawLanguage) {
-    return NextResponse.json({ error: 'Please select a language.' }, { status: 400 });
   }
   if (rawTopics.length === 0) {
     return NextResponse.json({ error: 'Please select at least one topic.' }, { status: 400 });
@@ -79,7 +75,6 @@ export async function POST(request: NextRequest) {
     contact: user.email,
     plan,
     city: rawCity,
-    language: rawLanguage,
     topics: rawTopics.join('|'),
   };
   if (cityRequestMeta) metadata.city_request = cityRequestMeta;
@@ -102,7 +97,6 @@ export async function POST(request: NextRequest) {
       stripe_subscription_id: stripeSub.id,
       stripe_status: 'active',
       city: rawCity,
-      preferred_language: rawLanguage,
     };
 
     const { error: upsertError } = await admin
