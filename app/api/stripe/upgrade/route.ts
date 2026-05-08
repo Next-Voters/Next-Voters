@@ -62,7 +62,11 @@ export async function POST() {
       });
       // Write tier immediately so refetch() after this call sees the updated state.
       const admin = createSupabaseAdminClient();
-      await admin.from('subscriptions').update({ tier: 'pro' }).eq('contact', user.email);
+      const { error: tierError } = await admin.from('subscriptions').update({ tier: 'pro' }).eq('contact', user.email);
+      if (tierError) {
+        console.error('Upgrade tier write failed:', tierError);
+        // Stripe subscription is already updated — webhook will reconcile tier.
+      }
       return NextResponse.json({ success: true });
     }
 

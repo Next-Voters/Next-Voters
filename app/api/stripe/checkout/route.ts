@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
       contact: user.email,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSub.id,
-      stripe_status: 'active',
+      stripe_status: stripeSub.status,
+      stripe_period_end: new Date(stripeSub.items.data[0].current_period_end * 1000).toISOString(),
+      tier: 'free',
       city: rawCity,
     };
 

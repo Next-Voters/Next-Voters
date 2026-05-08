@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Webhook signature verification failed: ${message}` }, { status: 400 });
   }
 
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
+  if (!proPriceId) {
+    return NextResponse.json({ error: 'STRIPE_PRO_PRICE_ID is not configured' }, { status: 500 });
+  }
+
   const supabase = createSupabaseAdminClient();
 
   switch (event.type) {
@@ -28,18 +33,19 @@ export async function POST(request: NextRequest) {
       const contact = session.metadata?.contact;
       if (!contact) break;
 
+      const checkoutCity = typeof session.metadata?.city === 'string' ? session.metadata.city.trim() : '';
+      const checkoutPayload: Record<string, string> = {
+        contact,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
+        stripe_status: 'active',
+        tier: session.metadata?.plan === 'pro' ? 'pro' : 'free',
+      };
+      if (checkoutCity) checkoutPayload.city = checkoutCity;
+
       const { error: checkoutError } = await supabase
         .from('subscriptions')
-        .upsert(
-          {
-            contact,
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: session.subscription as string,
-            stripe_status: 'active',
-            tier: session.metadata?.plan === 'pro' ? 'pro' : 'free',
-          },
-          { onConflict: 'contact' }
-        );
+        .upsert(checkoutPayload, { onConflict: 'contact' });
       if (checkoutError) {
         console.error(`Webhook ${event.type}:`, checkoutError);
         return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
@@ -52,13 +58,12 @@ export async function POST(request: NextRequest) {
       const contact = sub.metadata?.contact;
       if (!contact) break;
 
-      const proPriceId = process.env.STRIPE_PRO_PRICE_ID
       const subTier = sub.items.data.some((i) => i.price.id === proPriceId) ? 'pro' : 'free'
       const { error: updateError } = await supabase
         .from('subscriptions')
         .update({
           stripe_status: sub.status,
-          stripe_period_end: new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
+          stripe_period_end: new Date(sub.items.data[0].current_period_end * 1000).toISOString(),
           tier: subTier,
         })
         .eq('contact', contact);
@@ -87,20 +92,20 @@ export async function POST(request: NextRequest) {
 
     case 'invoice.paid': {
       const invoice = event.data.object as Stripe.Invoice;
-      const subId = (invoice as unknown as { subscription: string }).subscription;
+      const rawSub = invoice.parent?.subscription_details?.subscription;
+      const subId = typeof rawSub === 'string' ? rawSub : rawSub?.id;
       if (!subId) break;
 
       const stripeSub = await getStripe().subscriptions.retrieve(subId);
       const contact = stripeSub.metadata?.contact;
       if (!contact) break;
 
-      const proPriceIdForPaid = process.env.STRIPE_PRO_PRICE_ID
-      const paidTier = stripeSub.items.data.some((i) => i.price.id === proPriceIdForPaid) ? 'pro' : 'free'
+      const paidTier = stripeSub.items.data.some((i) => i.price.id === proPriceId) ? 'pro' : 'free'
       const { error: paidError } = await supabase
         .from('subscriptions')
         .update({
           stripe_status: 'active',
-          stripe_period_end: new Date((stripeSub as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
+          stripe_period_end: new Date(stripeSub.items.data[0].current_period_end * 1000).toISOString(),
           tier: paidTier,
         })
         .eq('contact', contact);
@@ -113,7 +118,8 @@ export async function POST(request: NextRequest) {
 
     case 'invoice.payment_failed': {
       const invoice = event.data.object as Stripe.Invoice;
-      const subId = (invoice as unknown as { subscription: string }).subscription;
+      const rawSub = invoice.parent?.subscription_details?.subscription;
+      const subId = typeof rawSub === 'string' ? rawSub : rawSub?.id;
       if (!subId) break;
 
       const stripeSub = await getStripe().subscriptions.retrieve(subId);

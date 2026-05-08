@@ -31,6 +31,7 @@ export interface SubscriptionTable {
   stripe_status: string | null
   stripe_period_end: string | null
   referral_code: string | null
+  tier: string | null
 }
 
 export type ChatCount = Selectable<ChatCountTable>

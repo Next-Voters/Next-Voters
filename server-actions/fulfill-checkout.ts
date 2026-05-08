@@ -52,17 +52,26 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
 
   const admin = createSupabaseAdminClient()
 
-  // Idempotency: if we've already fulfilled this exact session for this user,
-  // short-circuit so we don't re-send admin emails or re-convert referrals
-  // (submitRegionWaitlist below is not idempotent).
+  // Check whether we've already fulfilled this session so we can skip
+  // non-idempotent side effects (admin emails, referral conversions).
+  // The upsert itself always runs — it's idempotent and ensures the
+  // webhook-created row (which may lack city / stripe_period_end) gets
+  // the complete data from the checkout session.
   const { data: existingRow } = await admin
     .from("subscriptions")
     .select("stripe_subscription_id")
     .eq("contact", user.email)
     .maybeSingle()
 
-  if (existingRow?.stripe_subscription_id === session.subscription) {
-    return { success: true }
+  const alreadyFulfilled = existingRow?.stripe_subscription_id === session.subscription
+
+  // Fetch the subscription to get stripe_period_end.
+  let periodEnd: string | undefined
+  try {
+    const stripeSub = await getStripe().subscriptions.retrieve(session.subscription as string)
+    periodEnd = new Date(stripeSub.items.data[0].current_period_end * 1000).toISOString()
+  } catch {
+    // Non-fatal — webhook will fill stripe_period_end shortly.
   }
 
   const upsertPayload: Record<string, string> = {
@@ -73,6 +82,7 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     tier: plan,
   }
   if (city) upsertPayload.city = city
+  if (periodEnd) upsertPayload.stripe_period_end = periodEnd
 
   const { error } = await admin
     .from("subscriptions")
@@ -80,7 +90,8 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
 
   if (error) return { success: false, error: error.message }
 
-  // Persist topics to subscription_topics (replace any prior selections).
+  // Topics are idempotent (delete + insert) — always run so they're saved even
+  // when the webhook created the row before fulfillCheckout reached this point.
   if (truncatedTopics.length > 0) {
     const normalized = truncatedTopics.map((t) => t.toLowerCase())
     const { data: topicRows } = await admin
@@ -100,12 +111,16 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     }
   }
 
-  // If the user requested an unsupported city, notify admin + convert any referral.
+  // Non-idempotent side effects — only run on first fulfillment to avoid
+  // duplicate vote counts and referral conversions.
+  if (alreadyFulfilled) return { success: true }
+
   const cityRequest = parseCityRequest(metadata.city_request)
   if (cityRequest) {
     const referralCode = typeof metadata.referral_code === "string" ? metadata.referral_code.trim() : ""
     await submitRegionWaitlist({
       city: cityRequest.city,
+      voterEmail: user.email,
       referralCode: referralCode || undefined,
     })
   }
