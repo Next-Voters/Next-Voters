@@ -41,14 +41,31 @@ export async function POST(request: NextRequest) {
   const referralCode = typeof body.referralCode === 'string' ? body.referralCode.trim() : '';
 
   // Env var intentionally named STRIPE_BASIC_PRICE_ID — UI labels the tier "Free" but the Stripe price config retains the original name to avoid a coordinated secrets rotation.
-  const priceId = plan === 'pro'
-    ? process.env.STRIPE_PRO_PRICE_ID!
-    : process.env.STRIPE_BASIC_PRICE_ID!;
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
+  const basicPriceId = process.env.STRIPE_BASIC_PRICE_ID;
+  if (!proPriceId || !basicPriceId) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+  const priceId = plan === 'pro' ? proPriceId : basicPriceId;
 
   const stripe = getStripe();
+  const admin = createSupabaseAdminClient();
 
-  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-  const customer = customers.data[0];
+  // Prefer the stripe_customer_id stored in the DB over an email-based lookup,
+  // since Stripe allows multiple customers with the same email.
+  const { data: dbRow } = await admin
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('contact', user.email)
+    .maybeSingle();
+
+  let customer: { id: string } | undefined;
+  if (dbRow?.stripe_customer_id) {
+    customer = { id: dbRow.stripe_customer_id };
+  } else {
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    customer = customers.data[0];
+  }
 
   if (customer) {
     const activeSubs = await stripe.subscriptions.list({
@@ -89,14 +106,13 @@ export async function POST(request: NextRequest) {
       metadata,
     });
 
-    const admin = createSupabaseAdminClient();
-
+    const periodEnd = stripeSub.items.data[0]?.current_period_end;
     const upsertPayload: Record<string, string> = {
       contact: user.email,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSub.id,
       stripe_status: stripeSub.status,
-      stripe_period_end: new Date(stripeSub.items.data[0].current_period_end * 1000).toISOString(),
+      ...(periodEnd && { stripe_period_end: new Date(periodEnd * 1000).toISOString() }),
       tier: 'free',
       city: rawCity,
     };
@@ -106,7 +122,8 @@ export async function POST(request: NextRequest) {
       .upsert(upsertPayload, { onConflict: 'contact' });
 
     if (upsertError) {
-      return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      console.error('checkout: DB upsert failed:', upsertError);
+      return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
     }
 
     // Save topics (max 1 for free tier).

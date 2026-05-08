@@ -20,12 +20,24 @@ export async function syncSubscriptionFromStripe(): Promise<{
   if (!user?.email) return { ok: false, error: "Not authenticated" };
 
   const stripe = getStripe();
-  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-  const customer = customers.data[0];
-  if (!customer) return { ok: false, error: "No Stripe customer" };
+  const admin = createSupabaseAdminClient();
+
+  // Prefer the stripe_customer_id stored in the DB over an email-based lookup.
+  const { data: dbRow } = await admin
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("contact", user.email)
+    .maybeSingle();
+
+  let customerId = dbRow?.stripe_customer_id;
+  if (!customerId) {
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    customerId = customers.data[0]?.id;
+  }
+  if (!customerId) return { ok: false, error: "No Stripe customer" };
 
   const subs = await stripe.subscriptions.list({
-    customer: customer.id,
+    customer: customerId,
     status: "active",
     limit: 1,
   });
@@ -33,19 +45,23 @@ export async function syncSubscriptionFromStripe(): Promise<{
   if (!sub) return { ok: false, error: "No active Stripe subscription" };
 
   const proPriceId = process.env.STRIPE_PRO_PRICE_ID
-  if (!proPriceId) throw new Error('STRIPE_PRO_PRICE_ID is not configured')
+  if (!proPriceId) return { ok: false, error: 'STRIPE_PRO_PRICE_ID is not configured' }
   const tier = sub.items.data.some((i) => i.price.id === proPriceId) ? 'pro' : 'free'
 
-  const admin = createSupabaseAdminClient();
+  const periodEnd = sub.items.data[0]?.current_period_end;
+  const upsertPayload: Record<string, string> = {
+    contact: user.email,
+    stripe_customer_id: customerId,
+    stripe_subscription_id: sub.id,
+    stripe_status: "active",
+    tier,
+  };
+  if (periodEnd) {
+    upsertPayload.stripe_period_end = new Date(periodEnd * 1000).toISOString();
+  }
+
   const { error } = await admin.from("subscriptions").upsert(
-    {
-      contact: user.email,
-      stripe_customer_id: customer.id,
-      stripe_subscription_id: sub.id,
-      stripe_status: "active",
-      stripe_period_end: new Date(sub.items.data[0].current_period_end * 1000).toISOString(),
-      tier,
-    },
+    upsertPayload,
     { onConflict: "contact" },
   );
   if (error) return { ok: false, error: error.message };

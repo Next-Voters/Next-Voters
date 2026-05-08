@@ -12,19 +12,34 @@ export async function POST() {
   }
 
   const stripe = getStripe();
-  const proPriceId = process.env.STRIPE_PRO_PRICE_ID!;
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
+  if (!proPriceId) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
 
-  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-  const customer = customers.data[0];
+  const admin = createSupabaseAdminClient();
 
-  if (!customer) {
+  // Prefer the stripe_customer_id stored in the DB over an email-based lookup.
+  const { data: dbRow } = await admin
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('contact', user.email)
+    .maybeSingle();
+
+  let customerId = dbRow?.stripe_customer_id;
+  if (!customerId) {
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    customerId = customers.data[0]?.id;
+  }
+
+  if (!customerId) {
     // No Stripe customer yet — client should open the payment modal directly
     // via /api/stripe/subscribe-pro which will create the customer.
     return NextResponse.json({ requiresPayment: true });
   }
 
   const subscriptions = await stripe.subscriptions.list({
-    customer: customer.id,
+    customer: customerId,
     status: 'active',
     limit: 1,
   });
@@ -43,7 +58,7 @@ export async function POST() {
 
   try {
     // Check if the customer has a payment method on file.
-    const customerDetails = await stripe.customers.retrieve(customer.id) as {
+    const customerDetails = await stripe.customers.retrieve(customerId) as {
       invoice_settings?: { default_payment_method?: string | null };
       default_source?: string | null;
     };
@@ -55,14 +70,20 @@ export async function POST() {
     if (hasPaymentMethod) {
       // Swap the price directly — no card needed.
       const currentItem = stripeSub.items.data[0];
-      await stripe.subscriptions.update(stripeSub.id, {
+      const updatedSub = await stripe.subscriptions.update(stripeSub.id, {
         items: [{ id: currentItem.id, price: proPriceId }],
         metadata: { contact: user.email, plan: 'pro' },
         proration_behavior: 'create_prorations',
       });
-      // Write tier immediately so refetch() after this call sees the updated state.
-      const admin = createSupabaseAdminClient();
-      const { error: tierError } = await admin.from('subscriptions').update({ tier: 'pro' }).eq('contact', user.email);
+
+      // Write tier and period end immediately so refetch() sees the updated state.
+      const periodEnd = updatedSub.items.data[0]?.current_period_end;
+      const updatePayload: Record<string, string> = { tier: 'pro' };
+      if (periodEnd) {
+        updatePayload.stripe_period_end = new Date(periodEnd * 1000).toISOString();
+      }
+
+      const { error: tierError } = await admin.from('subscriptions').update(updatePayload).eq('contact', user.email);
       if (tierError) {
         console.error('Upgrade tier write failed:', tierError);
         // Stripe subscription is already updated — webhook will reconcile tier.
@@ -74,7 +95,7 @@ export async function POST() {
     // /api/stripe/subscribe-pro will attach the PM and swap the price in one step.
     return NextResponse.json({ requiresPayment: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to upgrade';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Upgrade error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Failed to upgrade subscription' }, { status: 500 });
   }
 }

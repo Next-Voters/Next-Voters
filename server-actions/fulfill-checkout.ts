@@ -31,6 +31,10 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: "Session not completed" }
   }
 
+  if (session.status !== "complete") {
+    return { success: false, error: "Session not completed" }
+  }
+
   if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return { success: false, error: "Session not completed" }
   }
@@ -40,15 +44,12 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   }
 
   const metadata = session.metadata ?? {}
-  const plan = metadata.plan === "pro" ? "pro" : "free"
   const city = typeof metadata.city === "string" ? metadata.city.trim() : ""
   const topicsRaw = typeof metadata.topics === "string" ? metadata.topics : ""
   const topics = topicsRaw
     .split("|")
     .map((t) => t.trim())
     .filter(Boolean)
-  const maxTopics = plan === "pro" ? 3 : 1
-  const truncatedTopics = topics.slice(0, maxTopics)
 
   const admin = createSupabaseAdminClient()
 
@@ -65,14 +66,24 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
 
   const alreadyFulfilled = existingRow?.stripe_subscription_id === session.subscription
 
-  // Fetch the subscription to get stripe_period_end.
+  // Fetch the subscription to get stripe_period_end and determine tier
+  // from actual price IDs (authoritative) rather than metadata.
   let periodEnd: string | undefined
+  let plan: "pro" | "free" = metadata.plan === "pro" ? "pro" : "free"
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID
   try {
     const stripeSub = await getStripe().subscriptions.retrieve(session.subscription as string)
-    periodEnd = new Date(stripeSub.items.data[0].current_period_end * 1000).toISOString()
+    const ts = stripeSub.items.data[0]?.current_period_end
+    if (ts) periodEnd = new Date(ts * 1000).toISOString()
+    if (proPriceId) {
+      plan = stripeSub.items.data.some((i) => i.price.id === proPriceId) ? "pro" : "free"
+    }
   } catch {
     // Non-fatal — webhook will fill stripe_period_end shortly.
   }
+
+  const maxTopics = plan === "pro" ? 3 : 1
+  const truncatedTopics = topics.slice(0, maxTopics)
 
   const upsertPayload: Record<string, string> = {
     contact: user.email,
@@ -88,7 +99,10 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     .from("subscriptions")
     .upsert(upsertPayload, { onConflict: "contact" })
 
-  if (error) return { success: false, error: error.message }
+  if (error) {
+    console.error("fulfillCheckout: DB upsert failed:", error)
+    return { success: false, error: "Failed to save subscription" }
+  }
 
   // Topics are idempotent (delete + insert) — always run so they're saved even
   // when the webhook created the row before fulfillCheckout reached this point.
