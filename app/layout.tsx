@@ -1,12 +1,10 @@
 import { type Metadata, type Viewport } from 'next'
 import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google'
-import Script from 'next/script'
+import Head from 'next/head'
 import './globals.css'
 import Root from '@/components/common/root'
 import { AuthProvider } from '@/wrappers/AuthProvider'
 import { SubscriptionProvider } from '@/wrappers/SubscriptionProvider'
-
-const GOOGLE_ADS_ID = 'AW-18024404483'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -91,20 +89,19 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${dancingScript.variable}`}
     >
-      <head>
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
-          strategy="afterInteractive"
+      <Head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18024404483"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-18024404483');
+            `,
+          }}
         />
-        <Script id="google-ads-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GOOGLE_ADS_ID}');
-          `}
-        </Script>
-      </head>
+      </Head>
       <body className="antialiased">
         <AuthProvider>
           <SubscriptionProvider>
