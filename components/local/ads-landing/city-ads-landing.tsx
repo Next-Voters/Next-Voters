@@ -15,7 +15,7 @@ import {
   Check,
   ChevronDown,
   Clock,
-  Flag
+  Flag,
   Forward,
   Landmark,
   Loader2,
