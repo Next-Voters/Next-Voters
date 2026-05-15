@@ -28,3 +28,5 @@ Analyze all pending changes and use judgement to commit them as one or multiple 
 6. After all commits are created, run `git log --oneline -10` and report:
    - How many commits were created and why you chose that grouping
    - The hash and message of each new commit
+
+7. Do NOT push these commits. Engineer will use bash command to manually do it when needed. 
