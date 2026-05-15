@@ -42,16 +42,22 @@ function NVLocalInner() {
   const conversionFiredRef = useRef(false);
 
   // Fire Google Ads conversion event after successful checkout.
+  // Guarantee the dataLayer queue and gtag wrapper exist so the event is
+  // never silently dropped — queued events are processed when gtag.js loads.
   useEffect(() => {
     if (!isPostCheckout || conversionFiredRef.current) return;
     conversionFiredRef.current = true;
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'conversion', {
-        send_to: 'AW-18024404483/iVVXCP-BpZUcEIOs2pJD',
-        value: 1.0,
-        currency: 'USD',
-      });
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function (...args: unknown[]) {
+        (window.dataLayer as unknown[]).push(args);
+      };
     }
+    window.gtag('event', 'conversion', {
+      send_to: 'AW-18024404483/iVVXCP-BpZUcEIOs2pJD',
+      value: 1.0,
+      currency: 'USD',
+    });
   }, [isPostCheckout]);
 
   // Read the pending-action cookie once on mount.
