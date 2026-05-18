@@ -27,12 +27,18 @@ export type GetSubscriberReportsResult = {
 
 const DEFAULT_PAGE_SIZE = 10;
 
-type ReportRow = {
-  report_id: number;
-  report_date: string;
-  items: ReportItem[];
-  sources: string[];
+type ReportHeaderRow = {
+  id: number;
+  header: string;
+  bullets: string[];
+  topic_id: number;
   supported_topics: { topic_name: string } | null;
+};
+
+type ReportRow = {
+  id: number;
+  report_date: string;
+  report_headers: ReportHeaderRow[];
 };
 
 type TopicRow = {
@@ -65,28 +71,48 @@ export async function getSubscriberReports(
 
   const topicIds = ((topicRows ?? []) as TopicRow[]).map((r) => r.topic_id);
 
-  let query = supabase
+  const { data, error } = await supabase
     .from("reports")
-    .select("report_id, report_date, items, sources, supported_topics(topic_name)")
+    .select(
+      "id, report_date, report_headers(id, header, bullets, topic_id, supported_topics(topic_name))",
+    )
     .eq("region", sub.region)
     .order("report_date", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
-  if (topicIds.length > 0) {
-    query = query.in("topic_id", topicIds);
-  }
-
-  const { data, error } = await query;
   if (error || !data) return { cards: [], nextCursor: null };
 
-  const cards: ReportCard[] = (data as unknown as ReportRow[]).map((row) => ({
-    report_id: row.report_id,
-    report_date: row.report_date,
-    topic_name: row.supported_topics?.topic_name ?? "Unknown",
-    items: (row.items as ReportItem[]) ?? [],
-    sources: (row.sources as string[]) ?? [],
-  }));
+  const cards: ReportCard[] = [];
+  for (const report of data as unknown as ReportRow[]) {
+    let headers = report.report_headers ?? [];
+    if (topicIds.length > 0) {
+      headers = headers.filter((h) => topicIds.includes(h.topic_id));
+    }
+    if (headers.length === 0) continue;
 
-  const nextCursor = data.length === pageSize ? String(offset + data.length) : null;
+    // Group headers by topic so each card represents one topic within a report
+    const byTopic = new Map<number, ReportHeaderRow[]>();
+    for (const h of headers) {
+      const list = byTopic.get(h.topic_id) ?? [];
+      list.push(h);
+      byTopic.set(h.topic_id, list);
+    }
+
+    for (const topicHeaders of byTopic.values()) {
+      cards.push({
+        report_id: report.id,
+        report_date: report.report_date,
+        topic_name: topicHeaders[0]?.supported_topics?.topic_name ?? "Unknown",
+        items: topicHeaders.map((h) => ({
+          header: h.header,
+          description: (h.bullets as string[]).join(" "),
+        })),
+        sources: [],
+      });
+    }
+  }
+
+  const nextCursor =
+    data.length === pageSize ? String(offset + data.length) : null;
   return { cards, nextCursor };
 }

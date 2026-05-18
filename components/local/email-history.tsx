@@ -101,7 +101,7 @@ export function EmailHistory() {
         ) : (
           <div className="flex flex-col gap-3">
             {cards.map((card) => (
-              <ReportCardView key={card.report_id} card={card} />
+              <ReportCardView key={`${card.report_id}-${card.topic_name}`} card={card} />
             ))}
 
             {!done && (
