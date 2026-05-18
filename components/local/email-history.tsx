@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Mail } from "lucide-react";
 import {
   getSubscriberReports,
   type ReportCard,
+  type TopicSection,
 } from "@/server-actions/get-subscriber-reports";
 
 const PAGE_SIZE = 10;
@@ -64,7 +65,6 @@ export function EmailHistory() {
 
   useEffect(() => {
     loadMore();
-    // Initial load only — subsequent loads driven by the observer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -97,11 +97,11 @@ export function EmailHistory() {
         className="max-h-[calc(100vh-220px)] overflow-y-auto pr-1 -mr-1"
       >
         {loading && cards.length === 0 ? (
-          <p className="text-gray-400 text-[13px] py-4">Loading…</p>
+          <p className="text-gray-400 text-[13px] py-4">Loading...</p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {cards.map((card) => (
-              <ReportCardView key={`${card.report_id}-${card.topic_name}`} card={card} />
+              <ReportCardView key={card.report_id} card={card} />
             ))}
 
             {!done && (
@@ -110,7 +110,7 @@ export function EmailHistory() {
                 className="py-4 text-center text-[12px] text-gray-400"
                 aria-hidden="true"
               >
-                {loadingMore ? "Loading more…" : " "}
+                {loadingMore ? "Loading more..." : " "}
               </div>
             )}
 
@@ -138,75 +138,105 @@ export function EmailHistory() {
 function ReportCardView({ card }: { card: ReportCard }) {
   const [expanded, setExpanded] = useState(false);
 
+  const itemCount = card.topics.reduce((sum, t) => sum + t.items.length, 0);
+
   return (
-    <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+    <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+      {/* Red header — mirrors email template branding */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full text-left group"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="shrink-0 inline-block px-2 py-0.5 rounded-full bg-gray-100 text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
-            {capitalize(card.topic_name)}
-          </span>
-          <span className="text-[13px] font-medium text-gray-900 truncate">
-            {formatDate(card.report_date)}
-          </span>
-        </div>
-        {expanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" aria-hidden="true" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" aria-hidden="true" />
-        )}
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
-          <div className="flex flex-col gap-3 pt-3">
-            {card.items.length === 0 ? (
-              <p className="text-[13px] text-gray-400">No items in this report.</p>
+        <div className="bg-brand px-4 py-3 flex items-center justify-between gap-3 transition-[filter] group-hover:brightness-110">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="shrink-0 text-[18px] font-extrabold tracking-[2px] text-white/90 leading-none select-none">
+              NV
+            </span>
+            <div className="h-4 w-px bg-white/25 shrink-0" />
+            <div className="min-w-0">
+              <span className="block text-[13px] font-semibold text-white truncate">
+                {formatDate(card.report_date)}
+              </span>
+              <span className="block text-[11px] text-white/60 truncate">
+                {card.city}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-white/50 font-medium tabular-nums">
+              {itemCount}
+            </span>
+            {expanded ? (
+              <ChevronUp className="h-3.5 w-3.5 text-white/60 shrink-0" aria-hidden="true" />
             ) : (
-              card.items.map((item, i) => (
-                <article key={i}>
-                  <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-1">
-                    {item.header}
-                  </h3>
-                  <p className="text-[13px] text-gray-600 leading-relaxed">{item.description}</p>
-                </article>
-              ))
+              <ChevronDown className="h-3.5 w-3.5 text-white/60 shrink-0" aria-hidden="true" />
             )}
           </div>
+        </div>
+      </button>
 
-          {card.sources.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                Sources
-              </p>
-              <ul className="flex flex-col gap-1">
-                {card.sources.map((url, i) => {
-                  let hostname = url;
-                  try {
-                    hostname = new URL(url).hostname;
-                  } catch {
-                    // fall back to raw url
-                  }
-                  return (
-                    <li key={i}>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[12px] text-brand hover:underline"
-                      >
-                        {hostname}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+      {/* Collapsed: topic pills for scannability */}
+      {!expanded && (
+        <div className="px-4 py-2.5 flex flex-wrap items-center gap-1.5">
+          {card.topics.map((t) => (
+            <span
+              key={t.topic_name}
+              className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-semibold text-gray-500 uppercase tracking-wide"
+            >
+              {capitalize(t.topic_name)}
+            </span>
+          ))}
         </div>
       )}
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="px-4 py-4">
+          {card.topics.map((topic, ti) => (
+            <TopicSectionView
+              key={topic.topic_name}
+              topic={topic}
+              isLast={ti === card.topics.length - 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopicSectionView({
+  topic,
+  isLast,
+}: {
+  topic: TopicSection;
+  isLast: boolean;
+}) {
+  return (
+    <div className={isLast ? "" : "mb-4 pb-4 border-b border-gray-100"}>
+      <span className="inline-block px-2.5 py-0.5 rounded-full bg-brand/10 text-[11px] font-bold text-brand uppercase tracking-wide mb-3">
+        {capitalize(topic.topic_name)}
+      </span>
+
+      <div className="flex flex-col gap-3">
+        {topic.items.map((item, i) => (
+          <article key={i}>
+            <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-1">
+              {item.header}
+            </h3>
+            <ul className="space-y-0.5 pl-4 list-disc marker:text-gray-300">
+              {item.bullets.map((bullet, bi) => (
+                <li
+                  key={bi}
+                  className="text-[12.5px] text-gray-600 leading-relaxed pl-0.5"
+                >
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

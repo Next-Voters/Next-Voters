@@ -4,15 +4,19 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ReportItem = {
   header: string;
-  description: string;
+  bullets: string[];
+};
+
+export type TopicSection = {
+  topic_name: string;
+  items: ReportItem[];
 };
 
 export type ReportCard = {
   report_id: number;
   report_date: string;
-  topic_name: string;
-  items: ReportItem[];
-  sources: string[];
+  city: string;
+  topics: TopicSection[];
 };
 
 export type GetSubscriberReportsInput = {
@@ -38,6 +42,7 @@ type ReportHeaderRow = {
 type ReportRow = {
   id: number;
   report_date: string;
+  city: string | null;
   report_headers: ReportHeaderRow[];
 };
 
@@ -74,7 +79,7 @@ export async function getSubscriberReports(
   const { data, error } = await supabase
     .from("reports")
     .select(
-      "id, report_date, report_headers(id, header, bullets, topic_id, supported_topics(topic_name))",
+      "id, report_date, city, report_headers(id, header, bullets, topic_id, supported_topics(topic_name))",
     )
     .eq("region", sub.region)
     .order("report_date", { ascending: false })
@@ -90,26 +95,32 @@ export async function getSubscriberReports(
     }
     if (headers.length === 0) continue;
 
-    // Group headers by topic so each card represents one topic within a report
-    const byTopic = new Map<number, ReportHeaderRow[]>();
+    // Group headers by topic — each topic becomes a section within the card
+    const byTopic = new Map<
+      number,
+      { name: string; items: ReportItem[] }
+    >();
     for (const h of headers) {
-      const list = byTopic.get(h.topic_id) ?? [];
-      list.push(h);
-      byTopic.set(h.topic_id, list);
+      const existing = byTopic.get(h.topic_id) ?? {
+        name: h.supported_topics?.topic_name ?? "Unknown",
+        items: [],
+      };
+      existing.items.push({
+        header: h.header,
+        bullets: h.bullets as string[],
+      });
+      byTopic.set(h.topic_id, existing);
     }
 
-    for (const topicHeaders of byTopic.values()) {
-      cards.push({
-        report_id: report.id,
-        report_date: report.report_date,
-        topic_name: topicHeaders[0]?.supported_topics?.topic_name ?? "Unknown",
-        items: topicHeaders.map((h) => ({
-          header: h.header,
-          description: (h.bullets as string[]).join(" "),
-        })),
-        sources: [],
-      });
-    }
+    cards.push({
+      report_id: report.id,
+      report_date: report.report_date,
+      city: report.city ?? sub.region,
+      topics: Array.from(byTopic.values()).map((t) => ({
+        topic_name: t.name,
+        items: t.items,
+      })),
+    });
   }
 
   const nextCursor =
