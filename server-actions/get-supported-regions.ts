@@ -1,10 +1,11 @@
 "use server"
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { RegionType } from "@/types/supported-regions"
 
 export type SupportedRegion = {
   region: string
-  type: string
+  type: RegionType
   parent_region: string | null
 }
 
