@@ -100,6 +100,19 @@ export async function POST(request: NextRequest) {
   // Free tier: create the subscription directly — no hosted checkout page needed
   // since no payment is required. Write to DB immediately and return success.
   if (plan === 'free') {
+    // City-level regions require Pro.
+    const { data: regionRow } = await admin
+      .from('supported_regions')
+      .select('type')
+      .eq('region', rawRegion)
+      .maybeSingle();
+
+    if (regionRow?.type === 'city') {
+      return NextResponse.json(
+        { error: 'City-level coverage requires the Pro plan.' },
+        { status: 400 },
+      );
+    }
     const stripeSub = await stripe.subscriptions.create({
       customer: stripeCustomerId,
       items: [{ price: priceId, quantity: 1 }],
@@ -126,8 +139,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
     }
 
-    // Save topics (max 1 for free tier).
-    const truncatedTopics = rawTopics.slice(0, 1).map((t) => t.toLowerCase());
+    // Save topics (max 3).
+    const truncatedTopics = rawTopics.slice(0, 3).map((t) => t.toLowerCase());
     if (truncatedTopics.length > 0) {
       const { data: topicRows } = await admin
         .from('supported_topics')

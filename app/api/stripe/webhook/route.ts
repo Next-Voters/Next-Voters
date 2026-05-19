@@ -45,6 +45,37 @@ function getPeriodEnd(sub: Stripe.Subscription): string | null {
   return new Date(ts * 1000).toISOString();
 }
 
+/**
+ * If the user's current region is a city, fall back to its parent state.
+ * Called when a subscription is downgraded or canceled so free-tier users
+ * don't retain city-level coverage.
+ */
+async function fallbackCityRegion(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  contact: string,
+): Promise<void> {
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('region')
+    .eq('contact', contact)
+    .maybeSingle();
+
+  if (!sub?.region) return;
+
+  const { data: regionRow } = await supabase
+    .from('supported_regions')
+    .select('type, parent_region')
+    .eq('region', sub.region)
+    .maybeSingle();
+
+  if (regionRow?.type === 'city' && regionRow.parent_region) {
+    await supabase
+      .from('subscriptions')
+      .update({ region: regionRow.parent_region })
+      .eq('contact', contact);
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const sig = request.headers.get('stripe-signature');
@@ -147,6 +178,11 @@ export async function POST(request: NextRequest) {
         console.error(`Webhook ${event.type}:`, updateError);
         return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
       }
+
+      // Downgraded to free — fall back from city to parent state.
+      if (subTier === 'free') {
+        await fallbackCityRegion(supabase, contact);
+      }
       break;
     }
 
@@ -171,6 +207,9 @@ export async function POST(request: NextRequest) {
         console.error(`Webhook ${event.type}:`, deleteError);
         return NextResponse.json({ error: 'Database write failed' }, { status: 500 });
       }
+
+      // Canceled — fall back from city to parent state.
+      await fallbackCityRegion(supabase, contact);
       break;
     }
 

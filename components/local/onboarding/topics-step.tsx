@@ -25,13 +25,13 @@ export function TopicsStep({ state, updateState, onContinue }: Props) {
     count === 0
       ? "Tap a topic to get started."
       : count === 3
-        ? "All three selected — Pro covers them all."
+        ? "All three selected."
         : `${count} selected`;
 
   return (
     <div>
       <p className="text-[15px] text-gray-500 leading-relaxed mb-6">
-        Pick the issues you care about. Free sends one; Pro sends all three.
+        Pick the issues you care about. We&rsquo;ll send you updates on your selections.
       </p>
 
       <label className="block mb-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">

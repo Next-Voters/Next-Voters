@@ -117,6 +117,7 @@ export function OnboardingWizard() {
         region: match.region,
         regionRequest: null,
         topics: urlTopics,
+        regionType: match.type ?? null,
       });
       setMode("subscribe");
       // Jump to the furthest step the hydrated state unlocks.
@@ -407,7 +408,7 @@ export function OnboardingWizard() {
           <AlternativeRegionsStep
             state={state}
             supportedRegions={supportedRegions
-              .filter((r) => r.type === "city")
+              .filter((r) => r.type !== "city")
               .map((r) => r.region)}
             onPick={handlePickAlternative}
           />

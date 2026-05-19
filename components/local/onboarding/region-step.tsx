@@ -104,7 +104,7 @@ export function RegionStep({
       (r) => r.type === "city" && ci(r.region, trimmed),
     );
     if (cityMatch) {
-      updateState({ region: cityMatch.region, regionRequest: null });
+      updateState({ region: cityMatch.region, regionRequest: null, regionType: "city" });
       onContinue(true);
       return;
     }
@@ -115,7 +115,7 @@ export function RegionStep({
           (r) => r.type === "state" && ci(r.region, pickedSuggestion.state!),
         );
         if (stateMatch) {
-          updateState({ region: stateMatch.region, regionRequest: null });
+          updateState({ region: stateMatch.region, regionRequest: null, regionType: "state" });
           onContinue(true);
           return;
         }
@@ -126,7 +126,7 @@ export function RegionStep({
           (r) => r.type === "country" && ci(r.region, pickedSuggestion.country!),
         );
         if (countryMatch) {
-          updateState({ region: countryMatch.region, regionRequest: null });
+          updateState({ region: countryMatch.region, regionRequest: null, regionType: "country" });
           onContinue(true);
           return;
         }
@@ -135,7 +135,7 @@ export function RegionStep({
 
     const flatMatch = supportedRegions.find((r) => ci(r.region, trimmed));
     if (flatMatch) {
-      updateState({ region: flatMatch.region, regionRequest: null });
+      updateState({ region: flatMatch.region, regionRequest: null, regionType: flatMatch.type ?? null });
       onContinue(true);
       return;
     }
@@ -224,6 +224,12 @@ export function RegionStep({
           </ul>
         )}
       </div>
+
+      {state.regionType === "city" && (
+        <p className="mt-2 text-[13px] text-gray-500">
+          City-level coverage is a Pro feature.
+        </p>
+      )}
 
       {error && (
         <p

@@ -82,7 +82,7 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     // Non-fatal — webhook will fill stripe_period_end shortly.
   }
 
-  const maxTopics = plan === "pro" ? 3 : 1
+  const maxTopics = 3
   const truncatedTopics = topics.slice(0, maxTopics)
 
   const upsertPayload: Record<string, string> = {

@@ -26,7 +26,7 @@ const faqs = [
   },
   {
     q: 'What topics are covered?',
-    a: 'Next Voters currently covers Immigration, Civil Rights, and the Economy. Free users choose one topic; Pro users receive weekly updates on all three.',
+    a: 'All users get updates on all three topics. Pro users additionally unlock city-level political coverage.',
   },
   {
     q: 'Is the content actually nonpartisan?',
@@ -50,7 +50,7 @@ export default function PricingPage() {
         </h1>
         <p className="text-[16px] text-gray-500 leading-relaxed">
           Start free &mdash; no credit card needed. Upgrade anytime to unlock
-          full coverage across all three topics.
+          city-level political coverage.
         </p>
       </section>
 
@@ -70,7 +70,8 @@ export default function PricingPage() {
 
             <ul className="flex flex-col gap-3.5 mb-8 flex-1" aria-label="Free plan features">
               {[
-                '1 topic of your choice',
+                'All 3 topics \u2014 Immigration, Civil Rights, Economy',
+                'State & federal level politics',
                 'Weekly civic updates via email',
                 'Nonpartisan policy analysis',
               ].map((f) => (
@@ -108,9 +109,9 @@ export default function PricingPage() {
 
             <ul className="flex flex-col gap-3.5 mb-8 flex-1" aria-label="Pro plan features">
               {[
-                'All 3 topics \u2014 Immigration, Civil Rights, Economy',
+                'Everything in Free',
+                'City-level politics',
                 'Weekly civic updates via email',
-                'Nonpartisan policy analysis',
                 'Cancel anytime, no questions asked',
               ].map((f) => (
                 <li key={f} className="flex items-start gap-3">

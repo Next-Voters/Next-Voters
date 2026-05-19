@@ -7,51 +7,58 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { TierBadge } from "@/components/local/tier-badge";
 import { getUserTopics } from "@/server-actions/get-user-topics";
 import { updateUserTopics } from "@/server-actions/update-user-topics";
-import { getSupportedRegions, getUserRegion } from "@/server-actions/get-supported-regions";
+import { getSupportedRegionsWithHierarchy, getUserRegion, type SupportedRegion } from "@/server-actions/get-supported-regions";
 import { updateUserRegion } from "@/server-actions/update-user-region";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function ManageTopics({ onSaved }: { onSaved?: () => void } = {}) {
   const { isPro, isLoading: subLoading, tier } = useSubscription();
-  const MAX_TOPICS = isPro ? 3 : 1;
+  const MAX_TOPICS = 3;
 
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
   const [topicsLoading, setTopicsLoading] = useState(true);
 
-  const [regions, setRegions] = useState<string[]>([]);
+  const [regions, setRegions] = useState<SupportedRegion[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("");
+  const [regionError, setRegionError] = useState("");
 
   useEffect(() => {
-    getSupportedRegions().then(setRegions);
+    getSupportedRegionsWithHierarchy().then(setRegions);
     getUserRegion().then((region) => { if (region) setSelectedRegion(region); });
   }, []);
 
   useEffect(() => {
     if (subLoading) return;
     getUserTopics().then((topics) => {
-      setSelected(topics.slice(0, MAX_TOPICS));
+      setSelected(topics);
       setTopicsLoading(false);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subLoading, MAX_TOPICS]);
+  }, [subLoading]);
 
   const toggleTopic = (topic: string) => {
     const exists = selected.includes(topic);
     if (exists) {
       setSelected(selected.filter((t) => t !== topic));
-    } else if (selected.length >= MAX_TOPICS) {
-      if (!isPro) {
-        setSelected([topic]);
-      }
-    } else {
+    } else if (selected.length < MAX_TOPICS) {
       setSelected([...selected, topic]);
     }
     setSavedMsg("");
   };
 
   const handleSave = async () => {
+    setRegionError("");
+    // Prevent free users from saving a city region.
+    if (selectedRegion && !isPro) {
+      const match = regions.find((r) => r.region === selectedRegion);
+      if (match?.type === "city") {
+        setRegionError("City-level updates require a Pro subscription.");
+        return;
+      }
+    }
+
     setSaving(true);
     setSavedMsg("");
     const [topicResult, regionResult] = await Promise.all([
@@ -86,9 +93,7 @@ export function ManageTopics({ onSaved }: { onSaved?: () => void } = {}) {
           <TierBadge tier={tier} />
         </div>
         <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
-          {isPro
-            ? "Select up to 3 topics. We'll only send you updates related to your choices."
-            : "Select 1 topic. Upgrade to Pro for all 3."}
+          Select up to 3 topics. We&rsquo;ll only send you updates related to your choices.
         </p>
 
         {/* City selector */}
@@ -103,14 +108,25 @@ export function ManageTopics({ onSaved }: { onSaved?: () => void } = {}) {
                 <SelectValue placeholder="Select your region" />
               </SelectTrigger>
               <SelectContent className="bg-white text-gray-900 border border-gray-200 z-[50]">
-                {regions.map((region) => (
-                  <SelectItem key={region} value={region} className="hover:bg-gray-100 focus:bg-gray-100">
-                    {region}
-                  </SelectItem>
-                ))}
+                {regions.map((r) => {
+                  const isCityLocked = r.type === "city" && !isPro;
+                  return (
+                    <SelectItem
+                      key={r.region}
+                      value={r.region}
+                      disabled={isCityLocked}
+                      className="hover:bg-gray-100 focus:bg-gray-100"
+                    >
+                      {r.region}{isCityLocked ? " (Pro)" : ""}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
+          {regionError && (
+            <p className="mt-2 text-[13px] text-red-600 font-medium">{regionError}</p>
+          )}
         </div>
 
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">

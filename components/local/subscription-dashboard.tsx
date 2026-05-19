@@ -129,7 +129,7 @@ export function SubscriptionDashboard() {
                 disabled={checkoutLoading}
                 className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 text-[14px] font-bold text-white bg-brand rounded-xl hover:bg-brand-hover transition-colors disabled:opacity-50 shadow-sm"
               >
-                {checkoutLoading ? 'Loading…' : 'Upgrade to Pro — $2/mo'}
+                {checkoutLoading ? 'Loading…' : 'Unlock city-level updates — $2/mo'}
               </button>
             )}
             <button

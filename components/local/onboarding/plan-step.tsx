@@ -17,8 +17,7 @@ export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
     if (!isRedirecting) setPending(null);
   }, [isRedirecting]);
 
-  const pickedCount = state.topics.length;
-  const freeRequiresFewerTopics = pickedCount > 1;
+  const cityRequiresPro = state.regionType === "city";
 
   const handleClick = (plan: "free" | "pro") => {
     setPending(plan);
@@ -41,10 +40,10 @@ export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
         <ExternalLink className="w-3.5 h-3.5" />
       </a>
 
-      {freeRequiresFewerTopics && (
+      {cityRequiresPro && (
         <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
           <p className="text-[13px] text-gray-600 leading-relaxed">
-            Free includes one topic. Deselect extras or pick Pro to unlock all three.
+            City-level updates require Pro. Go back to pick a state or country, or choose Pro.
           </p>
         </div>
       )}
@@ -53,7 +52,7 @@ export function PlanStep({ state, isRedirecting, onCheckout }: Props) {
         <button
           type="button"
           onClick={() => handleClick("free")}
-          disabled={isRedirecting || freeRequiresFewerTopics}
+          disabled={isRedirecting || cityRequiresPro}
           className="w-full min-h-[64px] px-6 py-4 text-[15.5px] font-bold text-gray-800 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending === "free" && isRedirecting ? "Redirecting…" : "Start free"}
