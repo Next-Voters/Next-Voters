@@ -10,10 +10,6 @@ const headerItems: HeaderItem[] = [
     href: "/subscription"
 },
 {
-    name: "Blog",
-    href: "/blog"
-},
-{
     name: "Pricing",
     href: "/pricing"
 }

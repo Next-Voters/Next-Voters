@@ -5,9 +5,6 @@ const footerLinks = {
     { name: "Subscribe", href: "/subscription" },
     { name: "Pricing", href: "/pricing" },
   ],
-  Company: [
-    { name: "Blog", href: "/blog" },
-  ],
 };
 
 const Footer: React.FC = () => {
