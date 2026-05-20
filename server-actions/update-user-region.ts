@@ -33,13 +33,6 @@ export async function updateUserRegion(region: string): Promise<{ error?: string
     }
   }
 
-  const { error } = await admin
-    .from("subscriptions")
-    .update({ region })
-    .eq("contact", user.email)
-
-  if (error) return { error: error.message }
-
   // Rebuild subscription_regions by walking up the parent chain from the
   // selected region so the stored coverage levels stay in sync.
   const hierarchy: { region: string; type: string }[] = [
@@ -67,16 +60,19 @@ export async function updateUserRegion(region: string): Promise<{ error?: string
     ? hierarchy
     : hierarchy.filter((r) => r.type !== "city")
 
+  const classified: Record<string, string | null> = { country: null, region: null, city: null }
+  for (const r of regionsToSave) {
+    if (r.type === "country") classified.country = r.region
+    else if (r.type === "state") classified.region = r.region
+    else if (r.type === "city") classified.city = r.region
+  }
+
   await admin
     .from("subscription_regions")
-    .delete()
-    .eq("subscription_id", user.email)
-
-  if (regionsToSave.length > 0) {
-    await admin
-      .from("subscription_regions")
-      .insert(regionsToSave.map((r) => ({ subscription_id: user.email, region: r.region })))
-  }
+    .upsert({
+      subscription_id: user.email,
+      ...classified,
+    }, { onConflict: "subscription_id" })
 
   return {}
 }

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe"
 import { submitRegionWaitlist } from "@/server-actions/request-region"
+import { classifyRegions } from "@/lib/classify-regions"
 
 function parseRegionRequest(raw: string | undefined): { region: string } | null {
   if (!raw) return null
@@ -44,7 +45,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   }
 
   const metadata = session.metadata ?? {}
-  const region = typeof metadata.region === "string" ? metadata.region.trim() : ""
   const regionsRaw = typeof metadata.regions === "string" ? metadata.regions : ""
   const regions = regionsRaw.split("|").map((r) => r.trim()).filter(Boolean)
   const topicsRaw = typeof metadata.topics === "string" ? metadata.topics : ""
@@ -94,7 +94,6 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     stripe_status: "active",
     tier: plan,
   }
-  if (region) upsertPayload.region = region
   if (periodEnd) upsertPayload.stripe_period_end = periodEnd
 
   const { error } = await admin
@@ -127,17 +126,17 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     }
   }
 
-  // Regions are idempotent (delete + insert) — always run so they're saved
+  // Regions are idempotent (upsert) — always run so they're saved
   // even when the webhook created the row before fulfillCheckout reached this point.
   if (regions.length > 0) {
-    await admin
-      .from("subscription_regions")
-      .delete()
-      .eq("subscription_id", user.email)
+    const classified = await classifyRegions(admin, regions)
 
     await admin
       .from("subscription_regions")
-      .insert(regions.map((r) => ({ subscription_id: user.email, region: r })))
+      .upsert({
+        subscription_id: user.email,
+        ...classified,
+      }, { onConflict: "subscription_id" })
   }
 
   // Non-idempotent side effects — only run on first fulfillment to avoid

@@ -35,13 +35,16 @@ export async function getUserRegion(): Promise<string | null> {
 
   if (!user?.email) return null
 
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("region")
-    .eq("contact", user.email)
+  const { data: row } = await supabase
+    .from("subscription_regions")
+    .select("country, region, city")
+    .eq("subscription_id", user.email)
     .maybeSingle()
 
-  return data?.region ?? null
+  if (!row) return null
+
+  // Return the most specific level.
+  return row.city ?? row.region ?? row.country ?? null
 }
 
 /** Fetch all regions the current user is subscribed to, with type info. */
@@ -51,14 +54,17 @@ export async function getUserSubscriptionRegions(): Promise<SupportedRegion[]> {
 
   if (!user?.email) return []
 
-  const { data: rows } = await supabase
+  const { data: row } = await supabase
     .from("subscription_regions")
-    .select("region")
+    .select("country, region, city")
     .eq("subscription_id", user.email)
+    .maybeSingle()
 
-  if (!rows || rows.length === 0) return []
+  if (!row) return []
 
-  const regionNames = rows.map((r) => r.region)
+  const regionNames = [row.country, row.region, row.city].filter(Boolean) as string[]
+  if (regionNames.length === 0) return []
+
   const { data: regionDetails } = await supabase
     .from("supported_regions")
     .select("region, type, parent_region")

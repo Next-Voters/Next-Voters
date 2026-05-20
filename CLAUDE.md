@@ -39,7 +39,7 @@ Next.js 16 with App Router. File-based routing under `app/`. API routes at `app/
 ### Data Layer
 
 - **Neon PostgreSQL + Kysely**: Type-safe SQL for `chat_count`, `admin_table`, `subscriptions` tables. Schema in `types/database.ts`, connection in `lib/db/index.ts`.
-- **Supabase**: Auth (session management, OAuth), Storage (PDFs in `next-voters-summaries` bucket). Clients in `lib/supabase/` (browser, server, admin variants).
+- **Supabase**: Auth (session management, OAuth), Storage (PDFs in `next-voters-summaries` bucket), and additional tables (`subscription_regions`, `subscription_topics`, `supported_regions`, `reports`, etc.). Clients in `lib/supabase/` (browser, server, admin variants).
 - **Qdrant**: Vector collections per region (e.g., `collection-ca`, `collection-us`). Client in `lib/qdrant.ts`.
 
 ### Auth Flow
@@ -48,7 +48,7 @@ Next.js 16 with App Router. File-based routing under `app/`. API routes at `app/
 
 ### Payments (Stripe)
 
-Webhook at `app/api/stripe/webhook/route.ts` handles checkout completion and subscription updates. Tier (Basic/Pro) determined by Stripe price ID. Subscription state stored in Supabase `subscriptions` table.
+Webhook at `app/api/stripe/webhook/route.ts` handles checkout completion and subscription updates. Tier (Free/Pro) determined by Stripe price ID. Subscription state stored in Supabase `subscriptions` table (no `city` or `region` columns — region data lives entirely in `subscription_regions`).
 
 ### Key Directories
 
@@ -61,6 +61,18 @@ Webhook at `app/api/stripe/webhook/route.ts` handles checkout completion and sub
 ### Multi-Region Design
 
 Regions and their political parties are defined in `data/supported-regions.ts`. Each region has its own Qdrant collection. Chat responses are generated per-party in parallel, then streamed as completed. User region/party preferences stored in localStorage via `lib/country-preference.ts`.
+
+### Subscription Regions (Supabase)
+
+The `supported_regions` table stores all regions in a self-referential hierarchy via `parent_region` (country → state → city). Region types (`country`, `state`, `city`) are enforced by the `supported_region_types` lookup table.
+
+The `subscription_regions` table stores one row per user with explicit columns for each geographic level:
+- `subscription_id` (PK, FK → `subscriptions.contact`)
+- `country` (nullable FK → `supported_regions.region`)
+- `region` (nullable FK → `supported_regions.region`) — subnational/state level
+- `city` (nullable FK → `supported_regions.region`) — requires Pro tier
+
+City-level coverage is gated to Pro subscribers. On downgrade/cancellation, the webhook sets `city = NULL`. The helper `lib/classify-regions.ts` converts an array of region names into the `{ country, region, city }` structure used for upserts.
 
 ### LangGraph Research Agents
 

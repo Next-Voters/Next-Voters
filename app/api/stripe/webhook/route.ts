@@ -46,8 +46,7 @@ function getPeriodEnd(sub: Stripe.Subscription): string | null {
 }
 
 /**
- * If the user's current region is a city, fall back to its parent state.
- * Also removes city-level entries from subscription_regions.
+ * Clears city-level coverage from subscription_regions.
  * Called when a subscription is downgraded or canceled so free-tier users
  * don't retain city-level coverage.
  */
@@ -55,52 +54,10 @@ async function fallbackCityRegion(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   contact: string,
 ): Promise<void> {
-  // Fall back primary region if it's a city.
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('region')
-    .eq('contact', contact)
-    .maybeSingle();
-
-  if (sub?.region) {
-    const { data: regionRow } = await supabase
-      .from('supported_regions')
-      .select('type, parent_region')
-      .eq('region', sub.region)
-      .maybeSingle();
-
-    if (regionRow?.type === 'city' && regionRow.parent_region) {
-      await supabase
-        .from('subscriptions')
-        .update({ region: regionRow.parent_region })
-        .eq('contact', contact);
-    }
-  }
-
-  // Remove city entries from subscription_regions.
-  const { data: userRegions } = await supabase
+  await supabase
     .from('subscription_regions')
-    .select('region')
+    .update({ city: null })
     .eq('subscription_id', contact);
-
-  if (userRegions && userRegions.length > 0) {
-    const regionNames = userRegions.map((r) => r.region);
-    const { data: cityRegions } = await supabase
-      .from('supported_regions')
-      .select('region')
-      .in('region', regionNames)
-      .eq('type', 'city');
-
-    if (cityRegions && cityRegions.length > 0) {
-      for (const city of cityRegions) {
-        await supabase
-          .from('subscription_regions')
-          .delete()
-          .eq('subscription_id', contact)
-          .eq('region', city.region);
-      }
-    }
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -154,7 +111,6 @@ export async function POST(request: NextRequest) {
         tier = session.metadata?.plan === 'pro' ? 'pro' : 'free';
       }
 
-      const checkoutRegion = typeof session.metadata?.region === 'string' ? session.metadata.region.trim() : '';
       const checkoutPayload: Record<string, string> = {
         contact,
         stripe_customer_id: session.customer as string,
@@ -162,7 +118,6 @@ export async function POST(request: NextRequest) {
         stripe_status: 'active',
         tier,
       };
-      if (checkoutRegion) checkoutPayload.region = checkoutRegion;
       if (periodEnd) checkoutPayload.stripe_period_end = periodEnd;
 
       const { error: checkoutError } = await supabase

@@ -3,6 +3,7 @@ import { getStripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { submitRegionWaitlist } from '@/server-actions/request-region';
+import { classifyRegions } from '@/lib/classify-regions';
 
 export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -141,7 +142,6 @@ export async function POST(request: NextRequest) {
       stripe_subscription_id: stripeSub.id,
       stripe_status: stripeSub.status,
       tier: 'pro',
-      ...(rawRegion && { region: rawRegion }),
     };
     if (periodEnd) {
       upsertPayload.stripe_period_end = new Date(periodEnd * 1000).toISOString();
@@ -177,16 +177,16 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Save selected regions (multi-level).
+      // Save selected regions.
       if (rawRegions.length > 0) {
-        await admin
-          .from('subscription_regions')
-          .delete()
-          .eq('subscription_id', user.email);
+        const classified = await classifyRegions(admin, rawRegions);
 
         await admin
           .from('subscription_regions')
-          .insert(rawRegions.map((r) => ({ subscription_id: user.email, region: r })));
+          .upsert({
+            subscription_id: user.email,
+            ...classified,
+          }, { onConflict: 'subscription_id' });
       }
 
       // Notify admin if the user requested an unsupported region.

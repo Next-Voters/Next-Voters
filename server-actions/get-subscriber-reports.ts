@@ -42,6 +42,7 @@ type ReportHeaderRow = {
 type ReportRow = {
   id: number;
   report_date: string;
+  region: string;
   city: string | null;
   report_headers: ReportHeaderRow[];
 };
@@ -62,12 +63,15 @@ export async function getSubscriberReports(
   } = await supabase.auth.getUser();
   if (!user?.email) return { cards: [], nextCursor: null };
 
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("region")
-    .eq("contact", user.email)
+  const { data: regionRow } = await supabase
+    .from("subscription_regions")
+    .select("country, region, city")
+    .eq("subscription_id", user.email)
     .maybeSingle();
-  if (!sub?.region) return { cards: [], nextCursor: null };
+
+  const userRegions = [regionRow?.country, regionRow?.region, regionRow?.city]
+    .filter(Boolean) as string[];
+  if (userRegions.length === 0) return { cards: [], nextCursor: null };
 
   const { data: topicRows } = await supabase
     .from("subscription_topics")
@@ -79,9 +83,9 @@ export async function getSubscriberReports(
   const { data, error } = await supabase
     .from("reports")
     .select(
-      "id, report_date, city, report_headers(id, header, bullets, topic_id, supported_topics(topic_name))",
+      "id, report_date, region, city, report_headers(id, header, bullets, topic_id, supported_topics(topic_name))",
     )
-    .eq("region", sub.region)
+    .in("region", userRegions)
     .order("report_date", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
@@ -115,7 +119,7 @@ export async function getSubscriberReports(
     cards.push({
       report_id: report.id,
       report_date: report.report_date,
-      city: report.city ?? sub.region,
+      city: report.city ?? report.region,
       topics: Array.from(byTopic.values()).map((t) => ({
         topic_name: t.name,
         items: t.items,

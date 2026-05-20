@@ -3,6 +3,7 @@ import { getStripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { submitRegionWaitlist } from '@/server-actions/request-region';
+import { classifyRegions, stripCityForFree } from '@/lib/classify-regions';
 
 interface RegionRequestBody {
   region?: unknown;
@@ -131,7 +132,6 @@ export async function POST(request: NextRequest) {
       stripe_status: stripeSub.status,
       ...(periodEnd && { stripe_period_end: new Date(periodEnd * 1000).toISOString() }),
       tier: 'free',
-      region: rawRegion,
     };
 
     const { error: upsertError } = await admin
@@ -163,31 +163,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save selected regions (multi-level). Filter out any city entries — city
-    // coverage requires Pro, and the primary-region check above only validates
-    // `rawRegion`. Without this filter a direct API call could sneak city
-    // entries into subscription_regions on the free tier.
+    // Save selected regions. Strip city entries — city coverage requires Pro.
     if (rawRegions.length > 0) {
-      const { data: regionTypeRows } = await admin
-        .from('supported_regions')
-        .select('region, type')
-        .in('region', rawRegions);
+      const classified = stripCityForFree(await classifyRegions(admin, rawRegions));
 
-      const cityNames = new Set(
-        (regionTypeRows ?? []).filter((r) => r.type === 'city').map((r) => r.region),
-      );
-      const freeRegions = rawRegions.filter((r) => !cityNames.has(r));
-
-      if (freeRegions.length > 0) {
-        await admin
-          .from('subscription_regions')
-          .delete()
-          .eq('subscription_id', user.email);
-
-        await admin
-          .from('subscription_regions')
-          .insert(freeRegions.map((r) => ({ subscription_id: user.email, region: r })));
-      }
+      await admin
+        .from('subscription_regions')
+        .upsert({
+          subscription_id: user.email,
+          ...classified,
+        }, { onConflict: 'subscription_id' });
     }
 
     // Notify admin if the user requested an unsupported region.
@@ -214,8 +199,8 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${origin}/local?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/local/onboarding?checkout=cancel`,
+    success_url: `${origin}/subscription?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/subscription/onboarding?checkout=cancel`,
     metadata,
     subscription_data: {
       metadata,
