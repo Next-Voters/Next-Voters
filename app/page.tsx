@@ -35,18 +35,20 @@ const Home = () => {
         <section className="relative py-20 md:py-28 bg-white overflow-hidden">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-[400px]"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[500px]"
             style={{
               backgroundImage:
-                "radial-gradient(ellipse 55% 60% at 50% 0%, rgba(235, 34, 64, 0.04) 0%, transparent 70%)",
+                "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(235, 34, 64, 0.035) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 30% 10%, rgba(251, 191, 146, 0.04) 0%, transparent 70%)",
             }}
           />
 
           <div className="relative max-w-[1100px] mx-auto px-6">
             <div className="max-w-[680px] mx-auto text-center mb-12 md:mb-16">
-              <p className="text-[10.5px] tracking-[0.18em] uppercase text-red-500/80 font-semibold mb-4">
-                How the tech works
-              </p>
+              <div className="flex justify-center mb-5">
+                <span className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-[10.5px] tracking-[0.14em] uppercase text-red-500/90 font-semibold">
+                  How it works
+                </span>
+              </div>
               <h2 className="text-[30px] md:text-[42px] font-bold text-gray-900 tracking-tight leading-[1.08]">
                 We do the reading,
                 <br className="hidden sm:block" />{" "}
@@ -74,13 +76,13 @@ const Home = () => {
         </section>
 
         {/* ───────────── Final CTA ───────────── */}
-        <section className="relative overflow-hidden bg-page">
+        <section className="relative overflow-hidden bg-gradient-to-b from-white via-rose-50/30 to-page">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "radial-gradient(50% 70% at 50% 0%, rgba(235, 34, 64, 0.06) 0%, rgba(235, 34, 64, 0) 70%)",
+                "radial-gradient(50% 60% at 50% 20%, rgba(235, 34, 64, 0.05) 0%, transparent 70%), radial-gradient(40% 50% at 70% 60%, rgba(251, 146, 60, 0.03) 0%, transparent 70%)",
             }}
           />
           <div className="relative max-w-[1100px] mx-auto px-6 py-20 md:py-28 text-center">
@@ -105,9 +107,9 @@ const Home = () => {
         </section>
 
         {/* ───────────── Footer ───────────── */}
-        <footer className="border-t border-gray-200/80 bg-white">
-          <div className="max-w-[1100px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12.5px] text-gray-500">
-            <span className="font-semibold text-gray-700 tracking-tight">
+        <footer className="border-t border-gray-200/60 bg-page">
+          <div className="max-w-[1100px] mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12.5px] text-gray-400">
+            <span className="font-semibold text-gray-600 tracking-tight text-[13px]">
               Next Voters
             </span>
             <span>© {new Date().getFullYear()} Next Voters. All rights reserved.</span>

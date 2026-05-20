@@ -151,23 +151,32 @@ export function NewsletterHero() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white">
-      {/* Soft cool atmospheric wash (no warm/yellow tones) */}
+    <section className="grain-overlay relative overflow-hidden bg-gradient-to-b from-rose-50/40 via-slate-50/60 to-white">
+      {/* Warm atmospheric wash with depth */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-40 h-[680px]"
+        className="pointer-events-none absolute inset-x-0 -top-40 h-[720px]"
         style={{
           background:
-            "radial-gradient(55% 50% at 50% 35%, rgba(148, 163, 184, 0.16) 0%, rgba(148, 163, 184, 0.04) 50%, rgba(148, 163, 184, 0) 80%)",
+            "radial-gradient(60% 50% at 50% 30%, rgba(251, 191, 146, 0.10) 0%, rgba(148, 163, 184, 0.12) 40%, transparent 80%)",
         }}
       />
-      {/* A whisper of brand red, tucked behind the headline only */}
+      {/* Brand red glow behind headline */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[24%] -translate-x-1/2 h-[260px] w-[680px] rounded-full blur-3xl opacity-60"
+        className="pointer-events-none absolute left-1/2 top-[22%] -translate-x-1/2 h-[300px] w-[720px] rounded-full blur-3xl opacity-70"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(235, 34, 64, 0.08) 0%, rgba(235, 34, 64, 0) 70%)",
+            "radial-gradient(ellipse at center, rgba(235, 34, 64, 0.09) 0%, rgba(235, 34, 64, 0) 65%)",
+        }}
+      />
+      {/* Secondary warm accent glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-[10%] top-[15%] h-[200px] w-[300px] rounded-full blur-3xl opacity-50"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(251, 146, 60, 0.06) 0%, transparent 70%)",
         }}
       />
       {/* Faint cityscape silhouette - two layers slowly drift left in a seamless loop */}
@@ -183,7 +192,7 @@ export function NewsletterHero() {
       >
         {/* Back layer - distant skyline, fainter, slower drift */}
         <div className="absolute inset-x-0 bottom-0 h-[180px] md:h-[230px] overflow-hidden">
-          <div className="flex h-full w-[200%]">
+          <div className="flex h-full w-[200%] animate-city-drift-back">
             {[0, 1].map((i) => (
               <svg
                 key={i}
@@ -202,7 +211,7 @@ export function NewsletterHero() {
 
         {/* Front layer - closer, taller, faster drift for subtle parallax */}
         <div className="relative h-[210px] md:h-[270px] overflow-hidden">
-          <div className="flex h-full w-[200%]">
+          <div className="flex h-full w-[200%] animate-city-drift-front">
             {[0, 1].map((i) => (
               <svg
                 key={i}
@@ -219,7 +228,15 @@ export function NewsletterHero() {
         </div>
       </div>
 
-      <div className="relative max-w-[1100px] mx-auto px-6 pt-20 pb-32 md:pt-28 md:pb-44">
+      <div className="relative z-[2] max-w-[1100px] mx-auto px-6 pt-20 pb-32 md:pt-28 md:pb-44">
+        {/* Trust badge */}
+        <div className="flex justify-center mb-6">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-sm border border-gray-200/60 px-4 py-1.5 text-[12px] font-medium text-gray-500 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Free weekly civic digest
+          </span>
+        </div>
+
         <h1 className="text-center text-[44px] sm:text-[56px] md:text-[68px] font-bold tracking-tight text-gray-900 leading-[1.15] max-w-[900px] mx-auto">
           Catch up with current legislation in{" "}
           <span className="inline-block pr-1 pb-1 italic font-extrabold bg-gradient-to-br from-red-500 via-red-500 to-rose-600 bg-clip-text text-transparent">
