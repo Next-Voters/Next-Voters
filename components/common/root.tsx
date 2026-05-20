@@ -13,12 +13,12 @@ interface RootProps {
 }
 
 // Routes where the footer should not appear
-const NO_FOOTER_PATTERNS = ["/chat", "/local"];
+const NO_FOOTER_PATTERNS = ["/chat", "/subscription"];
 
 // Routes where the global header should not appear. Used on dedicated
 // ad-traffic landings so paid-traffic visitors land on a clean page with no
 // site-nav distractions.
-const NO_HEADER_PATTERNS = ["/local/sf", "/local/nyc"];
+const NO_HEADER_PATTERNS = ["/local/sf", "/local/nyc", "/subscription/sf", "/subscription/nyc"];
 
 const Root: FC<RootProps> = ({ children }) => {
   const [queryClient] = useState(

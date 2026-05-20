@@ -92,7 +92,7 @@ export function ManageTopics({ onSaved }: { onSaved?: () => void } = {}) {
       <div className="flex-1 w-full pt-12 pb-8">
         <div className="flex items-center gap-2.5 mb-3">
           <h1 className="text-[30px] sm:text-[38px] font-bold text-gray-950 leading-tight tracking-tight">
-            NV Local
+            Next Voters
           </h1>
           <TierBadge tier={tier} />
         </div>

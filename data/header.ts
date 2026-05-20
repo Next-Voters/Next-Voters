@@ -7,7 +7,7 @@ const headerItems: HeaderItem[] = [
 },
 {
     name: "Subscribe",
-    href: "/local"
+    href: "/subscription"
 },
 {
     name: "Blog",

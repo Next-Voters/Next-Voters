@@ -140,7 +140,7 @@ export function OnboardingWizard() {
       setStep(2);
     }
 
-    router.replace("/local/onboarding", { scroll: false });
+    router.replace("/subscription/onboarding", { scroll: false });
   }, [
     regionsLoading,
     supportedRegions,
@@ -241,7 +241,7 @@ export function OnboardingWizard() {
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/local")}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/subscription")}`,
           },
         });
         if (oauthError) {
@@ -289,13 +289,13 @@ export function OnboardingWizard() {
             scrollToBottom();
             return;
           }
-          router.replace("/local");
+          router.replace("/subscription");
           return;
         }
 
         const data = await res.json();
         if (data.success) {
-          router.replace("/local");
+          router.replace("/subscription");
           return;
         }
         setCheckoutError(data.error ?? "Something went wrong. Please try again.");
@@ -437,7 +437,7 @@ export function OnboardingWizard() {
       <PaymentModal
         open={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        onSuccess={() => router.replace("/local")}
+        onSuccess={() => router.replace("/subscription")}
         region={state.region}
         regions={state.selectedRegions.map((r) => r.region)}
         topics={state.topics}

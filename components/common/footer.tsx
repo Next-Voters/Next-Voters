@@ -2,7 +2,7 @@ import React from "react";
 
 const footerLinks = {
   Product: [
-    { name: "Local", href: "/local" },
+    { name: "Subscribe", href: "/subscription" },
     { name: "Pricing", href: "/pricing" },
   ],
   Company: [

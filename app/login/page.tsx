@@ -6,12 +6,12 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 function LoginInner() {
   const searchParams = useSearchParams();
-  // Default post-auth destination is /local. /local itself routes based on
-  // subscription state and the nv_pending_action_v2 cookie (dashboard for
-  // subscribers; Stripe kickoff for subscribe-intent; otherwise bounce to
-  // /local/onboarding — which also reads the cookie for request-flow users).
-  // Explicit ?redirectTo= (e.g. from /chat's unauth redirect) still wins.
-  const resolvedRedirect = searchParams.get('redirectTo') ?? '/local';
+  // Default post-auth destination is /subscription. /subscription itself routes
+  // based on subscription state and the nv_pending_action_v2 cookie (dashboard
+  // for subscribers; Stripe kickoff for subscribe-intent; otherwise bounce to
+  // /subscription/onboarding — which also reads the cookie for request-flow
+  // users). Explicit ?redirectTo= (e.g. from /chat's unauth redirect) still wins.
+  const resolvedRedirect = searchParams.get('redirectTo') ?? '/subscription';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

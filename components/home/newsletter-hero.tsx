@@ -147,7 +147,7 @@ export function NewsletterHero() {
       setError("Please enter your city.");
       return;
     }
-    router.push(`/local/onboarding?city=${encodeURIComponent(trimmed)}`);
+    router.push(`/subscription/onboarding?city=${encodeURIComponent(trimmed)}`);
   };
 
   return (

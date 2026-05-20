@@ -173,7 +173,7 @@ export function CityAdsLanding({
     setRedirecting(true);
     const cityParam = resolvedCity ?? cityAliases[0] ?? cityDisplay;
     router.push(
-      `/local/onboarding?city=${encodeURIComponent(cityParam)}&ref=${encodeURIComponent(refCode)}`,
+      `/subscription/onboarding?city=${encodeURIComponent(cityParam)}&ref=${encodeURIComponent(refCode)}`,
     );
   };
 

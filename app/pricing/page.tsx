@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: 'How do I manage my subscription?',
-    a: 'Head to the Local page to manage your plan, topics, and billing.',
+    a: 'Head to the Subscription page to manage your plan, topics, and billing.',
   },
 ];
 
@@ -83,7 +83,7 @@ export default function PricingPage() {
             </ul>
 
             <Link
-              href="/local"
+              href="/subscription"
               className="w-full text-center px-6 py-3.5 text-[14.5px] font-bold text-gray-700 border border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors"
             >
               Get started
@@ -122,7 +122,7 @@ export default function PricingPage() {
             </ul>
 
             <Link
-              href="/local"
+              href="/subscription"
               className="w-full text-center px-6 py-3.5 text-[14.5px] font-bold text-gray-950 bg-white rounded-xl hover:bg-gray-100 transition-colors"
             >
               Get started

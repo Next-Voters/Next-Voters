@@ -50,8 +50,8 @@ const Header: FC = () => {
       );
     }
 
-    // Minimal header for /local
-    if (pathname?.startsWith("/local")) {
+    // Minimal header for /subscription
+    if (pathname?.startsWith("/subscription")) {
       return (
         <header className="w-full bg-page pt-[env(safe-area-inset-top)]">
           <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center">

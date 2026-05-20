@@ -94,7 +94,7 @@ const Home = () => {
             </p>
             <div className="mt-10 flex justify-center">
               <a
-                href="/local/onboarding"
+                href="/subscription/onboarding"
                 className="inline-flex items-center justify-center gap-3 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[18px] sm:text-[22px] font-black uppercase tracking-[0.08em] px-10 sm:px-12 h-16 sm:h-[72px] transition-colors w-full sm:w-auto shadow-lg shadow-red-900/20"
               >
                 Get my weekly brief

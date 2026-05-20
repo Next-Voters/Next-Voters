@@ -56,7 +56,7 @@ function PaymentForm({
         const result = await stripe.confirmSetup({
           elements,
           confirmParams: {
-            return_url: `${window.location.origin}/local`,
+            return_url: `${window.location.origin}/subscription`,
           },
           redirect: 'if_required',
         });

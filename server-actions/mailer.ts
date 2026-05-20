@@ -171,7 +171,7 @@ export const sendReferralEmail = async (referrerEmail: string, referredEmail: st
   `;
 
   await transporter.sendMail({
-    from: `NV Local <${process.env.EMAIL_USER}>`,
+    from: `Next Voters <${process.env.EMAIL_USER}>`,
     to: referredEmail,
     subject,
     text,
@@ -188,7 +188,7 @@ export const sendConfirmationEmail = async (email: string, preferredCategories: 
 
   const html = `
     <div>
-      <p>Thank you for signing up to NV Local!</p>
+      <p>Thank you for signing up to Next Voters!</p>
       <p>As a bonus, here's the most recent summary:</p>
       <ul>
         ${preferredCategories.map(category => `<li>${category}</li>`).join("")}
@@ -197,7 +197,7 @@ export const sendConfirmationEmail = async (email: string, preferredCategories: 
   `;
 
   await transporter.sendMail({
-    from: `NV Local <${process.env.EMAIL_USER}>`,
+    from: `Next Voters <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Confirmation Email",
     html,
