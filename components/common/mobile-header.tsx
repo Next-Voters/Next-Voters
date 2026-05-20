@@ -14,7 +14,7 @@ const MobileHeader: React.FC = () => {
     <>
       <header className="w-full bg-page border-b border-gray-200/80 sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="px-4 h-14 flex justify-between items-center">
-          <a href="/" className="text-[17px] font-bold text-gray-900 tracking-tight">
+          <a href="/" className="text-[14px] font-bold text-white tracking-tight bg-gray-900 w-8 h-8 rounded-lg inline-flex items-center justify-center">
             NV
           </a>
 

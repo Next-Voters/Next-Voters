@@ -14,7 +14,7 @@ const DesktopHeader: React.FC = () => {
         {/* Logo */}
         <a
           href="/"
-          className="text-[17px] font-bold text-gray-900 tracking-tight shrink-0 hover:opacity-80 transition-opacity"
+          className="text-[14px] font-bold text-white tracking-tight shrink-0 hover:opacity-80 transition-opacity bg-gray-900 w-8 h-8 rounded-lg inline-flex items-center justify-center"
         >
           NV
         </a>
@@ -32,7 +32,7 @@ const DesktopHeader: React.FC = () => {
                       "relative px-3 py-1.5 text-[13.5px] font-medium rounded-md transition-colors min-h-[36px] flex items-center",
                       isActive
                         ? "text-gray-900"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/70",
+                        : "text-gray-500 hover:text-gray-800",
                     ].join(" ")}
                   >
                     {item.name}

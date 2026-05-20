@@ -140,7 +140,7 @@ export function RegionAutocomplete({
           }}
           className={
             isHero
-              ? "flex-1 min-w-0 pl-1 pr-2 text-[17px] sm:text-[18.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none bg-transparent h-16"
+              ? "flex-1 min-w-0 pl-1 pr-2 text-[16px] sm:text-[17px] text-gray-950 placeholder:text-gray-400 focus:outline-none bg-transparent h-12 sm:h-14"
               : "flex-1 min-w-0 px-3 py-3 text-[14.5px] text-gray-950 placeholder:text-gray-400 focus:outline-none"
           }
           disabled={disabled}

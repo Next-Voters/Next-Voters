@@ -183,13 +183,13 @@ export function NewsletterHero() {
       >
         {/* Back layer - distant skyline, fainter, slower drift */}
         <div className="absolute inset-x-0 bottom-0 h-[180px] md:h-[230px] overflow-hidden">
-          <div className="flex h-full w-[200%] animate-city-drift-back">
+          <div className="flex h-full w-[200%]">
             {[0, 1].map((i) => (
               <svg
                 key={i}
                 viewBox="0 0 1440 320"
                 preserveAspectRatio="none"
-                className="w-1/2 h-full opacity-[0.05] flex-shrink-0"
+                className="w-1/2 h-full opacity-[0.035] flex-shrink-0"
                 fill="currentColor"
               >
                 {BACK_BUILDINGS.map(([x, w, h]) => (
@@ -202,13 +202,13 @@ export function NewsletterHero() {
 
         {/* Front layer - closer, taller, faster drift for subtle parallax */}
         <div className="relative h-[210px] md:h-[270px] overflow-hidden">
-          <div className="flex h-full w-[200%] animate-city-drift-front">
+          <div className="flex h-full w-[200%]">
             {[0, 1].map((i) => (
               <svg
                 key={i}
                 viewBox="0 0 1440 320"
                 preserveAspectRatio="none"
-                className="w-1/2 h-full opacity-[0.085] flex-shrink-0"
+                className="w-1/2 h-full opacity-[0.06] flex-shrink-0"
                 fill="currentColor"
               >
                 <rect x="0" y="316" width="1440" height="4" />
@@ -228,7 +228,7 @@ export function NewsletterHero() {
           .
         </h1>
 
-        <p className="mt-6 text-center text-[14.5px] md:text-[16px] text-gray-600 leading-relaxed max-w-[720px] mx-auto">
+        <p className="mt-6 text-center text-[15px] md:text-[17px] text-gray-500 leading-relaxed max-w-[720px] mx-auto">
           Get a weekly, bias-free email summarizing new legislation in your region. Stay in the know with the topics you care about from immigration, economics and civil rights.
         </p>
 
@@ -240,7 +240,7 @@ export function NewsletterHero() {
           className="mt-10 max-w-[720px] mx-auto"
           noValidate
         >
-          <div className="relative rounded-2xl bg-white border border-gray-200 shadow-[0_1px_0_rgba(17,17,17,0.04),0_24px_48px_-20px_rgba(17,17,17,0.14)] p-2 transition-shadow focus-within:shadow-[0_0_0_4px_rgba(235,34,64,0.08),0_24px_48px_-20px_rgba(17,17,17,0.2)]">
+          <div className="relative rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_0_rgba(17,17,17,0.03),0_16px_40px_-16px_rgba(17,17,17,0.10)] p-2 transition-shadow focus-within:shadow-[0_0_0_3px_rgba(235,34,64,0.06),0_16px_40px_-16px_rgba(17,17,17,0.14)]">
             <div className="flex items-stretch gap-2">
               <div className="flex-1 min-w-0">
                 <RegionAutocomplete
@@ -257,10 +257,10 @@ export function NewsletterHero() {
               </div>
               <button
                 type="submit"
-                className="btn-shine shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-[18px] sm:text-[20px] font-black uppercase tracking-[0.08em] px-7 sm:px-9 h-16 transition-colors shadow-sm"
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-[15px] sm:text-[16px] font-semibold px-6 sm:px-8 h-12 sm:h-14 transition-colors shadow-sm"
               >
-                <span>SIGN ME UP</span>
-                <ArrowRight className="w-[22px] h-[22px] stroke-[2.75]" />
+                <span>Sign me up</span>
+                <ArrowRight className="w-[18px] h-[18px] stroke-[2.5]" />
               </button>
             </div>
           </div>

@@ -11,12 +11,12 @@ const Home = () => {
         <NewsletterHero />
 
         {/* ───────────── Supporters strip ───────────── */}
-        <section className="border-y border-gray-200/80 bg-white/60 backdrop-blur">
-          <div className="max-w-[1100px] mx-auto px-6 py-10 md:py-12">
-            <p className="text-center text-[11.5px] tracking-[0.14em] uppercase text-gray-500 font-medium mb-6">
-              Proud to be supported by
+        <section className="bg-white/60">
+          <div className="max-w-[1100px] mx-auto px-6 py-14 md:py-16">
+            <p className="text-center text-[11px] tracking-[0.14em] uppercase text-gray-400 font-medium mb-8">
+              Backed by
             </p>
-            <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 opacity-80">
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-70">
               <img
                 src="/google-for-nonprofits-logo.png"
                 alt="Google for Nonprofits"
@@ -44,10 +44,10 @@ const Home = () => {
 
           <div className="relative max-w-[1100px] mx-auto px-6">
             <div className="max-w-[680px] mx-auto text-center mb-12 md:mb-16">
-              <p className="text-[11.5px] tracking-[0.18em] uppercase text-red-600 font-semibold mb-4">
+              <p className="text-[10.5px] tracking-[0.18em] uppercase text-red-500/80 font-semibold mb-4">
                 How the tech works
               </p>
-              <h2 className="text-[32px] md:text-[44px] font-bold text-gray-900 tracking-tight leading-[1.06]">
+              <h2 className="text-[30px] md:text-[42px] font-bold text-gray-900 tracking-tight leading-[1.08]">
                 We do the reading,
                 <br className="hidden sm:block" />{" "}
                 <span className="text-red-500">so you don&apos;t have to.</span>
@@ -66,7 +66,7 @@ const Home = () => {
                 loop
                 muted
                 playsInline
-                className="block w-full h-auto"
+                className="block w-full h-auto rounded-xl border border-gray-200/80"
                 aria-label="Animation showing how Next Voters monitors government sources, extracts decisions, writes a personal brief, and sends it to your inbox"
               />
             </div>
@@ -74,7 +74,7 @@ const Home = () => {
         </section>
 
         {/* ───────────── Final CTA ───────────── */}
-        <section className="relative overflow-hidden border-t border-gray-200/80 bg-page">
+        <section className="relative overflow-hidden bg-page">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
@@ -84,21 +84,21 @@ const Home = () => {
             }}
           />
           <div className="relative max-w-[1100px] mx-auto px-6 py-20 md:py-28 text-center">
-            <h2 className="text-[32px] md:text-[48px] font-bold text-gray-900 tracking-tight leading-[1.05] max-w-[760px] mx-auto">
+            <h2 className="text-[30px] md:text-[44px] font-bold text-gray-900 tracking-tight leading-[1.08] max-w-[720px] mx-auto">
               Stay informed with{" "}
               <span className="text-red-500">Next Voters.</span>
             </h2>
-            <p className="mt-5 text-[16px] md:text-[18px] text-gray-600 leading-relaxed max-w-[560px] mx-auto">
+            <p className="mt-5 text-[15.5px] md:text-[17px] text-gray-500 leading-relaxed max-w-[540px] mx-auto">
               A free weekly digest of the votes, motions, and decisions shaping
               your block. Cited, nonpartisan, and in your inbox by Sunday.
             </p>
             <div className="mt-10 flex justify-center">
               <a
                 href="/subscription/onboarding"
-                className="inline-flex items-center justify-center gap-3 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[18px] sm:text-[22px] font-black uppercase tracking-[0.08em] px-10 sm:px-12 h-16 sm:h-[72px] transition-colors w-full sm:w-auto shadow-lg shadow-red-900/20"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full bg-red-500 hover:bg-red-600 text-white text-[16px] sm:text-[18px] font-semibold px-8 sm:px-10 h-14 transition-colors w-full sm:w-auto shadow-lg shadow-red-900/15"
               >
                 Get my weekly brief
-                <ArrowRight className="w-6 h-6 sm:w-7 sm:h-7" />
+                <ArrowRight className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
               </a>
             </div>
           </div>
