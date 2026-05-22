@@ -38,8 +38,8 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
-  			page: '#FAF8F5',
-  			surface: '#FAF8F5',
+  			page: '#f5f5f5',
+  			surface: '#f5f5f5',
   			brand: {
   				DEFAULT: 'hsl(var(--brand))',
   				hover: 'hsl(var(--brand-hover))',

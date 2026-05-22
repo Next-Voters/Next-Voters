@@ -31,7 +31,7 @@ const Home = () => {
         <NewsletterHero />
 
         {/* 2. Supporters strip */}
-        <section className="bg-white border-t border-gray-200/60">
+        <section className="border-t border-gray-200/60">
           <div className="max-w-[1100px] mx-auto px-6 py-8 md:py-10">
             <p className="text-center text-[11px] tracking-[0.14em] uppercase text-gray-400 font-medium mb-6">
               Backed by
@@ -58,7 +58,7 @@ const Home = () => {
         <WhatYouGet />
 
         {/* 4. How It Works */}
-        <section className="relative py-20 md:py-28 bg-white border-t border-gray-200/60">
+        <section className="relative py-20 md:py-28 border-t border-gray-200/60">
           <div className="relative max-w-[1100px] mx-auto px-6">
             <div className="max-w-[680px] mx-auto text-center mb-12 md:mb-16">
               <h2 className="text-[28px] md:text-[38px] font-bold text-gray-900 tracking-tight leading-[1.12]">
@@ -114,7 +114,7 @@ const Home = () => {
         <ProblemSection />
 
         {/* 6. Final CTA */}
-        <section className="bg-white border-t border-gray-200/60">
+        <section className="border-t border-gray-200/60">
           <div className="max-w-[1100px] mx-auto px-6 py-20 md:py-28 text-center">
             <h2 className="text-[28px] md:text-[38px] font-bold text-gray-900 tracking-tight leading-[1.12] max-w-[600px] mx-auto">
               Your first briefing is{" "}
@@ -133,7 +133,7 @@ const Home = () => {
               className="mt-10 max-w-[560px] mx-auto"
               noValidate
             >
-              <div className="relative rounded-2xl bg-page border border-gray-200/80 shadow-[0_1px_0_rgba(17,17,17,0.03),0_16px_40px_-16px_rgba(17,17,17,0.08)] p-2 transition-shadow focus-within:shadow-[0_0_0_3px_rgba(235,34,64,0.06),0_16px_40px_-16px_rgba(17,17,17,0.12)]">
+              <div className="relative rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_0_rgba(17,17,17,0.03),0_16px_40px_-16px_rgba(17,17,17,0.08)] p-2 transition-shadow focus-within:shadow-[0_0_0_3px_rgba(235,34,64,0.06),0_16px_40px_-16px_rgba(17,17,17,0.12)]">
                 <div className="flex flex-col sm:flex-row items-stretch gap-2">
                   <div className="flex-1 min-w-0">
                     <RegionAutocomplete
