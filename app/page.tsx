@@ -7,7 +7,6 @@ import ClientMountWrapper from "@/components/client-mount-wrapper";
 import { NewsletterHero } from "@/components/home/newsletter-hero";
 import { WhatYouGet } from "@/components/home/what-you-get";
 import { ProblemSection } from "@/components/home/problem-section";
-import { TestimonialSection } from "@/components/home/testimonial-section";
 import { RegionAutocomplete } from "@/components/local/region-autocomplete";
 
 const Home = () => {
@@ -114,10 +113,7 @@ const Home = () => {
         {/* 5. The Problem */}
         <ProblemSection />
 
-        {/* 6. Testimonial */}
-        <TestimonialSection />
-
-        {/* 7. Final CTA */}
+        {/* 6. Final CTA */}
         <section className="bg-white border-t border-gray-200/60">
           <div className="max-w-[1100px] mx-auto px-6 py-20 md:py-28 text-center">
             <h2 className="text-[28px] md:text-[38px] font-bold text-gray-900 tracking-tight leading-[1.12] max-w-[600px] mx-auto">

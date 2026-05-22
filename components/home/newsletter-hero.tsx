@@ -147,10 +147,11 @@ export function NewsletterHero({
           )}
         </form>
 
-        {/* Product demo - email preview */}
-        <div className="mt-14 md:mt-20 max-w-[760px] mx-auto">
-          <EmailPreviewMock />
-        </div>
+      </div>
+
+      {/* Product demo - email preview, full width */}
+      <div className="px-4 sm:px-6 pb-8 md:pb-12">
+        <EmailPreviewMock />
       </div>
     </section>
   );
