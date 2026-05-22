@@ -9,8 +9,8 @@ const DesktopHeader: React.FC = () => {
   const pathname = usePathname();
 
   return (
-    <header className="w-full sticky top-0 z-40 bg-white border-b border-gray-200">
-      <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+    <header className="w-full sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-gray-200/40">
+      <div className="max-w-[1200px] mx-auto px-6 h-[72px] flex items-center justify-between">
         {/* Left: Logo + Nav pill */}
         <div className="flex items-center gap-5">
           <a
@@ -21,7 +21,7 @@ const DesktopHeader: React.FC = () => {
           </a>
 
           <nav aria-label="Main navigation">
-            <ul className="flex items-center border border-gray-200 rounded-full px-1 py-1 gap-0.5">
+            <ul className="flex items-center border border-gray-200/60 rounded-full px-1 py-1 gap-0.5 bg-white/50">
               {headerItems.map((item) => {
                 const isActive =
                   pathname === item.href ||

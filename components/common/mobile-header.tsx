@@ -12,8 +12,8 @@ const MobileHeader: React.FC = () => {
 
   return (
     <>
-      <header className="w-full sticky top-0 z-40 pt-[env(safe-area-inset-top)] bg-white border-b border-gray-200">
-        <div className="px-4 h-16 flex justify-between items-center">
+      <header className="w-full sticky top-0 z-40 pt-[env(safe-area-inset-top)] bg-white/70 backdrop-blur-xl border-b border-gray-200/40">
+        <div className="px-4 h-[72px] flex justify-between items-center">
           <a
             href="/"
             className="text-[18px] font-bold text-gray-900 tracking-tight hover:opacity-70 transition-opacity"
@@ -41,12 +41,12 @@ const MobileHeader: React.FC = () => {
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/20"
+            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
             aria-hidden
           />
           <nav
-            className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg"
+            className="fixed top-[72px] left-0 right-0 z-40 bg-white/70 backdrop-blur-xl border-b border-gray-200/40 shadow-lg"
             aria-label="Mobile navigation"
           >
             <ul className="flex flex-col py-2">

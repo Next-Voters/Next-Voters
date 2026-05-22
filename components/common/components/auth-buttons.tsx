@@ -20,8 +20,8 @@ export default function AuthButtons({ variant = "desktop" }: AuthButtonsProps) {
       <Link
         href="/login"
         className={[
-          "font-medium text-[14px] text-gray-600 hover:text-gray-900 transition-colors",
-          variant === "mobile" ? "block py-2" : "",
+          "inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-[14px] font-semibold rounded-full transition-colors",
+          variant === "mobile" ? "px-5 py-2.5" : "px-5 py-2",
         ].join(" ")}
       >
         Log in
