@@ -9,7 +9,6 @@ import { EmailPreviewMock } from "./email-preview-mock";
 const FALLBACK_PLACEHOLDER_CITY = "Vancouver";
 
 interface NewsletterHeroProps {
-  badge?: ReactNode;
   headline?: ReactNode;
   subcopy?: ReactNode;
   ctaLabel?: string;
@@ -30,7 +29,6 @@ function cityFromTimezone(): string | null {
 }
 
 export function NewsletterHero({
-  badge,
   headline,
   subcopy,
   ctaLabel,
@@ -84,14 +82,6 @@ export function NewsletterHero({
   return (
     <section className="bg-page">
       <div className="max-w-[1100px] mx-auto px-6 pt-16 pb-16 md:pt-24 md:pb-20">
-        {/* Trust badge */}
-        <div className="flex justify-center mb-8">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-sm border border-gray-200/60 px-4 py-1.5 text-[12px] font-medium text-gray-500 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {badge ?? "Free weekly civic digest"}
-          </span>
-        </div>
-
         {/* Headline */}
         <h1 className="text-center text-[40px] sm:text-[52px] md:text-[64px] font-medium tracking-tight text-gray-900 leading-[1.1] max-w-[800px] mx-auto">
           {headline ?? "Next Voters, legislation in your inbox weekly"}
