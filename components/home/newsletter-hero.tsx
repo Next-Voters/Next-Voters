@@ -8,6 +8,14 @@ import { EmailPreviewMock } from "./email-preview-mock";
 
 const FALLBACK_PLACEHOLDER_CITY = "Vancouver";
 
+interface NewsletterHeroProps {
+  badge?: ReactNode;
+  headline?: ReactNode;
+  subcopy?: ReactNode;
+  ctaLabel?: string;
+  refCode?: string;
+}
+
 function cityFromTimezone(): string | null {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -86,8 +94,14 @@ export function NewsletterHero({
 
         {/* Headline */}
         <h1 className="text-center text-[40px] sm:text-[52px] md:text-[64px] font-medium tracking-tight text-gray-900 leading-[1.1] max-w-[800px] mx-auto">
-          Next Voters, legislation in your inbox weekly
+          {headline ?? "Next Voters, legislation in your inbox weekly"}
         </h1>
+
+        {subcopy && (
+          <p className="mt-5 text-center text-[15px] md:text-[17px] text-gray-500 leading-relaxed max-w-[620px] mx-auto">
+            {subcopy}
+          </p>
+        )}
 
         {/* CTA form */}
         <form
