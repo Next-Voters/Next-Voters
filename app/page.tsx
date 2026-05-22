@@ -32,7 +32,7 @@ const Home = () => {
         <NewsletterHero />
 
         {/* 2. Supporters strip */}
-        <section className="bg-white/60 border-t border-gray-200/40">
+        <section className="bg-white border-t border-gray-200/60">
           <div className="max-w-[1100px] mx-auto px-6 py-8 md:py-10">
             <p className="text-center text-[11px] tracking-[0.14em] uppercase text-gray-400 font-medium mb-6">
               Backed by
@@ -138,7 +138,7 @@ const Home = () => {
               noValidate
             >
               <div className="relative rounded-2xl bg-page border border-gray-200/80 shadow-[0_1px_0_rgba(17,17,17,0.03),0_16px_40px_-16px_rgba(17,17,17,0.08)] p-2 transition-shadow focus-within:shadow-[0_0_0_3px_rgba(235,34,64,0.06),0_16px_40px_-16px_rgba(17,17,17,0.12)]">
-                <div className="flex items-stretch gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch gap-2">
                   <div className="flex-1 min-w-0">
                     <RegionAutocomplete
                       variant="hero"

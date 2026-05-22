@@ -50,7 +50,7 @@ export function ProblemSection() {
               <p className="text-[14.5px] text-gray-400 leading-relaxed">
                 {s.text}
               </p>
-              <p className="mt-2 text-[11.5px] text-gray-600">
+              <p className="mt-2 text-[11.5px] text-gray-500">
                 {s.cite}
               </p>
             </div>
