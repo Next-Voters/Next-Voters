@@ -33,7 +33,7 @@ const DesktopHeader: React.FC = () => {
         {/* Logo */}
         <a
           href="/"
-          className="text-[14px] font-bold text-white tracking-tight shrink-0 hover:opacity-80 transition-opacity bg-gray-900 w-8 h-8 rounded-lg inline-flex items-center justify-center"
+          className="text-[17px] font-bold text-gray-900 tracking-tight shrink-0 hover:opacity-70 transition-opacity"
         >
           NV
         </a>

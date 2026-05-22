@@ -33,7 +33,7 @@ const MobileHeader: React.FC = () => {
         ].join(" ")}
       >
         <div className="px-4 h-14 flex justify-between items-center">
-          <a href="/" className="text-[14px] font-bold text-white tracking-tight bg-gray-900 w-8 h-8 rounded-lg inline-flex items-center justify-center">
+          <a href="/" className="text-[17px] font-bold text-gray-900 tracking-tight hover:opacity-70 transition-opacity">
             NV
           </a>
 
