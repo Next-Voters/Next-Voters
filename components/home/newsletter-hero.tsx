@@ -92,7 +92,7 @@ export function NewsletterHero({
         )}
 
         {/* Headline */}
-        <h1 className="text-center text-[40px] sm:text-[52px] md:text-[64px] font-medium tracking-tight text-gray-900 leading-[1.1] max-w-[800px] mx-auto">
+        <h1 className="text-center text-[40px] sm:text-[52px] md:text-[64px] font-semibold tracking-tight text-gray-900 leading-[1.1] max-w-[800px] mx-auto">
           {headline ?? "Next Voters, legislation in your inbox weekly"}
         </h1>
 
